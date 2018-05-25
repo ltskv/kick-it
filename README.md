@@ -1,5 +1,14 @@
 # Kicker project
 
+## Prerequisites
+
+1. (L)ubuntu 14.04 32-bit
+2. Git installed:
+
+```sh
+sudo apt-get install git
+```
+
 ## How to start working
 
 ```sh
