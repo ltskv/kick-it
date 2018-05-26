@@ -2,16 +2,16 @@ from __future__ import print_function
 from __future__ import division
 
 import cv2
-from naoqi import ALProxy
-from collections import deque
 import numpy as np
 import imutils
+from naoqi import ALProxy
+from collections import deque
 
 
 # Nao configuration
 nao_ip = '192.168.0.11'
 nao_port = 9559
-res = (3, (960, 1280))  # NAOQi code and acutal resolution
+res = (2, (480, 640))  # NAOQi code and acutal resolution
 fps = 1
 cam_id = 0  # 0 := top, 1 := bottom
 
@@ -19,10 +19,10 @@ cam_id = 0  # 0 := top, 1 := bottom
 red_lower = (0, 17, 225)  # HSV coded red interval
 red_upper = (42, 255, 255)
 min_radius = 10
-resized_width = 600
+resized_width = 600  # Maybe we need it maybe don't (None if don't)
 
 
-def get_frame(cam_proxy, subscriber):
+def get_frame_nao(cam_proxy, subscriber):
     result = cam_proxy.getImageRemote(subscriber)
     cam_proxy.releaseImage(subscriber)
     if result == None:
@@ -30,26 +30,25 @@ def get_frame(cam_proxy, subscriber):
     elif result[6] == None:
         raise ValueError('no image data string')
     else:
-        # create image
-        image = np.zeros((res[1][0], res[1][1], 3), np.uint8)
-        values = map(ord, list(result[6]))
-        i = 0
-        for y in range(res[1][0]):
-            for x in range(res[1][1]):
-                image.itemset((y, x, 0), values[i + 0])
-                image.itemset((y, x, 1), values[i + 1])
-                image.itemset((y, x, 2), values[i + 2])
-                i += 3
-        return image
+        return np.frombuffer(result[6], dtype=np.uint8).reshape(
+            res[1][0], res[1][1], 3
+        )
+        # i = 0
+        # for y in range(res[1][0]):
+            # for x in range(res[1][1]): # columnwise
+                # image.itemset((y, x, 0), values[i + 0])
+                # image.itemset((y, x, 1), values[i + 1])
+                # image.itemset((y, x, 2), values[i + 2])
+                # i += 3
+        # return image
 
 
-def find_red_ball(frame):
+def find_colored_ball(frame, hsv_lower, hsv_upper, min_radius):
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
-    # construct a mask for the color "green", then perform
-    # a series of dilations and erosions to remove any small
-    # blobs left in the mask
-    mask = cv2.inRange(hsv, red_lower, red_upper)
+    # construct a mask for the color "green", then perform  a series of
+    # dilations and erosions to remove any small blobs left in the mask
+    mask = cv2.inRange(hsv, hsv_lower, hsv_upper)
     mask = cv2.erode(mask, None, iterations=2)
     mask = cv2.dilate(mask, None, iterations=2)
 
@@ -62,9 +61,8 @@ def find_red_ball(frame):
     if len(cnts) == 0:
         return None
 
-    # find the largest contour in the mask, then use
-    # it to compute the minimum enclosing circle and
-    # centroid
+    # find the largest contour in the mask, then use it to compute
+    # the minimum enclosing circle and centroid
     c = max(cnts, key=cv2.contourArea)
     ((x, y), radius) = cv2.minEnclosingCircle(c)
 
@@ -76,43 +74,57 @@ def find_red_ball(frame):
     return center, radius
 
 
-if __name__ == '__main__':
+def draw_ball_markers(frame, center, radius, history):
+    # draw the enclosing circle and ball's centroid on the frame,
+    cv2.circle(frame, center, radius, (0, 255, 255), 1)
+    cv2.circle(frame, center, 5, (0, 255, 0), -1)
+
+    # loop over the set of tracked points
+    for i in range(1, len(history)):
+        # if either of the tracked points are None, ignore them
+        if history[i - 1] is None or history[i] is None:
+            continue
+        # otherwise, compute the thickness of the line and
+        # draw the connecting lines
+        thickness = int(np.sqrt(64 / float(i + 1)) * 2.5)
+        cv2.line(frame, history[i - 1], history[i], (0, 0, 255), thickness)
+
+    return frame
+
+
+def nao_demo():
     vd_proxy = ALProxy('ALVideoDevice', nao_ip, nao_port)
     cam_subscriber = vd_proxy.subscribeCamera(
         "ball_finder", cam_id, res[0], 13, fps
     )
-    pts = deque(maxlen=64)
+    history = deque(maxlen=64)
+
     try:
         while True:
-            frame = get_frame(vd_proxy, cam_subscriber)
-            # resize the frame, blur it
-            frame = imutils.resize(frame, width=resized_width)
-            # blurred = cv2.GaussianBlur(frame, (11, 11), 0)
+            frame = get_frame_nao(vd_proxy, cam_subscriber)
+
+            # maybe resize the frame, maybe blur it
+            if resized_width is not None:
+                frame = imutils.resize(frame, width=resized_width)
+                # blurred = cv2.GaussianBlur(frame, (11, 11), 0)
+
             try:
-                center, radius = find_red_ball(frame)
+                center, radius = find_colored_ball(
+                    frame, red_lower, red_upper, min_radius
+                )
             except TypeError:  # No red ball found and function returned None
-                pts.appendleft(None)
+                history.appendleft(None)
                 continue
+            history.appendleft(center)
+            draw_ball_markers(frame, center, radius, history)
 
-            # draw the circle and centroid on the frame,
-            cv2.circle(frame, center, radius, (0, 255, 255), 1)
-            cv2.circle(frame, center, 5, (0, 255, 0), -1)
-            pts.appendleft(center)
-
-            # loop over the set of tracked points
-            for i in range(1, len(pts)):
-                # if either of the tracked points are None, ignore them
-                if pts[i - 1] is None or pts[i] is None:
-                    continue
-                # otherwise, compute the thickness of the line and
-                # draw the connecting lines
-                thickness = int(np.sqrt(64 / float(i + 1)) * 2.5)
-                cv2.line(frame, pts[i - 1], pts[i], (0, 0, 255), thickness)
-
-            # show the frame to our screen
+            # show the frame to screen
             cv2.imshow("Frame", frame)
-            key = cv2.waitKey(1) & 0xFF
+            cv2.waitKey(1)
+
     finally:
         vd_proxy.unsubscribe(cam_subscriber)
 
-    print(vd_proxy.unsubscribe(cam_subscriber))
+
+if __name__ == '__main__':
+    nao_demo()
