@@ -1,64 +1,35 @@
-#!/bin/sh
+#!/bin/bash
 
-echo "make naqui dir"
-mkdir ~/naoqi
+# Exit immediately if something fails
+set -e
 
-sleep 1
+# opt is better that $HOME imho
+naoqi_root='/opt/naoqi'
+pynaoqi='pynaoqi-python2.7-2.1.4.13-linux32'
+cppnaoqi='naoqi-sdk-2.1.4.13-linux32'
 
-echo "copy the files into the naoqi folder"
-#cp naoqi-sdk-2.1.4.13-linux32.tar.gz pynaoqi-python2.7-2.1.4.13-linux32.tar.gz ~/naoqi
-cp pynaoqi-python2.7-2.1.4.13-linux32.tar.gz ~/naoqi
-cd ~/naoqi
+echo "Make NAOQi root dir"
+sudo mkdir ${naoqi_root}
+cd ${naoqi_root}
 
-sleep 1
+echo "Get the SDKs"
+sudo wget \
+    'https://drive.google.com/uc?export=download&id=1cZYzD_kK-Ty3n7cqYcX1M7XMOSAs899O' \
+    -O "pynaoqi.tar.gz"
 
-echo "Extract them"
-#tar xzf naoqi-sdk-2.1.4.13-linux32.tar.gz
-tar xzf pynaoqi-python2.7-2.1.4.13-linux32.tar.gz
+sudo wget \
+    'https://drive.google.com/uc?export=download&id=1qmT2GiRJ5icZkWScjKqCIErIevu8fLkF' \
+    -O "cppnaoqi.tar.gz"
+
+sudo tar xzf cppnaoqi.tar.gz && sudo rm cppnaoqi.tar.gz
+sudo tar xzf pynaoqi.tar.gz && sudo rm pynaoqi.tar.gz
 
 echo "Add the NAOqi library path to PYTHONPATH"
-export PYTHONPATH=~/naoqi/pynaoqi-python2.7-2.1.4.13-linux32:$PYTHONPATH
+export PYTHONPATH="${naoqi_root}/${pynaoqi}:$PYTHONPATH"
 
-echo "make this permanently available for every future terminal"
-echo 'export PYTHONPATH=~/naoqi/pynaoqi-python2.7-2.1.4.13-linux32:$PYTHONPATH' >> ~/.bashrc
+echo "Make this permanently available for every future terminal"
+echo 'export PYTHONPATH="'"${naoqi_root}/${pynaoqi}"':$PYTHONPATH"' \
+    >>${HOME}/.profile
 
-echo "install ros packages for nao"
+echo "Install ROS packages for Nao"
 sudo apt-get install ros-indigo-nao-robot
-
-
-
-'''
-echo "Setting up sources.list"
-sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
-sleep 1
-echo "Set up your keys"
-sudo apt-key adv --keyserver hkp://ha.pool.sks-keyservers.net:80 --recv-key 421C365BD9FF1F717815A3895523BAEEB01FA116
-sleep 1
-
-echo "Doing apt update"
-sudo apt update
-sleep 1
-
-echo "installing ros"
-#sudo apt-get install ros-indigo-desktop-full
-sudo apt-get install ros-indigo-desktop 
-sleep 1
-
-echo "Initialize rosdep"
-sudo rosdep init
-sleep 1
-rosdep update
-sleep 1
-
-echo "Environment setup"
-echo "source /opt/ros/indigo/setup.bash" >> ~/.bashrc
-sleep 1
-source ~/.bashrc
-
-sleep 1
-echo "getting rosinstall"
-sudo apt install python-rosinstall 
-'''
-
-
-exit 0

@@ -70,14 +70,15 @@ def find_colored_ball(frame, hsv_lower, hsv_upper, min_radius):
         return None
 
     M = cv2.moments(c)
-    center = (M["m10"] // M["m00"], M["m01"] // M["m00"])
-    return center, radius
+    center = (int(M["m10"] / M["m00"]),int(M["m01"] // M["m00"]))
+    return center, int(radius)
 
 
 def draw_ball_markers(frame, center, radius, history):
     # draw the enclosing circle and ball's centroid on the frame,
-    cv2.circle(frame, center, radius, (0, 255, 255), 1)
-    cv2.circle(frame, center, 5, (0, 255, 0), -1)
+    if center is not None and radius is not None:
+        cv2.circle(frame, center, radius, (255, 255, 0), 1)
+        cv2.circle(frame, center, 5, (0, 255, 0), -1)
 
     # loop over the set of tracked points
     for i in range(1, len(history)):
@@ -87,7 +88,7 @@ def draw_ball_markers(frame, center, radius, history):
         # otherwise, compute the thickness of the line and
         # draw the connecting lines
         thickness = int(np.sqrt(64 / float(i + 1)) * 2.5)
-        cv2.line(frame, history[i - 1], history[i], (0, 0, 255), thickness)
+        cv2.line(frame, history[i - 1], history[i], (0, 255, 0), thickness)
 
     return frame
 
@@ -112,11 +113,11 @@ def nao_demo():
                 center, radius = find_colored_ball(
                     frame, red_lower, red_upper, min_radius
                 )
+                history.appendleft(center)
+                draw_ball_markers(frame, center, radius, history)
             except TypeError:  # No red ball found and function returned None
                 history.appendleft(None)
-                continue
-            history.appendleft(center)
-            draw_ball_markers(frame, center, radius, history)
+                draw_ball_markers(frame, None, None, history)
 
             # show the frame to screen
             cv2.imshow("Frame", frame)
@@ -124,6 +125,7 @@ def nao_demo():
 
     finally:
         vd_proxy.unsubscribe(cam_subscriber)
+        cv2.destroyAllWindows()
 
 
 if __name__ == '__main__':
