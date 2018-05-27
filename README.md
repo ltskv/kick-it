@@ -6,7 +6,7 @@
 2. Git installed:
 
 ```sh
-sudo apt-get install git
+sudo apt install git -y 
 ```
 
 ## How to start working
