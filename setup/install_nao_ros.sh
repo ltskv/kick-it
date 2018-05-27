@@ -32,4 +32,4 @@ echo 'export PYTHONPATH="'"${naoqi_root}/${pynaoqi}"':$PYTHONPATH"' \
     >>${HOME}/.profile
 
 echo "Install ROS packages for Nao"
-sudo apt-get install ros-indigo-nao-robot
+sudo apt install ros-indigo-nao-robot -y

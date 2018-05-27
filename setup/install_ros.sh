@@ -14,10 +14,10 @@ sudo apt-key adv \
     --recv-key 421C365BD9FF1F717815A3895523BAEEB01FA116
 
 echo "Update packages list"
-sudo apt-get update
+sudo apt update
 
 echo "Install ROS"
-sudo apt-get install ros-indigo-desktop
+sudo apt install ros-indigo-desktop -y
 
 echo "Initialize rosdep"
 sudo rosdep init
@@ -28,4 +28,4 @@ echo "source /opt/ros/indigo/setup.bash" >>${HOME}/.bashrc
 source ${HOME}/.bashrc
 
 echo "Get rosinstall"
-sudo apt-get install python-rosinstall
+sudo apt install python-rosinstall -y
