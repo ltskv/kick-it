@@ -13,7 +13,7 @@ sudo apt-get install git
 
 ```sh
 cd ~/Documents
-git clone git@gitlab.lrz.de:robocupss18-blue3/kick-it.git
+git clone https://gitlab.lrz.de/robocupss18-blue3/kick-it.git
 cd kick-it
 setup/install_ros.sh
 setup/install_nao_ros.sh
