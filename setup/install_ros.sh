@@ -24,8 +24,8 @@ sudo rosdep init
 rosdep update
 
 echo "Environment setup"
+source /opt/ros/indigo/setup.bash
 echo "source /opt/ros/indigo/setup.bash" >>${HOME}/.bashrc
-source ${HOME}/.bashrc
 
 echo "Get rosinstall"
 sudo apt install python-rosinstall -y
