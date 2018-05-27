@@ -11,18 +11,17 @@ from collections import deque
 # Nao configuration
 nao_ip = '192.168.0.11'
 nao_port = 9559
-res = (2, (480, 640))  # NAOQi code and acutal resolution
-fps = 1
-cam_id = 0  # 0 := top, 1 := bottom
+res = (1, (240, 320))  # NAOQi code and acutal resolution
+fps = 30
+cam_id = 1  # 0 := top, 1 := bottom
 
 # Recognition stuff
-red_lower = (0, 17, 225)  # HSV coded red interval
-red_upper = (42, 255, 255)
-min_radius = 10
-resized_width = 600  # Maybe we need it maybe don't (None if don't)
+red_lower = (0, 185, 170)  # HSV coded red interval
+red_upper = (2, 255, 255)
+min_radius = 5
+resized_width = None  # Maybe we need it maybe don't (None if don't)
 
-
-def get_frame_nao(cam_proxy, subscriber):
+def get_frame_nao(cam_proxy, subscriber, width, height):
     result = cam_proxy.getImageRemote(subscriber)
     cam_proxy.releaseImage(subscriber)
     if result == None:
@@ -31,7 +30,7 @@ def get_frame_nao(cam_proxy, subscriber):
         raise ValueError('no image data string')
     else:
         return np.frombuffer(result[6], dtype=np.uint8).reshape(
-            res[1][0], res[1][1], 3
+            height, width, 3
         )
         # i = 0
         # for y in range(res[1][0]):
@@ -51,6 +50,8 @@ def find_colored_ball(frame, hsv_lower, hsv_upper, min_radius):
     mask = cv2.inRange(hsv, hsv_lower, hsv_upper)
     mask = cv2.erode(mask, None, iterations=2)
     mask = cv2.dilate(mask, None, iterations=2)
+    cv2.imshow('ball_mask', mask)
+    cv2.waitKey(1)
 
     # find contours in the mask and initialize the current
     # (x, y) center of the ball
@@ -94,6 +95,9 @@ def draw_ball_markers(frame, center, radius, history):
 
 
 def nao_demo():
+    cv2.namedWindow('ball_mask')
+    cv2.namedWindow('Frame')
+
     vd_proxy = ALProxy('ALVideoDevice', nao_ip, nao_port)
     cam_subscriber = vd_proxy.subscribeCamera(
         "ball_finder", cam_id, res[0], 13, fps
@@ -102,7 +106,8 @@ def nao_demo():
 
     try:
         while True:
-            frame = get_frame_nao(vd_proxy, cam_subscriber)
+            frame = get_frame_nao(vd_proxy, cam_subscriber, res[1][1],
+                                  res[1][0])
 
             # maybe resize the frame, maybe blur it
             if resized_width is not None:
