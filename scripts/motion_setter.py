@@ -19,35 +19,50 @@ def main(robotIP, PORT,rest):
     AutonomousLifeProxy.setState("disabled")
 
     # Wake up robot
-    motionProxy.wakeUp()
+    # motionProxy.wakeUp()
+
+    # stiffnessses
+    # hand and wrist
+    handStiffness = 0.0;
+    # shoulder and elbow
+    armStiffness = 0.0;
+    # head
+    headStiffness = 0.9;
+    # hip
+    hipStiffness = 0.9;
+    # knee
+    kneeStiffness = 0.9;
+    # ankle
+    ankleStiffness = 0.9;
+
 
     # set the stiffnes
-    motionProxy.setStiffnesses("Head", 1.0)
-    motionProxy.setStiffnesses("RHand", 1.0)	
-    motionProxy.setStiffnesses("LHand", 1.0)
-    motionProxy.setStiffnesses("LShoulderPitch", 1.0)
-    motionProxy.setStiffnesses("LShoulderRoll", 1.0)
-    motionProxy.setStiffnesses("LElbowRoll", 1.0)
-    motionProxy.setStiffnesses("LWristYaw", 1.0)
-    motionProxy.setStiffnesses("LElbowYaw", 1.0)
-    motionProxy.setStiffnesses("LHipYawPitch", 1.0)
-    motionProxy.setStiffnesses("LHipPitch", 1.0)
-    motionProxy.setStiffnesses("LKneePitch", 1.0)
-    motionProxy.setStiffnesses("LAnklePitch", 1.0)
-    motionProxy.setStiffnesses("LHipRoll", 1.0)
-    motionProxy.setStiffnesses("LAnkleRoll", 1.0)
+    motionProxy.setStiffnesses("Head", headStiffness)
+    motionProxy.setStiffnesses("RHand", handStiffness)	
+    motionProxy.setStiffnesses("LHand", handStiffness)
+    motionProxy.setStiffnesses("LShoulderPitch", armStiffness)
+    motionProxy.setStiffnesses("LShoulderRoll", armStiffness)
+    motionProxy.setStiffnesses("LElbowRoll", armStiffness)
+    motionProxy.setStiffnesses("LWristYaw", handStiffness)
+    motionProxy.setStiffnesses("LElbowYaw", armStiffness)
+    motionProxy.setStiffnesses("LHipYawPitch", hipStiffness)
+    motionProxy.setStiffnesses("LHipPitch", hipStiffness)
+    motionProxy.setStiffnesses("LKneePitch", kneeStiffness)
+    motionProxy.setStiffnesses("LAnklePitch", ankleStiffness)
+    motionProxy.setStiffnesses("LHipRoll", hipStiffness)
+    motionProxy.setStiffnesses("LAnkleRoll", ankleStiffness)
     
-    motionProxy.setStiffnesses("RShoulderPitch", 1.0)
-    motionProxy.setStiffnesses("RShoulderRoll", 1.0)
-    motionProxy.setStiffnesses("RElbowRoll", 1.0)
-    motionProxy.setStiffnesses("RWristYaw", 1.0)
-    motionProxy.setStiffnesses("RElbowYaw", 1.0)
-    motionProxy.setStiffnesses("RHipYawPitch", 1.0)
-    motionProxy.setStiffnesses("RHipPitch", 1.0)
-    motionProxy.setStiffnesses("RKneePitch", 1.0)
-    motionProxy.setStiffnesses("RAnklePitch", 1.0)
-    motionProxy.setStiffnesses("RHipRoll", 1.0)
-    motionProxy.setStiffnesses("RAnkleRoll", 1.0)
+    motionProxy.setStiffnesses("RShoulderPitch", armStiffness)
+    motionProxy.setStiffnesses("RShoulderRoll", armStiffness)
+    motionProxy.setStiffnesses("RElbowRoll", armStiffness)
+    motionProxy.setStiffnesses("RWristYaw", handStiffness)
+    motionProxy.setStiffnesses("RElbowYaw", armStiffness)
+    motionProxy.setStiffnesses("RHipYawPitch", hipStiffness)
+    motionProxy.setStiffnesses("RHipPitch", hipStiffness)
+    motionProxy.setStiffnesses("RKneePitch", kneeStiffness)
+    motionProxy.setStiffnesses("RAnklePitch", ankleStiffness)
+    motionProxy.setStiffnesses("RHipRoll", hipStiffness)
+    motionProxy.setStiffnesses("RAnkleRoll", ankleStiffness)
 
     # Send robot to Stand Init
     #postureProxy.goToPosture("StandInit", 0.5)
