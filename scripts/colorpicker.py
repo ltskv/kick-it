@@ -94,13 +94,14 @@ cv.createTrackbar(
 
 vd_proxy = ALProxy('ALVideoDevice', '192.168.0.11', 9559)
 cam_subscriber = vd_proxy.subscribeCamera(
-    "ball_finder", 0, 1, 13, 20
+    "ball_finder", 0, 3, 13, 1
 )
+
+frame = get_frame_nao(vd_proxy, cam_subscriber, 1280, 960)
 
 try:
     while True:
-        frame = get_frame_nao(vd_proxy, cam_subscriber, 320, 240)
-
+        
         frame_HSV = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
         frame_threshold = cv.inRange(
             frame_HSV, (low_H, low_S, low_V), (high_H, high_S, high_V)
