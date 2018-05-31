@@ -22,7 +22,7 @@ subscriber = videoDevice.subscribeCamera(
 # create image
 image = np.zeros((res[1][0], res[1][1], 3), np.uint8)
 
-for k in range(2):
+for k in range(1):
 
     result = videoDevice.getImageRemote(subscriber)
     videoDevice.releaseImage(subscriber)
