@@ -7,7 +7,7 @@ import numpy as np
 from naoqi import ALProxy
 from collections import deque
 from imagereaders import NaoImageReader
-from live_recognition import BallTracker
+from live_recognition import BallFinder
 
 
 # Nao configuration
