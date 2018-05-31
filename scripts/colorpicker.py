@@ -1,3 +1,7 @@
+# syntax python colorpicker.py
+# or 
+# python colorpicker.py 640 480     -> set resolution
+
 from __future__ import print_function
 from live_recognition import get_frame_nao
 import cv2 as cv
