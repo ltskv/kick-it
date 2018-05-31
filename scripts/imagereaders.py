@@ -1,7 +1,6 @@
 import numpy as np
 import cv2
-# from naoqi import ALProxy
-ALProxy = None
+from naoqi import ALProxy
 
 
 class NaoImageReader(object):
