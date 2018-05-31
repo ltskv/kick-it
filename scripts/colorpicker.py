@@ -3,6 +3,7 @@ from live_recognition import get_frame_nao
 import cv2 as cv
 import imutils
 from naoqi import ALProxy
+import sys
 
 max_value = 255
 max_value_H = 360 // 2
@@ -106,9 +107,12 @@ try:
         frame_threshold = cv.inRange(
             frame_HSV, (low_H, low_S, low_V), (high_H, high_S, high_V)
         )
-
+	if len(sys.argv) > 1:
+	    frame_threshold = cv.resize(frame_threshold, (int(sys.argv[1]), int(sys.argv[2])))        
+	
         cv.imshow(window_capture_name, frame)
         cv.imshow(window_detection_name, frame_threshold)
+        
 
         key = cv.waitKey(1)
         if key == ord('q') or key == 27:
