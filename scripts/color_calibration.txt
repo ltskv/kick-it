@@ -1,0 +1,7 @@
+# Optimal HSV for ball detection
+
+# LOW HSV
+0 185 170
+
+# HIGH HSV
+6 255 255
