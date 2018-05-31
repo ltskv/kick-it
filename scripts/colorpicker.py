@@ -11,12 +11,18 @@ import sys
 
 max_value = 255
 max_value_H = 360 // 2
-low_H = 0
-low_S = 0
-low_V = 0
-high_H = max_value_H
-high_S = max_value
-high_V = max_value
+#low_H = 0
+#low_S = 0
+#low_V = 0
+#high_H = max_value_H
+#high_S = max_value
+#high_V = max_value
+low_H=0
+low_S=185
+low_V=170
+high_H=2
+high_S=255
+high_V=255
 window_capture_name = 'Video Capture'
 window_detection_name = 'Object Detection'
 low_H_name = 'Low H'
