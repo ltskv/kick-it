@@ -77,6 +77,7 @@ def set_angle_new(x,y):
     angles=[0.25*ball_angle_x,0.25*ball_angle_y]
     if abs(ball_angle_x)>0.1 or abs(ball_angle_y)>0.1:
 	    motionProxy.changeAngles(names, angles, fractionMaxSpeed)
+            
     elif abs(ball_angle_x)<0.1 and abs(ball_angle_y)<0.1:
             #tts = ALProxy("ALTextToSpeech", "192.168.0.11", 9559)
             #tts.setParameter("pitchShift", 1)
@@ -86,7 +87,7 @@ def set_angle_new(x,y):
             #tts.say("Ball found")
 
 	    print("Ball found")
-
+            print(get_angle())
 
 
 
