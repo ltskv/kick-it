@@ -63,7 +63,7 @@ def set_angle_new(x,y):
     ball_angle_x=ball_angles[0]
     ball_angle_y=ball_angles[1]
     print("ball_angle_x="+str(ball_angle_x))
-    #print("ball_angle_y="+str(ball_angle_y))
+    print("ball_angle_y="+str(ball_angle_y))
 
     #ball_angle_x_diff=ball_angle_x+
     #ball_angle_y_diff=ball_angle_y-99
@@ -74,10 +74,17 @@ def set_angle_new(x,y):
     #[-169.53343200683594, 99.27782440185547] (x_mid,y_mid)
     #if abs(ball_angle_x)>0.2 and abs(ball_angle_y)>0.01:
     #angles=[ball_angle_x,0]
-    angles=[0.5*ball_angle_x,0.5*ball_angle_y]
+    angles=[0.25*ball_angle_x,0.25*ball_angle_y]
     if abs(ball_angle_x)>0.1 or abs(ball_angle_y)>0.1:
 	    motionProxy.changeAngles(names, angles, fractionMaxSpeed)
     elif abs(ball_angle_x)<0.1 and abs(ball_angle_y)<0.1:
+            #tts = ALProxy("ALTextToSpeech", "192.168.0.11", 9559)
+            #tts.setParameter("pitchShift", 1)
+            #tts.setParameter("speed", 50)
+            #tts.setVoice("Kenny22Enhanced")
+
+            #tts.say("Ball found")
+
 	    print("Ball found")
 
 
