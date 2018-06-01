@@ -11,10 +11,11 @@ from live_recognition import BallFinder
 
 
 # Nao configuration
-nao_ip = '192.168.0.10'
+nao_ip = '192.168.0.11'
 nao_port = 9559
 #res = (3, (960, 1280))  # NAOQi code and acutal resolution
-res=(1,(240,320))
+#res=(1,(240,320))
+res=1
 #res=(2,(480,640))
 
 fps = 30
@@ -30,7 +31,7 @@ current_value = 0
 
 
 def get_angle():
-    robotIP="192.168.0.10"
+    robotIP="192.168.0.11"
     PORT = 9559
     motionProxy = ALProxy("ALMotion", robotIP, PORT)
     names=["HeadPitch","HeadYaw"]
@@ -42,7 +43,7 @@ def get_angle():
 
 def set_angle(direction):
 #def main(robotIP,x,y):
-    robotIP="192.168.0.10"
+    robotIP="192.168.0.11"
     PORT = 9559
     motionProxy = ALProxy("ALMotion", robotIP, PORT)
     # activiert gelenke
