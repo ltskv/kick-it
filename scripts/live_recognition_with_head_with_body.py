@@ -8,7 +8,8 @@ from naoqi import ALProxy
 from collections import deque
 from imagereaders import NaoImageReader
 from live_recognition import BallFinder
-
+import time
+import almath
 
 # Nao configuration
 nao_ip = '192.168.0.11'
@@ -19,7 +20,7 @@ res=1
 #res=(2,(480,640))
 
 fps = 30
-cam_id = 0  # 0 := top, 1 := bottom
+cam_id = 1  # 0 := top, 1 := bottom
 
 # Recognition stuff
 red_lower = (0, 185, 170)  # HSV coded red interval
@@ -30,6 +31,101 @@ resized_width = None  # Maybe we need it maybe don't (None if don't)
 current_value = 0
 global counter
 counter=0
+
+def move_to(old,y):
+    motionProxy  = ALProxy("ALMotion", nao_ip, nao_port)
+    postureProxy = ALProxy("ALRobotPosture", nao_ip, nao_port)
+
+    # Wake up robot
+    motionProxy.wakeUp()
+
+    handStiffness=0.0;
+    # shoulder and elbow
+    armStiffness = 0.0;
+    # head
+    headStiffness = 0.9;
+    # hip
+    hipStiffness = 0.9;
+    # knee
+    kneeStiffness = 0.9;
+    # ankle
+    ankleStiffness = 0.9;
+
+
+    # set the stiffnes
+    motionProxy.setStiffnesses("Head", headStiffness)
+    motionProxy.setStiffnesses("RHand", handStiffness)
+    motionProxy.setStiffnesses("LHand", handStiffness)
+    motionProxy.setStiffnesses("LShoulderPitch", armStiffness)
+    motionProxy.setStiffnesses("LShoulderRoll", armStiffness)
+    motionProxy.setStiffnesses("LElbowRoll", armStiffness)
+    motionProxy.setStiffnesses("LWristYaw", handStiffness)
+    motionProxy.setStiffnesses("LElbowYaw", armStiffness)
+    motionProxy.setStiffnesses("LHipYawPitch", hipStiffness)
+    motionProxy.setStiffnesses("LHipPitch", hipStiffness)
+    motionProxy.setStiffnesses("LKneePitch", kneeStiffness)
+    motionProxy.setStiffnesses("LAnklePitch", ankleStiffness)
+    motionProxy.setStiffnesses("LHipRoll", hipStiffness)
+    motionProxy.setStiffnesses("LAnkleRoll", ankleStiffness)
+
+    motionProxy.setStiffnesses("RShoulderPitch", armStiffness)
+    motionProxy.setStiffnesses("RShoulderRoll", armStiffness)
+    motionProxy.setStiffnesses("RElbowRoll", armStiffness)
+    motionProxy.setStiffnesses("RWristYaw", handStiffness)
+    motionProxy.setStiffnesses("RElbowYaw", armStiffness)
+    motionProxy.setStiffnesses("RHipYawPitch", hipStiffness)
+    motionProxy.setStiffnesses("RHipPitch", hipStiffness)
+    motionProxy.setStiffnesses("RKneePitch", kneeStiffness)
+    motionProxy.setStiffnesses("RAnklePitch", ankleStiffness)
+    motionProxy.setStiffnesses("RHipRoll", hipStiffness)
+    motionProxy.setStiffnesses("RAnkleRoll", ankleStiffness)
+
+
+    # Send robot to Stand Init
+    #postureProxy.goToPosture("StandInit", 0.5)
+
+    # Initialize the move
+    motionProxy.moveInit()
+
+    # First call of move API
+    # with post prefix to not be bloquing here.
+    motionProxy.post.moveTo(0, 0.0, 0)
+
+    # wait that the move process start running
+    time.sleep(0.1)
+
+    # get robotPosition and nextRobotPosition
+    useSensors = False
+    robotPosition     = almath.Pose2D(motionProxy.getRobotPosition(useSensors))
+    nextRobotPosition = almath.Pose2D(motionProxy.getNextRobotPosition())
+
+    # get the first foot steps vector
+    # (footPosition, unChangeable and changeable steps)
+
+    footSteps1 = []
+    #try:
+    footSteps1 = motionProxy.getFootSteps()
+    #except Exception, errorMsg:
+    #    print str(errorMsg)
+    #    PLOT_ALLOW = False
+
+    # Second call of move API
+    motionProxy.post.moveTo(0, 0.0, 1.2*y)
+
+    # get the second foot steps vector
+    footSteps2 = []
+    #try:
+    footSteps2 = motionProxy.getFootSteps()
+    #except Exception, errorMsg:
+        #print str(errorMsg)
+        #PLOT_ALLOW = False
+    motionProxy.setStiffnesses("Head", 0.5)
+    names  = ["HeadYaw", "HeadPitch"]
+    fractionMaxSpeed  = 0.5
+    angles=[0,old]
+    motionProxy.setAngles(names,angles,fractionMaxSpeed)
+
+
 
 def get_angle():
     robotIP="192.168.0.11"
@@ -50,7 +146,7 @@ def set_angle_new(x,y):
     # activiert gelenke
     motionProxy.setStiffnesses("Head", 0.5)
     names  = ["HeadYaw", "HeadPitch"]
-    fractionMaxSpeed  = 0.1
+    fractionMaxSpeed  = 0.3
     #x_mid=160
     #y_mid=120
     #x_diff=x-x_mid
@@ -59,7 +155,7 @@ def set_angle_new(x,y):
     #print("y_diff="+str(y_diff))
      
     videoProxy=ALProxy('ALVideoDevice', robotIP, PORT)    
-    ball_angles=videoProxy.getAngularPositionFromImagePosition(cam_id,[x/320,y/240])
+    ball_angles=videoProxy.getAngularPositionFromImagePosition(1,[x/320,y/240])
     #print(ball_angles)
     ball_angle_x=ball_angles[0]
     ball_angle_y=ball_angles[1]
@@ -75,13 +171,14 @@ def set_angle_new(x,y):
     #[-169.53343200683594, 99.27782440185547] (x_mid,y_mid)
     #if abs(ball_angle_x)>0.2 and abs(ball_angle_y)>0.01:
     #angles=[ball_angle_x,0]
+
     #angles=[0.25*ball_angle_x,0.25*ball_angle_y]
-    angles=[0.25*ball_angle_x,0.25*ball_angle_y]
-    if abs(ball_angle_x)>0.1 or abs(ball_angle_y)>0.1:
+    angles=[0.25*ball_angle_x,0]
+    if abs(ball_angle_x)>0.1:
 	    motionProxy.changeAngles(names, angles, fractionMaxSpeed)
-            #motionProxy.setAngles(names,angles,fractionMaxSpeed)
             
-    elif abs(ball_angle_x)<0.1 and abs(ball_angle_y)<0.1:
+    # if the head has the wright x coordinates
+    elif abs(ball_angle_x)<0.1:
             #tts = ALProxy("ALTextToSpeech", "192.168.0.11", 9559)
             #tts.setParameter("pitchShift", 1)
             #tts.setParameter("speed", 50)
@@ -96,7 +193,9 @@ def set_angle_new(x,y):
 		    global counter
                     counter=0
 	            print(get_angle())
-
+		    a=get_angle()
+ 		    if abs(a[1])>0.1:
+    		        move_to(a[0],a[1])
 
 
 def set_angle(direction):
