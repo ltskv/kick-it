@@ -40,6 +40,45 @@ def get_angle():
     #print("angle_is"+str(angles))
     return angle
 
+def set_angle_new(x,y):
+    angle=get_angle()
+    robotIP="192.168.0.11"
+    PORT = 9559
+    motionProxy = ALProxy("ALMotion", robotIP, PORT)
+    
+    # activiert gelenke
+    motionProxy.setStiffnesses("Head", 1.0)
+    names  = ["HeadYaw", "HeadPitch"]
+    fractionMaxSpeed  = 0.05
+    #x_mid=160
+    #y_mid=120
+    #x_diff=x-x_mid
+    #y_diff=y-y_mid
+    #print("x_diff="+str(x_diff))
+    #print("y_diff="+str(y_diff))
+     
+    videoProxy=ALProxy('ALVideoDevice', robotIP, PORT)    
+    ball_angles=videoProxy.getAngularPositionFromImagePosition(1,[x/320,y/240])
+    #print(ball_angles)
+    ball_angle_x=ball_angles[0]
+    ball_angle_y=ball_angles[1]
+    #print("ball_angle_x="+str(ball_angle_x))
+    print("ball_angle_y="+str(ball_angle_y))
+
+    #ball_angle_x_diff=ball_angle_x+
+    #ball_angle_y_diff=ball_angle_y-99
+    #print(ball_angle_x_diff*3.14/180)
+    #print(ball_angle_y_diff)
+    
+#    print(ball_angles-[-169,99])
+    #[-169.53343200683594, 99.27782440185547] (x_mid,y_mid)
+    #if abs(ball_angle_x)>0.2 and abs(ball_angle_y)>0.01:
+    #angles=[ball_angle_x,0]
+    #angles=[0,ball_angle_y]
+    #motionProxy.setAngles(names, angles, fractionMaxSpeed)
+
+
+
 
 def set_angle(direction):
 #def main(robotIP,x,y):
@@ -98,7 +137,9 @@ if __name__ == '__main__':
                 (x, y), radius = finder.find_colored_ball(video.get_frame())
             except TypeError:
                 continue
-            if 0<y<100:
+            set_angle_new(x,y)
+            '''
+ 	    if 0<y<100:
                 set_angle("up")
             elif 240>y>200:
                 set_angle("down")
@@ -106,5 +147,6 @@ if __name__ == '__main__':
                 set_angle("left")
             elif 320>x>220:
                 set_angle("right")
+  	    '''
     finally:
         video.close()
