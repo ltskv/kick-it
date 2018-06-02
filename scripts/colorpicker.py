@@ -3,7 +3,7 @@ from __future__ import print_function
 import json
 import argparse
 import cv2
-from imagereaders import VideoReader, NaoImageReader
+from imagereaders import VideoReader, NaoImageReader, PictureReader
 # import imutils
 
 class Colorpicker(object):
@@ -90,6 +90,10 @@ if __name__ == '__main__':
         help='video file to use'
     )
     parser.add_argument(
+        '--image-file',
+        help='image to use'
+    )
+    parser.add_argument(
         '--still',
         help='only take one image from video stream',
         action='store_true'
@@ -110,6 +114,8 @@ if __name__ == '__main__':
         cp.load(args.input_config)
     if args.video_file:
         rdr = VideoReader(args.video_file, loop=True)
+    elif args.image_file:
+        rdr = PictureReader(args.image_file)
     elif args.nao_ip:
         rdr = NaoImageReader(
             args.nao_ip,

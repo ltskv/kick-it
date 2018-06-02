@@ -1,6 +1,9 @@
 import numpy as np
 import cv2
-from naoqi import ALProxy
+try:
+    from naoqi import ALProxy
+except:
+    ALProxy = None
 
 
 class NaoImageReader(object):
@@ -54,3 +57,16 @@ class VideoReader(object):
 
     def close(self):
         self.cap.release()
+
+
+class PictureReader(object):
+    "Dummy class for maybe convenience."
+
+    def __init__(self, filename):
+        self.frame = cv2.imread(filename)
+
+    def get_frame(self):
+        return self.frame.copy()
+
+    def close(self):
+        pass
