@@ -89,40 +89,40 @@ def move_to(old,y):
 
     # First call of move API
     # with post prefix to not be bloquing here.
-    motionProxy.post.moveTo(0, 0.0, 0)
+    # motionProxy.post.moveTo(0, 0.0, 0)
 
     # wait that the move process start running
-    time.sleep(0.1)
+    # time.sleep(0.1)
 
     # get robotPosition and nextRobotPosition
-    useSensors = False
-    robotPosition     = almath.Pose2D(motionProxy.getRobotPosition(useSensors))
-    nextRobotPosition = almath.Pose2D(motionProxy.getNextRobotPosition())
+    # useSensors = False
+    # robotPosition     = almath.Pose2D(motionProxy.getRobotPosition(useSensors))
+    # nextRobotPosition = almath.Pose2D(motionProxy.getNextRobotPosition())
 
     # get the first foot steps vector
     # (footPosition, unChangeable and changeable steps)
 
-    footSteps1 = []
+    # footSteps1 = []
     #try:
-    footSteps1 = motionProxy.getFootSteps()
+    # footSteps1 = motionProxy.getFootSteps()
     #except Exception, errorMsg:
     #    print str(errorMsg)
     #    PLOT_ALLOW = False
 
     # Second call of move API
-    motionProxy.post.moveTo(0, 0.0, 1.2*y)
+    motionProxy.post.moveTo(0, 0.0, y)
 
     # get the second foot steps vector
-    footSteps2 = []
+    # footSteps2 = []
     #try:
-    footSteps2 = motionProxy.getFootSteps()
+    # footSteps2 = motionProxy.getFootSteps()
     #except Exception, errorMsg:
         #print str(errorMsg)
         #PLOT_ALLOW = False
-    motionProxy.setStiffnesses("Head", 0.5)
+    motionProxy.setStiffnesses("Head", 0.7)
     names  = ["HeadYaw", "HeadPitch"]
-    fractionMaxSpeed  = 0.5
-    angles=[0,old]
+    fractionMaxSpeed  = 0.05
+    angles=[0, 0]
     motionProxy.setAngles(names,angles,fractionMaxSpeed)
 
 

@@ -4,7 +4,7 @@ from __future__ import division
 import json
 import cv2
 import numpy as np
-import imutils
+# import imutils
 from imagereaders import NaoImageReader, VideoReader
 from collections import deque
 
@@ -15,7 +15,8 @@ red_upper = (2, 255, 255)
 
 class BallFinder(object):
 
-    def __init__(self, hsv_lower, hsv_upper, min_radius, width):
+    def __init__(self, hsv_lower, hsv_upper, min_radius, width,
+                 viz=False):
 
         self.hsv_lower = hsv_lower
         self.hsv_upper = hsv_upper
@@ -24,9 +25,11 @@ class BallFinder(object):
         self.history = deque(maxlen=64)
         self.last_center = None
         self.last_radius = None
+        self.viz = viz
 
-        cv2.namedWindow('ball_mask')
-        cv2.namedWindow('Frame')
+        if self.viz:
+            cv2.namedWindow('ball_mask')
+            cv2.namedWindow('Frame')
 
     def find_colored_ball(self, frame):
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
@@ -36,7 +39,8 @@ class BallFinder(object):
         mask = cv2.inRange(hsv, self.hsv_lower, self.hsv_upper)
         mask = cv2.erode(mask, None, iterations=2)
         mask = cv2.dilate(mask, None, iterations=2)
-        cv2.imshow('ball_mask', mask)
+        if self.viz:
+            cv2.imshow('ball_mask', mask)
 
         # find contours in the mask and initialize the current
         # (x, y) center of the ball
@@ -45,6 +49,7 @@ class BallFinder(object):
 
         # only proceed if at least one contour was found
         if len(cnts) == 0:
+            print('Nothin there')
             return None
 
         # find the largest contour in the mask, then use it to compute
@@ -61,8 +66,8 @@ class BallFinder(object):
 
     def next_frame(self, frame):
         # maybe resize the frame, maybe blur it
-        if self.width is not None:
-            frame = imutils.resize(frame, width=self.width)
+        # if self.width is not None:
+            # frame = imutils.resize(frame, width=self.width)
         try:
             self.last_center, self.last_radius = self.find_colored_ball(frame)
         except TypeError:  # No red ball found and function returned None
@@ -72,8 +77,9 @@ class BallFinder(object):
         self.draw_ball_markers(frame)
 
         # show the frame to screen
-        cv2.imshow("Frame", frame)
-        return cv2.waitKey(2)
+        if self.viz:
+            cv2.imshow("Frame", frame)
+            return cv2.waitKey(2)
 
     def draw_ball_markers(self, frame):
         # draw the enclosing circle and ball's centroid on the frame,

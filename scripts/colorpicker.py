@@ -57,6 +57,7 @@ class Colorpicker(object):
             tuple(map(self.settings.get, ('low_h', 'low_s', 'low_v'))),
             tuple(map(self.settings.get, ('high_h', 'high_s', 'high_v')))
         )
+        frame_threshold = cv2.resize(frame_threshold, (640, 480))
         cv2.imshow(self.WINDOW_CAPTURE_NAME, frame)
         cv2.imshow(self.WINDOW_DETECTION_NAME, frame_threshold)
         return cv2.waitKey(1)
@@ -107,9 +108,19 @@ if __name__ == '__main__':
         choices=['upper', 'lower'],
         help='choose a camera from nao'
     )
+    parser.add_argument(
+        '--nao-res',
+        choices=[1, 2, 3],
+        type=int,
+        default=1
+    )
     args = parser.parse_args()
 
     cp = Colorpicker()
+    camera_ids = {
+        'upper': 0,
+        'lower': 1
+    }
     if args.input_config:
         cp.load(args.input_config)
     if args.video_file:
@@ -119,7 +130,8 @@ if __name__ == '__main__':
     elif args.nao_ip:
         rdr = NaoImageReader(
             args.nao_ip,
-            cam_id=args.nao_cam if args.nao_cam else 0
+            cam_id=camera_ids[args.nao_cam] if args.nao_cam else 0,
+            res=args.nao_res
         )
     else:
         rdr = VideoReader(0)

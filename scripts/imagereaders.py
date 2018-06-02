@@ -1,3 +1,5 @@
+from __future__ import division
+
 import numpy as np
 import cv2
 try:
@@ -20,6 +22,14 @@ class NaoImageReader(object):
         self.sub = self.vd.subscribeCamera(
             "video_streamer", cam_id, res, 13, fps
         )
+
+    def to_angles(self, x, y):
+        return self.vd.getAngularPositionFromImagePosition(
+            self.cam_id, x / self.res[1], y / self.res[0]
+        )
+
+    def to_relative(self, x, y):
+        return x / self.res[1], y / self.res[0]
 
     def get_frame(self):
         result = self.vd.getImageRemote(self.sub)
