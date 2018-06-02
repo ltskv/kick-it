@@ -50,19 +50,20 @@ def set_angle_new(x,y):
     # activiert gelenke
     motionProxy.setStiffnesses("Head", 0.5)
     names  = ["HeadYaw", "HeadPitch"]
-    fractionMaxSpeed  = 0.1
-    #x_mid=160
+    fractionMaxSpeed  = 0.025
+    x_mid=320/2
+    y_mid=240/2
     #y_mid=120
-    #x_diff=x-x_mid
-    #y_diff=y-y_mid
-    #print("x_diff="+str(x_diff))
-    #print("y_diff="+str(y_diff))
+    x_diff=x-x_mid
+    y_diff=y-y_mid
+    print("x_diff="+str(x_diff))
+    print("y_diff="+str(y_diff))
      
-    videoProxy=ALProxy('ALVideoDevice', robotIP, PORT)    
-    ball_angles=videoProxy.getAngularPositionFromImagePosition(cam_id,[x/320,y/240])
+    #videoProxy=ALProxy('ALVideoDevice', robotIP, PORT)    
+    #ball_angles=videoProxy.getAngularPositionFromImagePosition(cam_id,[x/320,y/240])
     #print(ball_angles)
-    ball_angle_x=ball_angles[0]
-    ball_angle_y=ball_angles[1]
+    #ball_angle_x=ball_angles[0]
+    #ball_angle_y=ball_angles[1]
     #print("ball_angle_x="+str(ball_angle_x))
     #print("ball_angle_y="+str(ball_angle_y))
 
@@ -76,11 +77,20 @@ def set_angle_new(x,y):
     #if abs(ball_angle_x)>0.2 and abs(ball_angle_y)>0.01:
     #angles=[ball_angle_x,0]
     #angles=[0.25*ball_angle_x,0.25*ball_angle_y]
-    angles=[0.25*ball_angle_x,0.25*ball_angle_y]
-    if abs(ball_angle_x)>0.1 or abs(ball_angle_y)>0.1:
+    #angles=[0.25*ball_angle_x,0.25*ball_angle_y]
+    #angles=[2*(-1 if x_diff > 0 else 1),2*(-1 if y_diff > 0 else 1)]
+    angles=[2*(-1 if x_diff > 0 else 1),0]
+
+    #if abs(ball_angle_x)>0.1 or abs(ball_angle_y)>0.1:
+    #if abs(x_diff)>50 or abs(y_diff)>50:
+    if abs(x_diff)>50:
 	    motionProxy.changeAngles(names, angles, fractionMaxSpeed)
             #motionProxy.setAngles(names,angles,fractionMaxSpeed)
+    #else:
+    #        a=get_angle()
+    #        motionProxy.setAngles(names,a,fractionMaxSpeed)
             
+    '''
     elif abs(ball_angle_x)<0.1 and abs(ball_angle_y)<0.1:
             #tts = ALProxy("ALTextToSpeech", "192.168.0.11", 9559)
             #tts.setParameter("pitchShift", 1)
@@ -97,7 +107,7 @@ def set_angle_new(x,y):
                     counter=0
 	            print(get_angle())
 
-
+     '''
 
 def set_angle(direction):
 #def main(robotIP,x,y):
