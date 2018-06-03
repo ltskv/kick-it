@@ -5,7 +5,7 @@ import json
 import argparse
 import cv2
 from imagereaders import VideoReader, NaoImageReader, PictureReader
-# import imutils
+from utils import read_config
 
 class Colorpicker(object):
 
@@ -86,9 +86,7 @@ class Colorpicker(object):
 
 if __name__ == '__main__':
 
-    with open('nao_defaults.json') as f:
-        defaults = json.load(f)
-
+    defaults = read_config()
     parser = argparse.ArgumentParser(
         epilog='When called without arguments specifying the video source, ' +
         'will try to use the webcam'

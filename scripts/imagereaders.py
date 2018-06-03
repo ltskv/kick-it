@@ -2,10 +2,7 @@ from __future__ import division
 
 import numpy as np
 import cv2
-try:
-    from naoqi import ALProxy
-except:
-    ALProxy = None
+from naoqi import ALProxy
 
 
 class NaoImageReader(object):
