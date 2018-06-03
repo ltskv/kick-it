@@ -1,30 +1,16 @@
-from __future__ import print_function
-from __future__ import division
-
 import json
-import cv2
-import numpy as np
-# import imutils
-from imagereaders import NaoImageReader, VideoReader
 from collections import deque
-
-
-red_lower = (0, 185, 170)  # HSV coded red interval
-red_upper = (2, 255, 255)
+import cv2
 
 
 class BallFinder(object):
 
-    def __init__(self, hsv_lower, hsv_upper, min_radius, width,
-                 viz=False):
+    def __init__(self, hsv_lower, hsv_upper, min_radius, viz=False):
 
         self.hsv_lower = hsv_lower
         self.hsv_upper = hsv_upper
         self.min_radius = min_radius
-        self.width = width
         self.history = deque(maxlen=64)
-        self.last_center = None
-        self.last_radius = None
         self.viz = viz
 
         if self.viz:
@@ -50,6 +36,7 @@ class BallFinder(object):
         # only proceed if at least one contour was found
         if len(cnts) == 0:
             print('Nothin there')
+            self.history.appendleft(None)
             return None
 
         # find the largest contour in the mask, then use it to compute
@@ -58,35 +45,25 @@ class BallFinder(object):
         ((x, y), radius) = cv2.minEnclosingCircle(c)
 
         if radius < self.min_radius:
+            self.history.appendleft(None)
             return None
 
         M = cv2.moments(c)
         center = (int(M["m10"] / M["m00"]),int(M["m01"] // M["m00"]))
+        self.history.appendleft(center, int(radius))
         return center, int(radius)
 
-    def next_frame(self, frame):
-        # maybe resize the frame, maybe blur it
-        # if self.width is not None:
-            # frame = imutils.resize(frame, width=self.width)
-        try:
-            self.last_center, self.last_radius = self.find_colored_ball(frame)
-        except TypeError:  # No red ball found and function returned None
-            self.last_center, self.last_radius = None, None
+    def visualize(self, frame):
+        if not self.viz:
+            raise ValueError(
+                'Visualization needs to be enabled when initializing'
+            )
 
-        self.history.appendleft(self.last_center)
-        self.draw_ball_markers(frame)
-
-        # show the frame to screen
-        if self.viz:
-            cv2.imshow("Frame", frame)
-            return cv2.waitKey(2)
-
-    def draw_ball_markers(self, frame):
-        # draw the enclosing circle and ball's centroid on the frame,
-        if self.last_center is not None and self.last_radius is not None:
-            cv2.circle(frame, self.last_center, self.last_radius,
-                       (255, 255, 0), 1)
-            cv2.circle(frame, self.last_center, 5, (0, 255, 0), -1)
+        frame = frame.copy()
+        if self.history[0] is not None:
+            center, radius = self.history[0]
+            cv2.circle(frame, center, radius, (255, 255, 0), 1)
+            cv2.circle(frame, center, 5, (0, 255, 0), -1)
 
         # loop over the set of tracked points
         for i in range(1, len(self.history)):
@@ -95,25 +72,16 @@ class BallFinder(object):
                 continue
             # otherwise, compute the thickness of the line and
             # draw the connecting lines
-            thickness = int(np.sqrt(64 / float(i + 1)) * 2.5)
-            cv2.line(frame, self.history[i - 1], self.history[i],
-                     (0, 255, 0), thickness)
-
-        return frame
+            center_now = self.history[0][0]
+            center_prev = self.history[1][0]
+            thickness = int((64 / (i + 1))**0.5 * 2.5)
+            cv2.line(frame, center_now, center_prev, (0, 255, 0), thickness)
+        # show the frame to screen
+        cv2.imshow("Frame", frame)
+        return cv2.waitKey(1)
 
     def load_hsv_config(self, filename):
         with open(filename) as f:
             hsv = json.load(f)
         self.hsv_lower = tuple(map(hsv.get, ('low_h', 'low_s', 'low_v')))
         self.hsv_upper = tuple(map(hsv.get, ('high_h', 'high_s', 'high_v')))
-
-
-if __name__ == '__main__':
-    # video = NaoImageReader('192.168.0.11')
-    video = VideoReader(0, loop=True)
-    finder = BallFinder(red_lower, red_upper, 5, None)
-    try:
-        while True:
-            finder.next_frame(video.get_frame())
-    finally:
-        video.close()

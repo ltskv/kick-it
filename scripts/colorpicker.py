@@ -67,8 +67,14 @@ class Colorpicker(object):
         return cv2.waitKey(1)
 
     def save(self, filename):
+        try:
+            with open(filename) as f:
+                conf = json.load(f)
+        except FileNotFoundError:
+            conf = {}
+        conf.update(self.settings)
         with open(filename, 'w') as f:
-            json.dump(self.settings, f, indent=4)
+            json.dump(conf, f, indent=4)
 
     def load(self, filename):
         with open(filename) as f:
