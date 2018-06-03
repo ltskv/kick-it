@@ -1,4 +1,5 @@
 from __future__ import print_function
+from __future__ import division
 
 import json
 import argparse
@@ -50,14 +51,17 @@ class Colorpicker(object):
         cv2.setTrackbarPos(name, self.WINDOW_DETECTION_NAME,
                            self.settings[name])
 
-    def show_frame(self, frame):
+    def show_frame(self, frame, width=None):
         frame_HSV = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
         frame_threshold = cv2.inRange(
             frame_HSV,
             tuple(map(self.settings.get, ('low_h', 'low_s', 'low_v'))),
             tuple(map(self.settings.get, ('high_h', 'high_s', 'high_v')))
         )
-        frame_threshold = cv2.resize(frame_threshold, (640, 480))
+        if width:
+            sf = width / frame.shape[1]
+            frame = cv2.resize(frame, (0, 0), fx=sf, fy=sf)
+            frame_threshold = cv2.resize(frame_threshold, (0, 0), fx=sf, fy=sf)
         cv2.imshow(self.WINDOW_CAPTURE_NAME, frame)
         cv2.imshow(self.WINDOW_DETECTION_NAME, frame_threshold)
         return cv2.waitKey(1)
@@ -75,9 +79,14 @@ class Colorpicker(object):
 
 
 if __name__ == '__main__':
+
+    with open('nao_defaults.json') as f:
+        defaults = json.load(f)
+
     parser = argparse.ArgumentParser(
-    epilog='When called without arguments specifying the video source, ' +
-    'will try to use the webcam')
+        epilog='When called without arguments specifying the video source, ' +
+        'will try to use the webcam'
+    )
     parser.add_argument(
         '-o', '--output-config',
         help='file, to which the settings will be saved (if given)'
@@ -86,13 +95,21 @@ if __name__ == '__main__':
         '-i', '--input-config',
         help='file, from which to read the initial values'
     )
-    parser.add_argument(
+    imsource = parser.add_mutually_exclusive_group()
+    imsource.add_argument(
         '--video-file',
         help='video file to use'
     )
-    parser.add_argument(
+    imsource.add_argument(
         '--image-file',
         help='image to use'
+    )
+    imsource.add_argument(
+        '--nao-ip',
+        help='ip address of the nao robot, from which to capture',
+        default=False,
+        const=defaults['ip'],
+        nargs='?'
     )
     parser.add_argument(
         '--still',
@@ -100,29 +117,30 @@ if __name__ == '__main__':
         action='store_true'
     )
     parser.add_argument(
-        '--nao-ip',
-        help='ip address of the nao robot, from which to capture'
-    )
-    parser.add_argument(
         '--nao-cam',
-        choices=['upper', 'lower'],
-        help='choose a camera from nao'
+        choices=[0, 1],
+        help='0 for top camera, 1 for bottom camera',
+        default=defaults['cam']
     )
     parser.add_argument(
         '--nao-res',
         choices=[1, 2, 3],
+        help='choose a nao resolution',
         type=int,
-        default=1
+        default=defaults['res']
+    )
+    parser.add_argument(
+        '--width',
+        help='specify width of the image output',
+        type=int,
+        default=640
     )
     args = parser.parse_args()
 
     cp = Colorpicker()
-    camera_ids = {
-        'upper': 0,
-        'lower': 1
-    }
     if args.input_config:
         cp.load(args.input_config)
+
     if args.video_file:
         rdr = VideoReader(args.video_file, loop=True)
     elif args.image_file:
@@ -130,22 +148,25 @@ if __name__ == '__main__':
     elif args.nao_ip:
         rdr = NaoImageReader(
             args.nao_ip,
-            cam_id=camera_ids[args.nao_cam] if args.nao_cam else 0,
+            cam_id=args.nao_cam,
             res=args.nao_res
         )
     else:
         rdr = VideoReader(0)
+
     try:
         if args.still:
             frame = rdr.get_frame()
+            rdr.close()
         while True:
             if not args.still:
                 frame = rdr.get_frame()
-            key = cp.show_frame(frame)
+            key = cp.show_frame(frame, args.width)
             if key == ord('q') or key == 27:
                 break
     finally:
         cp.do_print()
         if args.output_config:
             cp.save(args.output_config)
-        rdr.close()
+        if not args.still:
+            rdr.close()
