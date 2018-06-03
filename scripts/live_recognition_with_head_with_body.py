@@ -32,7 +32,7 @@ current_value = 0
 global counter
 counter=0
 
-def move_to(old,y):
+def move_to(front, side, angle):
     motionProxy  = ALProxy("ALMotion", nao_ip, nao_port)
     postureProxy = ALProxy("ALRobotPosture", nao_ip, nao_port)
 
@@ -110,7 +110,8 @@ def move_to(old,y):
     #    PLOT_ALLOW = False
 
     # Second call of move API
-    motionProxy.post.moveTo(0, 0.0, y)
+    motionProxy.post.moveTo(front, side, angle)
+    # motionProxy.waitUntilMoveIsFinished()
 
     # get the second foot steps vector
     # footSteps2 = []
@@ -119,12 +120,6 @@ def move_to(old,y):
     #except Exception, errorMsg:
         #print str(errorMsg)
         #PLOT_ALLOW = False
-    motionProxy.setStiffnesses("Head", 0.7)
-    names  = ["HeadYaw", "HeadPitch"]
-    fractionMaxSpeed  = 0.05
-    angles=[0, 0]
-    motionProxy.setAngles(names,angles,fractionMaxSpeed)
-
 
 
 def get_angle():

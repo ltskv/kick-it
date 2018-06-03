@@ -69,33 +69,16 @@ def main(robotIP, PORT=9559):
     # First call of move API
     # with post prefix to not be bloquing here.
     motionProxy.post.moveTo(0, 0.0, 0)
-    
-    # wait that the move process start running
-    time.sleep(0.1)
-
-    # get robotPosition and nextRobotPosition
-    useSensors = False
-    robotPosition     = almath.Pose2D(motionProxy.getRobotPosition(useSensors))
-    nextRobotPosition = almath.Pose2D(motionProxy.getNextRobotPosition())
-
-    # get the first foot steps vector
-    # (footPosition, unChangeable and changeable steps)
-
-    footSteps1 = []
-    try:
-        footSteps1 = motionProxy.getFootSteps()
-    except Exception, errorMsg:
-        print str(errorMsg)
-        PLOT_ALLOW = False
 
     while True:
-        cmd = int(raw_input(">"))
+        ax = int(raw_input("Axis: "))
+        mag = float(raw_input('How much: '))
 
-    # Second call of move API
-        motionProxy.post.moveTo(3, 0, 0)
-
-    # here we wait until the move process is over
-        motionProxy.waitUntilMoveIsFinished()
+        if ax:
+            motionProxy.post.moveTo(0, mag, 0)
+            motionProxy.waitUntilMoveIsFinished()
+        else:
+            motionProxy.post.moveTo(mag, 0, 0)
    
     ''' 
      # Second call of move API
