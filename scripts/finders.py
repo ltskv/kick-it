@@ -35,7 +35,6 @@ class BallFinder(object):
 
         # only proceed if at least one contour was found
         if len(cnts) == 0:
-            print('Nothin there')
             self.history.appendleft(None)
             return None
 
@@ -45,7 +44,6 @@ class BallFinder(object):
         ((x, y), radius) = cv2.minEnclosingCircle(c)
 
         if radius < self.min_radius:
-            print('Nothin there')
             self.history.appendleft(None)
             return None
 

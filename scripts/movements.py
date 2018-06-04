@@ -29,7 +29,7 @@ class NaoMover(object):
         self.mp.rest()
         self.ready_to_move = False
 
-    def set_head_stiffness(self, stiffness=0.8):
+    def set_head_stiffness(self, stiffness=0.5):
         self.mp.setStiffnesses("Head", stiffness)
 
     def set_hand_stiffness(self, stiffness=0.0):
@@ -48,7 +48,7 @@ class NaoMover(object):
         self.mp.setStiffnesses("RElbowRoll", stiffness)
         self.mp.setStiffnesses("RElbowYaw", stiffness)
 
-    def set_hip_stiffness(self, stiffness=0.9):
+    def set_hip_stiffness(self, stiffness=0.6):
         self.mp.setStiffnesses("LHipYawPitch", stiffness)
         self.mp.setStiffnesses("LHipPitch", stiffness)
         self.mp.setStiffnesses("RHipYawPitch", stiffness)
@@ -56,13 +56,13 @@ class NaoMover(object):
         self.mp.setStiffnesses("LHipRoll", stiffness)
         self.mp.setStiffnesses("RHipRoll", stiffness)
 
-    def set_ankle_stiffness(self, stiffness=0.9):
+    def set_ankle_stiffness(self, stiffness=0.6):
         self.mp.setStiffnesses("LAnklePitch", stiffness)
         self.mp.setStiffnesses("LAnkleRoll", stiffness)
         self.mp.setStiffnesses("RAnklePitch", stiffness)
         self.mp.setStiffnesses("RAnkleRoll", stiffness)
 
-    def set_knee_stiffness(self, stiffness=0.9):
+    def set_knee_stiffness(self, stiffness=0.6):
         self.mp.setStiffnesses("LKneePitch", stiffness)
         self.mp.setStiffnesses("RKneePitch", stiffness)
 

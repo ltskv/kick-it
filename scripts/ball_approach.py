@@ -12,7 +12,7 @@ from math import tan,pi
 class BallFollower(object):
 
     def __init__(self, nao_ip, nao_port, res, hsv_lower, hsv_upper,
-                 min_radius):
+                 min_radius, run_after):
         self.mover = NaoMover(nao_ip=nao_ip, nao_port=nao_port)
         self.mover.stand_up()
         self.video_top = NaoImageReader(nao_ip, port=nao_port, res=res,
@@ -20,7 +20,18 @@ class BallFollower(object):
         self.video_bot = NaoImageReader(nao_ip, port=nao_port, res=res,
                                         fps=30, cam_id=0)
         self.finder = BallFinder(hsv_lower, hsv_upper, min_radius, None)
-        self.counter = 0
+        self.lock_counter = 0
+        self.loss_counter = 0
+        self.run_after = run_after
+
+    def ball_scan(self):
+        yaw = self.mover.get_head_angles()[0]
+        mag = abs(yaw)
+        sign = 1 if yaw >= 0 else -1
+        if mag > 2:
+            self.mover.move_to(0, 0, sign * pi / 12)
+        else:
+            self.mover.change_head_angles(sign * pi / 4, 0, 0.5)
 
     def update(self):
         #print('in update loop')
@@ -28,61 +39,56 @@ class BallFollower(object):
             (x, y), radius = self.finder.find_colored_ball(
                 self.video_top.get_frame()
             )
+            self.loss_counter = 0
             x, y = self.video_top.to_relative(x, y)
-            angles= self.video_top.to_angles(x,y)
-            print("y (in radians) angle is:"+str(angles[1]))
-            y_angle=angles[1]
-            y_angle=pi/2-y_angle-15*pi/180
-            distance = 0.5 * tan(y_angle)
-            print("Distance="+str(distance))
-            print('Top camera\n')
+            x, y = self.video_top.to_angles(x,y)
+            # print("y (in radians) angle is:"+str(angles[1]))
+            # y_angle=angles[1]
+            # y_angle=pi/2-y_angle-15*pi/180
+            # distance = 0.5 * tan(y_angle)
+            # print("Distance="+str(distance))
+            # print('Top camera\n')
         except TypeError:
             try:
                 (x, y), radius = self.finder.find_colored_ball(
                     self.video_bot.get_frame()
                 )
                 x, y = self.video_bot.to_relative(x, y)
+                self.loss_counter = 0
                 #print('Low camera')
             except TypeError:
-	        print("Ball is not in the view\n")
-		head_angles=self.mover.get_head_angles()
- 		# this conidition needs to be improved, as the robot tend starts to search in the right direction, 
-                # as soon as the angle is not -1 anymore
-		if head_angles[0]==-1:
-                        self.mover.set_head_angles(1,0,0.05)
-                        print("move head to the left")
-		else:
- 			self.mover.set_head_angles(-1,0,0.05)
-                        print("move head to the right")
+                print('No ball in sight')
+                self.loss_counter += 1
+                if self.loss_counter > 5:
+                    self.ball_scan()
                 return
         #print(x, y)
         self.process_coordinates(x, y)
 
     def process_coordinates(self, x, y):
-        x_diff = x - 0.5
-        y_diff = y - 0.5
-        print("x_diff: " + str(x_diff))
-        print("y_diff: " + str(y_diff))
+        # x_diff = x - 0.5
+        # y_diff = y - 0.5
+        # print("x_diff: " + str(x_diff))
+        # print("y_diff: " + str(y_diff))
 
-        d_yaw, d_pitch = -x_diff / 2, 0
+        d_yaw, d_pitch = x, 0
+        print(d_yaw)
 
-        if abs(x_diff) > 0.1:
-            self.mover.change_head_angles(d_yaw, d_pitch, 0.3)
-            self.counter = 0
-        else:
-            self.counter += 1
-            print(self.counter)
-        if self.counter == 4:
-            self.counter = 0
+        self.mover.change_head_angles(d_yaw * 0.7, d_pitch,
+                                      abs(d_yaw) / 2)
+        # self.counter = 0
+        yaw = self.mover.get_head_angles()[0]
+        if abs(yaw) > 0.4:
+            # self.counter = 0
             print('Going to rotate')
-            head_angle = self.mover.get_head_angles()
-            if abs(head_angle[0]) > 0.1:
-                self.mover.set_head_angles(0, 0, 0.05)
-                self.mover.move_to(0, 0, head_angle[0])
-                self.mover.wait()
+            # self.mover.set_head_angles(0, 0, 0.05)
+            self.mover.move_to(0, 0, yaw)
+            self.mover.wait()
+        if self.run_after:
             self.mover.move_to(0.3, 0, 0)
 
     def close(self):
+        self.mover.rest()
         self.video_top.close()
         self.video_bot.close()
 
@@ -96,7 +102,8 @@ if __name__ == '__main__':
         res=cfg['res'],
         hsv_lower=tuple(map(cfg.get, ('low_h', 'low_s', 'low_v'))),
         hsv_upper=tuple(map(cfg.get, ('high_h', 'high_s', 'high_v'))),
-        min_radius=cfg['min_radius']
+        min_radius=cfg['min_radius'],
+        run_after=False
     )
     try:
         while True:
