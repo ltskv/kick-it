@@ -6,6 +6,7 @@ from utils import read_config
 from imagereaders import NaoImageReader
 from finders import BallFinder
 from movements import NaoMover
+from math import tan,pi
 
 
 class BallFollower(object):
@@ -22,24 +23,30 @@ class BallFollower(object):
         self.counter = 0
 
     def update(self):
-        print('in update loop')
+        #print('in update loop')
         try:
             (x, y), radius = self.finder.find_colored_ball(
                 self.video_top.get_frame()
             )
             x, y = self.video_top.to_relative(x, y)
-            print('Top camera')
+            angles= self.video_top.to_angles(x,y)
+            print("y (in radians) angle is:"+str(angles[1]))
+            y_angle=angles[1]
+            y_angle=pi/2-y_angle-15*pi/180
+            distance = 0.5 * tan(y_angle)
+            print("Distance="+str(distance))
+            print('Top camera\n')
         except TypeError:
             try:
                 (x, y), radius = self.finder.find_colored_ball(
                     self.video_bot.get_frame()
                 )
                 x, y = self.video_bot.to_relative(x, y)
-                print('Low camera')
+                #print('Low camera')
             except TypeError:
                 return
-        print(x, y)
-        self.process_coordinates(x, y)
+        #print(x, y)
+        #self.process_coordinates(x, y)
 
     def process_coordinates(self, x, y):
         x_diff = x - 0.5
