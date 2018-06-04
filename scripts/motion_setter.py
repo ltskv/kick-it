@@ -1,5 +1,5 @@
 import argparse
-from motion import NaoMover
+from movements import NaoMover
 from utils import read_config
 
 if __name__ == "__main__":

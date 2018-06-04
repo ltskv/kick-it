@@ -1,4 +1,4 @@
-from motion import NaoMover
+from movements import NaoMover
 from utils import read_config
 
 

@@ -5,7 +5,7 @@ from utils import read_config
 
 from imagereaders import NaoImageReader
 from finders import BallFinder
-from motion import NaoMover
+from movements import NaoMover
 
 
 class BallFollower(object):

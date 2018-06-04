@@ -14,6 +14,7 @@ class NaoImageReader(object):
     }
 
     def __init__(self, ip, port=9559, res=1, fps=30, cam_id=0):
+        ip = bytes(ip)
         self.res = self.RESOLUTIONS[res]
         self.vd = ALProxy('ALVideoDevice', ip, port)
         self.sub = self.vd.subscribeCamera(

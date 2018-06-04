@@ -4,6 +4,7 @@ from naoqi import ALProxy
 class NaoMover(object):
 
     def __init__(self, nao_ip, nao_port=9559):
+        nao_ip = bytes(nao_ip)
         self.mp = ALProxy('ALMotion', nao_ip, nao_port)
         self.pp = ALProxy('ALRobotPosture', nao_ip, nao_port)
         ap = ALProxy("ALAutonomousLife", nao_ip, nao_port)
