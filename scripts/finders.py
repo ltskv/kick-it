@@ -45,12 +45,13 @@ class BallFinder(object):
         ((x, y), radius) = cv2.minEnclosingCircle(c)
 
         if radius < self.min_radius:
+            print('Nothin there')
             self.history.appendleft(None)
             return None
 
         M = cv2.moments(c)
         center = (int(M["m10"] / M["m00"]),int(M["m01"] // M["m00"]))
-        self.history.appendleft(center, int(radius))
+        self.history.appendleft((center, int(radius)))
         return center, int(radius)
 
     def visualize(self, frame):

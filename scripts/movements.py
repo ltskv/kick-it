@@ -8,8 +8,8 @@ class NaoMover(object):
         self.mp = ALProxy('ALMotion', nao_ip, nao_port)
         self.pp = ALProxy('ALRobotPosture', nao_ip, nao_port)
         ap = ALProxy("ALAutonomousLife", nao_ip, nao_port)
-        if ap.getState()!="disabled":
-        	ap.setState('disabled')
+        if ap.getState() != "disabled":
+            ap.setState('disabled')
         self.set_head_stiffness()
         self.set_hand_stiffness()
         self.set_arm_stiffness()
@@ -67,14 +67,14 @@ class NaoMover(object):
         self.mp.setStiffnesses("RKneePitch", stiffness)
 
     def get_head_angles(self):
-        return self.mp.getAngles(('HeadYaw', 'HeadPitch'), useSensors=False)
+        return self.mp.getAngles(('HeadYaw', 'HeadPitch'), False)
 
     def change_head_angles(self, d_yaw, d_pitch, speed):
         self.mp.changeAngles(('HeadYaw', 'HeadPitch'),
                              (d_yaw, d_pitch), speed)
 
     def set_head_angles(self, yaw, pitch, speed):
-        self.mp.setHeadAngles(('HeadYaw', 'HeadPitch'),
+        self.mp.setAngles(('HeadYaw', 'HeadPitch'),
                               (yaw, pitch), speed)
 
     def move_to(self, front, side, rotation, wait=False):

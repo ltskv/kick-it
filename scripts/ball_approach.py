@@ -22,6 +22,7 @@ class BallFollower(object):
         self.counter = 0
 
     def update(self):
+        print('in update loop')
         try:
             (x, y), radius = self.finder.find_colored_ball(
                 self.video_top.get_frame()
