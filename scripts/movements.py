@@ -8,7 +8,8 @@ class NaoMover(object):
         self.mp = ALProxy('ALMotion', nao_ip, nao_port)
         self.pp = ALProxy('ALRobotPosture', nao_ip, nao_port)
         ap = ALProxy("ALAutonomousLife", nao_ip, nao_port)
-        ap.setState('disabled')
+        if ap.getState()!="disabled":
+        	ap.setState('disabled')
         self.set_head_stiffness()
         self.set_hand_stiffness()
         self.set_arm_stiffness()
