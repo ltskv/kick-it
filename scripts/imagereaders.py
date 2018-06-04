@@ -16,6 +16,7 @@ class NaoImageReader(object):
     def __init__(self, ip, port=9559, res=1, fps=30, cam_id=0):
         ip = bytes(ip)
         self.res = self.RESOLUTIONS[res]
+        self.cam_id=cam_id
         self.vd = ALProxy('ALVideoDevice', ip, port)
         self.sub = self.vd.subscribeCamera(
             "video_streamer", cam_id, res, 13, fps
@@ -23,7 +24,7 @@ class NaoImageReader(object):
 
     def to_angles(self, x, y):
         return self.vd.getAngularPositionFromImagePosition(
-            self.cam_id, x / self.res[1], y / self.res[0]
+            self.cam_id, [x, y]
         )
 
     def to_relative(self, x, y):
