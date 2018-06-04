@@ -46,10 +46,14 @@ class BallFollower(object):
             except TypeError:
 	        print("Ball is not in the view\n")
 		head_angles=self.mover.get_head_angles()
-		if head_angles[0]==-0.5:
-	                self.mover.set_head_angles(0.5,0,0.05)
+ 		# this conidition needs to be improved, as the robot tend starts to search in the right direction, 
+                # as soon as the angle is not -1 anymore
+		if head_angles[0]==-1:
+                        self.mover.set_head_angles(1,0,0.05)
+                        print("move head to the left")
 		else:
- 			self.mover.set_head_angles(-0.5,0,0.05)
+ 			self.mover.set_head_angles(-1,0,0.05)
+                        print("move head to the right")
                 return
         #print(x, y)
         self.process_coordinates(x, y)
