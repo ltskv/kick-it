@@ -44,9 +44,15 @@ class BallFollower(object):
                 x, y = self.video_bot.to_relative(x, y)
                 #print('Low camera')
             except TypeError:
+	        print("Ball is not in the view\n")
+		head_angles=self.mover.get_head_angles()
+		if head_angles[0]==-0.5:
+	                self.mover.set_head_angles(0.5,0,0.05)
+		else:
+ 			self.mover.set_head_angles(-0.5,0,0.05)
                 return
         #print(x, y)
-        #self.process_coordinates(x, y)
+        self.process_coordinates(x, y)
 
     def process_coordinates(self, x, y):
         x_diff = x - 0.5
