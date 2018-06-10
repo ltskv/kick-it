@@ -4,8 +4,9 @@ from __future__ import division
 import json
 import argparse
 import cv2
-from imagereaders import VideoReader, NaoImageReader, PictureReader
-from utils import read_config
+
+from .imagereaders import VideoReader, NaoImageReader, PictureReader
+from .utils import read_config
 
 class Colorpicker(object):
 

@@ -1,12 +1,12 @@
 from __future__ import print_function
 from __future__ import division
 
-from utils import read_config
+from math import tan, pi
 
-from imagereaders import NaoImageReader
-from finders import BallFinder
-from movements import NaoMover
-from math import tan,pi
+from .utils import read_config
+from .imagereaders import NaoImageReader
+from .finders import BallFinder
+from .movements import NaoMover
 
 
 class BallFollower(object):

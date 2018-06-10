@@ -1,8 +1,9 @@
 import argparse
 import cv2
 from datetime import datetime
-from utils import read_config
-from imagereaders import NaoImageReader
+
+from .utils import read_config
+from .imagereaders import NaoImageReader
 
 
 if __name__ == '__main__':

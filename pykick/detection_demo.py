@@ -1,9 +1,9 @@
 from __future__ import print_function
 from __future__ import division
 
-from utils import read_config
-from imagereaders import NaoImageReader, VideoReader
-from finders import BallFinder
+from .utils import read_config
+from .imagereaders import NaoImageReader, VideoReader
+from .finders import BallFinder
 
 
 if __name__ == '__main__':

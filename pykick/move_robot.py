@@ -1,5 +1,5 @@
-from movements import NaoMover
-from utils import read_config
+from .movements import NaoMover
+from .utils import read_config
 
 
 if __name__ == "__main__":
