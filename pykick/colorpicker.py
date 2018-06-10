@@ -3,10 +3,12 @@ from __future__ import division
 
 import json
 import argparse
+
 import cv2
+import numpy as np
 
 from .imagereaders import VideoReader, NaoImageReader, PictureReader
-from .utils import read_config
+from .utils import read_config, imresize
 
 class Colorpicker(object):
 
@@ -19,7 +21,7 @@ class Colorpicker(object):
         checkers = [
             lambda x: min(x, self.settings['high_h'] - 1),  # LOW H
             lambda x: min(x, self.settings['high_s'] - 1),  # LOW S
-            lambda x: min(x, self.settings['high_v'] - 1),  # LOW H
+            lambda x: min(x, self.settings['high_v'] - 1),  # LOW V
             lambda x: max(x, self.settings['low_h'] + 1),  # HIGH H
             lambda x: max(x, self.settings['low_s'] + 1),  # HIGH S
             lambda x: max(x, self.settings['low_v'] + 1),  # HIGH V
@@ -52,17 +54,75 @@ class Colorpicker(object):
         cv2.setTrackbarPos(name, self.WINDOW_DETECTION_NAME,
                            self.settings[name])
 
-    def show_frame(self, frame, width=None):
+    def goal_similarity(self, contour):
+        contour = contour.reshape((-1, 2))
+        left, right = contour[:,0].min(), contour[:,0].max()
+        top, bottom = contour[:,1].min(), contour[:,1].max()
+        approx_line = np.array([
+            [left, bottom],
+            [left, top],
+            [right, top],
+            [right, bottom]
+        ])
+        shape_sim = np.array([
+            (np.abs(contour - al)).sum(axis=1) for al in approx_line
+        ])
+        len_a = cv2.arcLength(approx_line, False)
+        shape_sim = shape_sim.min(axis=1) / len_a
+
+        shape_sim = shape_sim.sum()
+
+        # len_c = cv2.arcLength(contour, True)
+        area_c = cv2.contourArea(contour)
+
+        # len_similarity = ((len_c / 2 - len_a) / len_a)**2
+        area_sim = area_c / ((right - left) * (bottom - top))
+        print(shape_sim, area_sim)
+        return shape_sim * area_sim
+
+    def draw_contours(self, thr):
+        thr = cv2.erode(thr, None, iterations=2)
+        thr = cv2.dilate(thr, None, iterations=2)
+        cnts, hier = cv2.findContours(thr.copy(), cv2.RETR_EXTERNAL,
+                                            cv2.CHAIN_APPROX_SIMPLE)
+        areas = np.array([cv2.contourArea(cnt) for cnt in cnts])
+        perimeters = np.array([cv2.arcLength(cnt, True) for cnt in cnts])
+        epsilon = 0.04 * perimeters
+
+        top_x = 6
+        if len(areas) > top_x:
+            cnt_ind = np.argpartition(areas, -top_x)[-top_x:]
+            cnts = [cnts[i] for i in cnt_ind]
+
+        perimeters = np.array([cv2.arcLength(cnt, True) for cnt in cnts])
+        epsilon = 0.005 * perimeters
+
+        cnts = [cv2.approxPolyDP(cnt, eps, True)
+                for cnt, eps in zip(cnts, epsilon)]
+
+        good_cnt = [cnt for cnt in cnts if 6 <= cnt.shape[0] <= 9
+                    and not cv2.isContourConvex(cnt)]
+        if good_cnt:
+            good_cnt = [min(good_cnt, key=self.goal_similarity)]
+            # print(good_cnt[0])
+
+        thr = cv2.cvtColor(thr, cv2.COLOR_GRAY2BGR)
+        cv2.drawContours(thr, good_cnt, -1, (0, 255, 0), 2)
+        return thr
+
+    def show_frame(self, frame, width=None, draw_contours=False):
         frame_HSV = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
         frame_threshold = cv2.inRange(
             frame_HSV,
             tuple(map(self.settings.get, ('low_h', 'low_s', 'low_v'))),
             tuple(map(self.settings.get, ('high_h', 'high_s', 'high_v')))
         )
-        if width:
-            sf = width / frame.shape[1]
-            frame = cv2.resize(frame, (0, 0), fx=sf, fy=sf)
-            frame_threshold = cv2.resize(frame_threshold, (0, 0), fx=sf, fy=sf)
+        frame = imresize(frame, width=width)
+        frame_threshold = imresize(frame_threshold, width=width)
+
+        if draw_contours:
+            frame_threshold = self.draw_contours(frame_threshold)
+
         cv2.imshow(self.WINDOW_CAPTURE_NAME, frame)
         cv2.imshow(self.WINDOW_DETECTION_NAME, frame_threshold)
         return cv2.waitKey(1)
@@ -71,7 +131,7 @@ class Colorpicker(object):
         try:
             with open(filename) as f:
                 conf = json.load(f)
-        except FileNotFoundError:
+        except IOError:
             conf = {}
         conf.update(self.settings)
         with open(filename, 'w') as f:
@@ -166,7 +226,7 @@ if __name__ == '__main__':
         while True:
             if not args.still:
                 frame = rdr.get_frame()
-            key = cp.show_frame(frame, args.width)
+            key = cp.show_frame(frame, width=args.width, draw_contours=True)
             if key == ord('q') or key == 27:
                 break
     finally:

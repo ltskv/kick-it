@@ -62,9 +62,10 @@ class VideoReader(object):
         if not succ:
             raise ValueError('Error while reading video')
         self.ctr += 1
-        if self.ctr == self.cap.get(cv2.CAP_PROP_FRAME_COUNT) and self.loop:
+        if (self.ctr == self.cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT) and
+            self.loop):
             self.ctr = 0
-            self.cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+            self.cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES, 0)
         return frame
 
     def close(self):
