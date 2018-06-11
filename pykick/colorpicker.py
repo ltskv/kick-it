@@ -56,58 +56,60 @@ class Colorpicker(object):
 
     def goal_similarity(self, contour):
         contour = contour.reshape((-1, 2))
-        left, right = contour[:,0].min(), contour[:,0].max()
-        top, bottom = contour[:,1].min(), contour[:,1].max()
-        approx_line = np.array([
-            [left, bottom],
-            [left, top],
-            [right, top],
-            [right, bottom]
-        ])
-        shape_sim = np.array([
-            (np.abs(contour - al)).sum(axis=1) for al in approx_line
-        ])
-        len_a = cv2.arcLength(approx_line, False)
-        shape_sim = shape_sim.min(axis=1) / len_a
+        hull = cv2.convexHull(contour).reshape((-1, 2))
+        len_h = cv2.arcLength(hull, True)
 
-        shape_sim = shape_sim.sum()
+        # Wild assumption that the goal should lie close to its
+        # enclosing convex hull
+        shape_sim = np.linalg.norm(contour[:,None] - hull,
+                                   axis=2).min(axis=1).sum() / len_h
 
-        # len_c = cv2.arcLength(contour, True)
+        # Wild assumption that the area of the goal is rather small
+        # compared to its enclosing convex hull
         area_c = cv2.contourArea(contour)
+        area_h = cv2.contourArea(hull)
 
-        # len_similarity = ((len_c / 2 - len_a) / len_a)**2
-        area_sim = area_c / ((right - left) * (bottom - top))
-        print(shape_sim, area_sim)
-        return shape_sim * area_sim
+        area_sim = area_c / area_h
+
+        # Final similarity score is just the sum of both
+        final_score = shape_sim + area_sim
+        print(shape_sim, area_sim, final_score)
+        return final_score
 
     def draw_contours(self, thr):
+        # The ususal
         thr = cv2.erode(thr, None, iterations=2)
         thr = cv2.dilate(thr, None, iterations=2)
-        cnts, hier = cv2.findContours(thr.copy(), cv2.RETR_EXTERNAL,
+        cnts, _ = cv2.findContours(thr.copy(), cv2.RETR_EXTERNAL,
                                             cv2.CHAIN_APPROX_SIMPLE)
         areas = np.array([cv2.contourArea(cnt) for cnt in cnts])
         perimeters = np.array([cv2.arcLength(cnt, True) for cnt in cnts])
         epsilon = 0.04 * perimeters
 
+        # Candidates are at most 6 biggest white areas
         top_x = 6
         if len(areas) > top_x:
             cnt_ind = np.argpartition(areas, -top_x)[-top_x:]
             cnts = [cnts[i] for i in cnt_ind]
 
         perimeters = np.array([cv2.arcLength(cnt, True) for cnt in cnts])
-        epsilon = 0.005 * perimeters
+        epsilon = 0.01 * perimeters
 
+        # Approximate resulting contours with simpler lines
         cnts = [cv2.approxPolyDP(cnt, eps, True)
                 for cnt, eps in zip(cnts, epsilon)]
 
-        good_cnt = [cnt for cnt in cnts if 6 <= cnt.shape[0] <= 9
+        # Goal needs normally 8 points for perfect approximation
+        # But with 6 can also be approximated
+        good_cnts = [cnt for cnt in cnts if 6 <= cnt.shape[0] <= 9
                     and not cv2.isContourConvex(cnt)]
-        if good_cnt:
-            good_cnt = [min(good_cnt, key=self.goal_similarity)]
-            # print(good_cnt[0])
+
+        if good_cnts:
+            # Find the contour with the shape closest to that of the goal
+            good_cnts = [min(good_cnts, key=self.goal_similarity)]
 
         thr = cv2.cvtColor(thr, cv2.COLOR_GRAY2BGR)
-        cv2.drawContours(thr, good_cnt, -1, (0, 255, 0), 2)
+        cv2.drawContours(thr, good_cnts, -1, (0, 255, 0), 2)
         return thr
 
     def show_frame(self, frame, width=None, draw_contours=False):
