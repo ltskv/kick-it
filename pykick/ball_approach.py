@@ -29,7 +29,7 @@ class BallFollower(object):
         mag = abs(yaw)
         sign = 1 if yaw >= 0 else -1
         if mag > 2:
-            self.mover.move_to(0, 0, sign * pi / 12)
+	    self.mover.move_to(0, 0, sign * pi / 12)
         else:
             self.mover.change_head_angles(sign * pi / 4, 0, 0.5)
 
@@ -73,9 +73,13 @@ class BallFollower(object):
 
         d_yaw, d_pitch = x, 0
         print(d_yaw)
-
-        self.mover.change_head_angles(d_yaw * 0.7, d_pitch,
+	
+	# dont move the head, when the angle is below a threshold
+	# otherwise function would raise an error and stop
+	if (abs(d_yaw)>=0.00001):
+		self.mover.change_head_angles(d_yaw * 0.7, d_pitch,
                                       abs(d_yaw) / 2)
+	
         # self.counter = 0
         yaw = self.mover.get_head_angles()[0]
         if abs(yaw) > 0.4:
