@@ -85,7 +85,7 @@ class BallFollower(object):
         if abs(yaw) > 0.4:
             # self.counter = 0
             print('Going to rotate')
-            # self.mover.set_head_angles(0, 0, 0.05)
+            self.mover.set_head_angles(0, 0, 0.5)
             self.mover.move_to(0, 0, yaw)
             self.mover.wait()
         if self.run_after:
@@ -107,7 +107,7 @@ if __name__ == '__main__':
         hsv_lower=tuple(map(cfg.get, ('low_h', 'low_s', 'low_v'))),
         hsv_upper=tuple(map(cfg.get, ('high_h', 'high_s', 'high_v'))),
         min_radius=cfg['min_radius'],
-        run_after=False
+        run_after=True
     )
     try:
         while True:
