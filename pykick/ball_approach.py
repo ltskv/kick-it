@@ -107,7 +107,7 @@ if __name__ == '__main__':
         hsv_lower=tuple(map(cfg.get, ('low_h', 'low_s', 'low_v'))),
         hsv_upper=tuple(map(cfg.get, ('high_h', 'high_s', 'high_v'))),
         min_radius=cfg['min_radius'],
-        run_after=True
+        run_after=False
     )
     try:
         while True:
