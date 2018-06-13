@@ -5,9 +5,9 @@ import json
 import argparse
 
 import cv2
-import numpy as np
 
 from .imagereaders import VideoReader, NaoImageReader, PictureReader
+from .finders import GoalFinder
 from .utils import read_config, imresize
 
 class Colorpicker(object):
@@ -15,7 +15,7 @@ class Colorpicker(object):
     WINDOW_CAPTURE_NAME = 'Video Capture'
     WINDOW_DETECTION_NAME = 'Object Detection'
 
-    def __init__(self):
+    def __init__(self, markers=()):
         parameters = ['low_h', 'low_s', 'low_v', 'high_h', 'high_s', 'high_v']
         maxes = [180, 255, 255, 180, 255, 255]
         checkers = [
@@ -34,6 +34,13 @@ class Colorpicker(object):
             'high_s': 255,
             'high_v': 255
         }
+        self.markers = {}
+        if 'goal' in markers:
+            self.markers['goal'] = GoalFinder(
+                tuple(map(self.settings.get, ('low_h', 'low_s', 'low_v'))),
+                tuple(map(self.settings.get, ('high_h', 'high_s', 'high_v')))
+            )
+
         cv2.namedWindow(self.WINDOW_CAPTURE_NAME)
         cv2.namedWindow(self.WINDOW_DETECTION_NAME)
         self.trackers = [
@@ -51,79 +58,37 @@ class Colorpicker(object):
 
     def _on_trackbar(self, val, name, checker):
         self.settings[name] = checker(val)
-        cv2.setTrackbarPos(name, self.WINDOW_DETECTION_NAME,
-                           self.settings[name])
+        self._hsv_updated(name)
 
-    def goal_similarity(self, contour):
-        contour = contour.reshape((-1, 2))
-        hull = cv2.convexHull(contour).reshape((-1, 2))
-        len_h = cv2.arcLength(hull, True)
+    def _hsv_updated(self, param):
+        cv2.setTrackbarPos(param, self.WINDOW_DETECTION_NAME,
+                           self.settings[param])
+        print(param)
+        for marker in self.markers:
+            print(self.markers[marker])
+            print(self.settings)
+            self.markers[marker].hsv_lower = tuple(
+                map(self.settings.get, ('low_h', 'low_s', 'low_v'))
+            )
+            self.markers[marker].hsv_upper = tuple(
+                map(self.settings.get, ('high_h', 'high_s', 'high_v'))
+            )
 
-        # Wild assumption that the goal should lie close to its
-        # enclosing convex hull
-        shape_sim = np.linalg.norm(contour[:,None] - hull,
-                                   axis=2).min(axis=1).sum() / len_h
-
-        # Wild assumption that the area of the goal is rather small
-        # compared to its enclosing convex hull
-        area_c = cv2.contourArea(contour)
-        area_h = cv2.contourArea(hull)
-
-        area_sim = area_c / area_h
-
-        # Final similarity score is just the sum of both
-        final_score = shape_sim + area_sim
-        print(shape_sim, area_sim, final_score)
-        return final_score
-
-    def draw_contours(self, thr):
-        # The ususal
-        thr = cv2.erode(thr, None, iterations=2)
-        thr = cv2.dilate(thr, None, iterations=2)
-        cnts, _ = cv2.findContours(thr.copy(), cv2.RETR_EXTERNAL,
-                                            cv2.CHAIN_APPROX_SIMPLE)
-        areas = np.array([cv2.contourArea(cnt) for cnt in cnts])
-        perimeters = np.array([cv2.arcLength(cnt, True) for cnt in cnts])
-        epsilon = 0.04 * perimeters
-
-        # Candidates are at most 6 biggest white areas
-        top_x = 6
-        if len(areas) > top_x:
-            cnt_ind = np.argpartition(areas, -top_x)[-top_x:]
-            cnts = [cnts[i] for i in cnt_ind]
-
-        perimeters = np.array([cv2.arcLength(cnt, True) for cnt in cnts])
-        epsilon = 0.01 * perimeters
-
-        # Approximate resulting contours with simpler lines
-        cnts = [cv2.approxPolyDP(cnt, eps, True)
-                for cnt, eps in zip(cnts, epsilon)]
-
-        # Goal needs normally 8 points for perfect approximation
-        # But with 6 can also be approximated
-        good_cnts = [cnt for cnt in cnts if 6 <= cnt.shape[0] <= 9
-                    and not cv2.isContourConvex(cnt)]
-
-        if good_cnts:
-            # Find the contour with the shape closest to that of the goal
-            good_cnts = [min(good_cnts, key=self.goal_similarity)]
-
-        thr = cv2.cvtColor(thr, cv2.COLOR_GRAY2BGR)
-        cv2.drawContours(thr, good_cnts, -1, (0, 255, 0), 2)
-        return thr
-
-    def show_frame(self, frame, width=None, draw_contours=False):
-        frame_HSV = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+    def show_frame(self, frame, width=None):
+        hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
         frame_threshold = cv2.inRange(
-            frame_HSV,
+            hsv,
             tuple(map(self.settings.get, ('low_h', 'low_s', 'low_v'))),
             tuple(map(self.settings.get, ('high_h', 'high_s', 'high_v')))
         )
         frame = imresize(frame, width=width)
         frame_threshold = imresize(frame_threshold, width=width)
 
-        if draw_contours:
-            frame_threshold = self.draw_contours(frame_threshold)
+        if 'goal' in self.markers:
+            self.markers['goal'].draw(frame)
+
+        if 'ball' in self.markers:
+            self.markers['ball'].draw(frame)
 
         cv2.imshow(self.WINDOW_CAPTURE_NAME, frame)
         cv2.imshow(self.WINDOW_DETECTION_NAME, frame_threshold)
@@ -143,8 +108,7 @@ class Colorpicker(object):
         with open(filename) as f:
             self.settings = json.load(f)
         for name in self.settings:
-            cv2.setTrackbarPos(name, self.WINDOW_DETECTION_NAME,
-                               self.settings[name])
+            self._hsv_updated(name)
 
 
 if __name__ == '__main__':
@@ -186,6 +150,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--nao-cam',
         choices=[0, 1],
+        type=int,
         help='0 for top camera, 1 for bottom camera',
         default=defaults['cam']
     )
@@ -204,7 +169,7 @@ if __name__ == '__main__':
     )
     args = parser.parse_args()
 
-    cp = Colorpicker()
+    cp = Colorpicker(['goal'])
     if args.input_config:
         cp.load(args.input_config)
 
@@ -228,7 +193,7 @@ if __name__ == '__main__':
         while True:
             if not args.still:
                 frame = rdr.get_frame()
-            key = cp.show_frame(frame, width=args.width, draw_contours=True)
+            key = cp.show_frame(frame, width=args.width)
             if key == ord('q') or key == 27:
                 break
     finally:

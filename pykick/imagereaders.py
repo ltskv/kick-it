@@ -60,7 +60,8 @@ class VideoReader(object):
     def get_frame(self):
         succ, frame = self.cap.read()
         if not succ:
-            raise ValueError('Error while reading video')
+            raise ValueError('Error while reading video.\n' +
+                             'Or video is over.')
         self.ctr += 1
         if (self.ctr == self.cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT) and
             self.loop):

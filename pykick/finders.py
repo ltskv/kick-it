@@ -1,6 +1,11 @@
+from __future__ import division
+from __future__ import print_function
+
 import json
 from collections import deque
+
 import cv2
+import numpy as np
 
 
 class GoalFinder(object):
@@ -11,8 +16,8 @@ class GoalFinder(object):
         self.hsv_upper = hsv_upper
 
     def goal_similarity(self, contour):
-        contour = contour.reshape((-1, 2))
-        hull = cv2.convexHull(contour).reshape((-1, 2))
+        contour = contour.squeeze(axis=1)
+        hull = cv2.convexHull(contour).squeeze(axis=1)
         len_h = cv2.arcLength(hull, True)
 
         # Wild assumption that the goal should lie close to its
@@ -32,8 +37,10 @@ class GoalFinder(object):
         print(shape_sim, area_sim, final_score)
         return final_score
 
-    def find_goal_contour(self, frame)
-        thr = 
+    def find_goal_contour(self, frame):
+        hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+        print(self.hsv_lower, self.hsv_upper)
+        thr = cv2.inRange(hsv, self.hsv_lower, self.hsv_upper)
 
         # The ususal
         thr = cv2.erode(thr, None, iterations=2)
@@ -47,8 +54,7 @@ class GoalFinder(object):
             cnt_ind = np.argpartition(areas, -top_x)[-top_x:]
             cnts = [cnts[i] for i in cnt_ind]
 
-        perimeters = np.array([cv2.arcLength(cnt, True) for cnt in cnts])
-        epsilon = 0.01 * perimeters
+        epsilon = [0.01 * cv2.arcLength(cnt, True) for cnt in cnts]
 
         # Approximate resulting contours with simpler lines
         cnts = [cv2.approxPolyDP(cnt, eps, True)
@@ -64,10 +70,19 @@ class GoalFinder(object):
 
         similarities = [self.goal_similarity(cnt) for cnt in good_cnts]
         best = min(similarities)
-        if best > 0.4:
-            return None
+        # if best > 0.4:
+            # return None
         # Find the contour with the shape closest to that of the goal
         goal = good_cnts[similarities.index(best)]
+        return goal
+
+    def left_right_post(self, contour):
+        return contour[:,0].min(), contour[:,0].max()
+
+    def draw(self, frame):
+        goal = self.find_goal_contour(frame)
+        if goal is not None:
+            cv2.drawContours(frame, (goal,), -1, (0, 255, 0), 2)
 
 
 class BallFinder(object):
@@ -102,7 +117,6 @@ class BallFinder(object):
 
         # only proceed if at least one contour was found
         if len(cnts) == 0:
-            self.history.appendleft(None)
             return None
 
         # find the largest contour in the mask, then use it to compute
@@ -111,23 +125,18 @@ class BallFinder(object):
         ((x, y), radius) = cv2.minEnclosingCircle(c)
 
         if radius < self.min_radius:
-            self.history.appendleft(None)
             return None
 
         M = cv2.moments(c)
         center = (int(M["m10"] / M["m00"]),int(M["m01"] // M["m00"]))
-        self.history.appendleft((center, int(radius)))
         return center, int(radius)
 
-    def visualize(self, frame):
-        if not self.viz:
-            raise ValueError(
-                'Visualization needs to be enabled when initializing'
-            )
+    def draw(self, frame):
+        ball = self.find_colored_ball(frame)
+        self.history.appendleft(ball)
 
-        frame = frame.copy()
-        if self.history[0] is not None:
-            center, radius = self.history[0]
+        if ball is not None:
+            center, radius = ball
             cv2.circle(frame, center, radius, (255, 255, 0), 1)
             cv2.circle(frame, center, 5, (0, 255, 0), -1)
 
@@ -138,13 +147,10 @@ class BallFinder(object):
                 continue
             # otherwise, compute the thickness of the line and
             # draw the connecting lines
-            center_now = self.history[0][0]
-            center_prev = self.history[1][0]
+            center_now = self.history[i - 1][0]
+            center_prev = self.history[i][0]
             thickness = int((64 / (i + 1))**0.5 * 2.5)
             cv2.line(frame, center_now, center_prev, (0, 255, 0), thickness)
-        # show the frame to screen
-        cv2.imshow("Frame", frame)
-        return cv2.waitKey(1)
 
     def load_hsv_config(self, filename):
         with open(filename) as f:
