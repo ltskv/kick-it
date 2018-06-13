@@ -1,7 +1,8 @@
 from __future__ import print_function
 from __future__ import division
 
-from math import tan, pi
+from math import pi
+from time import sleep
 
 from .utils import read_config
 from .imagereaders import NaoImageReader
@@ -18,7 +19,7 @@ class BallFollower(object):
         self.video_top = NaoImageReader(nao_ip, port=nao_port, res=res,
                                         fps=30, cam_id=0)
         self.video_bot = NaoImageReader(nao_ip, port=nao_port, res=res,
-                                        fps=30, cam_id=0)
+                                        fps=30, cam_id=1)
         self.finder = BallFinder(hsv_lower, hsv_upper, min_radius, None)
         self.lock_counter = 0
         self.loss_counter = 0
@@ -29,67 +30,89 @@ class BallFollower(object):
         mag = abs(yaw)
         sign = 1 if yaw >= 0 else -1
         if mag > 2:
-	    self.mover.move_to(0, 0, sign * pi / 12)
+            self.mover.move_to(0, 0, sign * pi / 12)
         else:
             self.mover.change_head_angles(sign * pi / 4, 0, 0.5)
 
-    def update(self):
-        #print('in update loop')
+    def get_ball_angles_from_camera(self, cam):
         try:
-            (x, y), radius = self.finder.find_colored_ball(
-                self.video_top.get_frame()
+            (x, y), _ = self.finder.find_colored_ball(
+                cam.get_frame()
             )
             self.loss_counter = 0
-            x, y = self.video_top.to_relative(x, y)
-            x, y = self.video_top.to_angles(x,y)
-            # print("y (in radians) angle is:"+str(angles[1]))
-            # y_angle=angles[1]
-            # y_angle=pi/2-y_angle-15*pi/180
-            # distance = 0.5 * tan(y_angle)
-            # print("Distance="+str(distance))
-            # print('Top camera\n')
+            x, y = cam.to_relative(x, y)
+            x, y = cam.to_angles(x, y)
+            return x, y
         except TypeError:
+            raise ValueError('Ball not found')
+
+
+    def ball_tracking(self):
+        cams = [self.video_top, self.video_bot]
+        in_sight = False
+        for cam in cams:
             try:
-                (x, y), radius = self.finder.find_colored_ball(
-                    self.video_bot.get_frame()
-                )
-                x, y = self.video_bot.to_relative(x, y)
-                self.loss_counter = 0
-                #print('Low camera')
-            except TypeError:
-                print('No ball in sight')
-                self.loss_counter += 1
-                if self.loss_counter > 5:
-                    self.ball_scan()
-                return
-        #print(x, y)
-        self.process_coordinates(x, y)
+                x, y = self.get_ball_angles_from_camera(self, cam)
+                in_sight = True
+                break
+            except ValueError:
+                pass
 
-    def process_coordinates(self, x, y):
-        # x_diff = x - 0.5
-        # y_diff = y - 0.5
-        # print("x_diff: " + str(x_diff))
-        # print("y_diff: " + str(y_diff))
+        if not in_sight:
+            print('No ball in sight')
+            self.loss_counter += 1
+            if self.loss_counter > 5:
+                self.ball_scan()
+            return
 
-        d_yaw, d_pitch = x, 0
-        print(d_yaw)
-	
-	# dont move the head, when the angle is below a threshold
-	# otherwise function would raise an error and stop
-	if (abs(d_yaw)>=0.00001):
-		self.mover.change_head_angles(d_yaw * 0.7, d_pitch,
-                                      abs(d_yaw) / 2)
-	
-        # self.counter = 0
+        self.turn_to_ball(x, y)
+
+    def run_after(self):
+        self.mover.move_to(0.3, 0, 0)
+
+    def turn_to_ball(self, ball_x, ball_y):
+        d_yaw, d_pitch = ball_x, 0
+        print('ball yaw', d_yaw)
+
+        if (abs(d_yaw) > 0.01):
+            self.mover.change_head_angles(d_yaw, d_pitch,
+                                          abs(d_yaw) / 2)
+            sleep(1)
+            self.mover.wait()
+
         yaw = self.mover.get_head_angles()[0]
-        if abs(yaw) > 0.4:
-            # self.counter = 0
+        print('head yaw', yaw)
+        if abs(yaw) > 0.05:
             print('Going to rotate')
             self.mover.set_head_angles(0, 0, 0.5)
             self.mover.move_to(0, 0, yaw)
             self.mover.wait()
-        if self.run_after:
-            self.mover.move_to(0.3, 0, 0)
+
+    def align_to_goal(self):
+        try:
+            x, y = self.get_ball_angles_from_camera(self.video_bot)
+            print(x, y)
+            if abs(x) > 0.05:
+                self.turn_to_ball(x, y)
+                return
+        except Exception as e:
+            print(e)
+            print('No ball')
+            sleep(0.1)
+            return
+
+        print('moving')
+        increment = 0.1
+        # if y < -pi / 8:
+            # self.mover.move_to(-0.1, 0, 0)
+        if y > 0.35:
+            self.mover.move_to(-0.05, 0, 0)
+        elif y < 0.25:
+            self.mover.move_to(0.05, 0, 0)
+        self.mover.wait()
+        self.mover.move_to(0, increment, 0)
+        self.mover.wait()
+
 
     def close(self):
         self.mover.rest()
@@ -111,6 +134,11 @@ if __name__ == '__main__':
     )
     try:
         while True:
-            follower.update()
+            try:
+                print(follower.get_ball_angles_from_camera(
+                    follower.video_bot)[1])
+            except Exception as e:
+                print(e)
+
     finally:
         follower.close()

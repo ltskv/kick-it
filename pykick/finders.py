@@ -3,6 +3,73 @@ from collections import deque
 import cv2
 
 
+class GoalFinder(object):
+
+    def __init__(self, hsv_lower, hsv_upper):
+
+        self.hsv_lower = hsv_lower
+        self.hsv_upper = hsv_upper
+
+    def goal_similarity(self, contour):
+        contour = contour.reshape((-1, 2))
+        hull = cv2.convexHull(contour).reshape((-1, 2))
+        len_h = cv2.arcLength(hull, True)
+
+        # Wild assumption that the goal should lie close to its
+        # enclosing convex hull
+        shape_sim = np.linalg.norm(contour[:,None] - hull,
+                                   axis=2).min(axis=1).sum() / len_h
+
+        # Wild assumption that the area of the goal is rather small
+        # compared to its enclosing convex hull
+        area_c = cv2.contourArea(contour)
+        area_h = cv2.contourArea(hull)
+
+        area_sim = area_c / area_h
+
+        # Final similarity score is just the sum of both
+        final_score = shape_sim + area_sim
+        print(shape_sim, area_sim, final_score)
+        return final_score
+
+    def find_goal_contour(self, frame)
+        thr = 
+
+        # The ususal
+        thr = cv2.erode(thr, None, iterations=2)
+        thr = cv2.dilate(thr, None, iterations=2)
+        cnts, _ = cv2.findContours(thr, cv2.RETR_EXTERNAL,
+                                            cv2.CHAIN_APPROX_SIMPLE)
+        areas = np.array([cv2.contourArea(cnt) for cnt in cnts])
+        # Candidates are at most 6 biggest white areas
+        top_x = 6
+        if len(areas) > top_x:
+            cnt_ind = np.argpartition(areas, -top_x)[-top_x:]
+            cnts = [cnts[i] for i in cnt_ind]
+
+        perimeters = np.array([cv2.arcLength(cnt, True) for cnt in cnts])
+        epsilon = 0.01 * perimeters
+
+        # Approximate resulting contours with simpler lines
+        cnts = [cv2.approxPolyDP(cnt, eps, True)
+                for cnt, eps in zip(cnts, epsilon)]
+
+        # Goal needs normally 8 points for perfect approximation
+        # But with 6 can also be approximated
+        good_cnts = [cnt for cnt in cnts if 6 <= cnt.shape[0] <= 9
+                    and not cv2.isContourConvex(cnt)]
+
+        if not good_cnts:
+            return None
+
+        similarities = [self.goal_similarity(cnt) for cnt in good_cnts]
+        best = min(similarities)
+        if best > 0.4:
+            return None
+        # Find the contour with the shape closest to that of the goal
+        goal = good_cnts[similarities.index(best)]
+
+
 class BallFinder(object):
 
     def __init__(self, hsv_lower, hsv_upper, min_radius, viz=False):
