@@ -23,7 +23,7 @@ def main(robotIP, PORT=9559):
     fractionMaxSpeed  = 0.05
     motionProxy.setStiffnesses("RAnkleRoll",0.9)
     names=["LHipRoll","RHipRoll","LHipPitch","RAnkleRoll","LAnklePitch"]
-    angles=[radians(-5),radians(-5),radians(-15),radians(-5),radians(0)]
+    angles=[radians(-10),radians(-10),radians(-15),radians(-5),radians(0)]
     motionProxy.setAngles(names, angles, fractionMaxSpeed)
 
     
