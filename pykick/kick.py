@@ -6,4 +6,4 @@ if __name__ == "__main__":
     cfg = read_config()
     mover = NaoMover(cfg['ip'])
     mover.stand_up()
-    mover.kick()
+    mover.kick(foot="R")

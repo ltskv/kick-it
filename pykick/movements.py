@@ -7,17 +7,17 @@ from naoqi import ALProxy
 class NaoMover(object):
 
     KICK_SEQUENCE = [
-        (0, 'ShoulderRoll', -45, 0.5),
+        (0, 'ShoulderRoll', 45, 0.0125),
+        #'wait',
+        (0, 'AnkleRoll', 10, 0.05),
+        (1, 'AnkleRoll', 10, 0.05),
         'wait',
-        (0, 'AnkleRoll', -10, 0.1),
-        (1, 'AnkleRoll', -10, 0.1),
+        (1, 'KneePitch', 90, 0.05),
+        (1, 'AnklePitch', -40, 0.05),
         'wait',
-        (1, 'KneePitch', 90, 0.2),
-        (1, 'AnklePitch', -40, 0.2),
-        'wait',
-        (1, 'HipPitch', -45, 0.03),
-        (1, 'KneePitch', 10, 0.05),
-        (1, 'AnklePitch', 20, 0.03)
+        (1, 'HipPitch', -45, 0.08),
+        (1, 'KneePitch', 10, 0.20),
+        (1, 'AnklePitch', 20, 0.16)
     ]
 
     def __init__(self, nao_ip, nao_port=9559):
@@ -40,11 +40,11 @@ class NaoMover(object):
         self.set_hip_stiffness(0.8)
         self.set_knee_stiffness(0.8)
         self.set_ankle_stiffness(0.8)
-        multiplier = 1
+        multiplier = 5
         if foot == 'L':
             sides = ['R', 'L']
         elif foot == 'R':
-            sides = ['R', 'L']
+            sides = ['L', 'R']
         reverse = []
         for motion in self.KICK_SEQUENCE:
             if motion == 'wait':
@@ -52,7 +52,6 @@ class NaoMover(object):
             else:
                 print(motion)
                 side, joint, angle, speed = motion
-                reverse.extend(self.mp.getAngles([sides[side] + joint])
                 self.mp.setAngles(
                     [sides[side] + joint], [radians(angle)], speed * multiplier
                 )
