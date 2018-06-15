@@ -20,12 +20,19 @@ def main(robotIP, PORT=9559):
 
     time.sleep(3)
 
-    fractionMaxSpeed  = 0.01
+    fractionMaxSpeed  = 0.05
     motionProxy.setStiffnesses("RAnkleRoll",0.9)
-    names=["LHipRoll","RHipRoll","LHipPitch","RAnkleRoll"]
-    angles=[radians(-10),radians(-10),radians(-15),radians(-5)]
+    names=["LHipRoll","RHipRoll","LHipPitch","RAnkleRoll","LAnklePitch"]
+    angles=[radians(-5),radians(-5),radians(-15),radians(-5),radians(0)]
     motionProxy.setAngles(names, angles, fractionMaxSpeed)
 
+    
+    time.sleep(0.5)
+    names=["LAnklePitch"]
+    angles=[radians(-20)]
+    motionProxy.setAngles(names,angles,fractionMaxSpeed)
+
+    '''
     #motionProxy.waitUntilMoveIsFinished()
     time.sleep(6)
     
@@ -34,7 +41,7 @@ def main(robotIP, PORT=9559):
     angles=[radians(45),radians(-50),radians(-45)]
 
     motionProxy.setAngles(names, angles, fractionMaxSpeed)
-    
+    '''
     
     #time.sleep(3.0)
     #motionProxy.setStiffnesses("Head", 0.0)
