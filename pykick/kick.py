@@ -14,35 +14,43 @@ def main(robotIP, PORT=9559):
     #names  = ["HeadYaw", "HeadPitch"]
     #angles  = [0.2, -0.2]
     fractionMaxSpeed = 0.5
-    names=["RShoulderRoll","RElbowRoll"]
-    angles=[radians(-76),0]
+    names=["RShoulderRoll","LShoulderRoll"]
+    angles=[radians(-76),radians(76)]
     motionProxy.setAngles(names,angles,fractionMaxSpeed)
 
     time.sleep(3)
 
-    fractionMaxSpeed  = 0.05
+    fractionMaxSpeed  = 0.01
     motionProxy.setStiffnesses("RAnkleRoll",0.9)
-    names=["LHipRoll","RHipRoll","LHipPitch","RAnkleRoll","LAnklePitch"]
-    angles=[radians(-13),radians(-13),radians(-15),radians(-5),radians(0)]
+    #names=["LHipRoll","RHipRoll","RAnkleRoll","LAnkleRoll"]
+    names=["RAnkleRoll","LAnkleRoll"]
+    #names=["LHipRoll","RHipRoll","LHipPitch","RAnkleRoll","LAnklePitch"]
+    angles=[radians(-10),radians(-10)]
+#   angles=[radians(-20),radians(-20),radians(-10),radians(-10)]
+#    angles=[radians(-20),radians(-20),radians(-15),radians(-5),radians(0)]
     motionProxy.setAngles(names, angles, fractionMaxSpeed)
 
-    """
+    '''
     time.sleep(3)
-    names=["LShoulderRoll",    
-
-    """
-
+    names=["LShoulderRoll"]
+    angles=[radians(76)]
+    motionProxy.setAngles(names,angles,fractionMaxSpeed)
+    '''
+   
+    '''
     time.sleep(0.5)
     names=["LAnklePitch"]
     angles=[radians(-20)]
     motionProxy.setAngles(names,angles,fractionMaxSpeed)
 
+    '''
 
-    time.sleep(4)
-    print("kick")
-    names=["LKneePitch","LAnklePitch"]
-    angles=[radians(10),radians(0)]
-    motionProxy.setAngles(names,angles,fractionMaxSpeed)
+    
+#    time.sleep(4)
+#    print("kick")
+#    names=["LKneePitch","LAnklePitch"]
+#    angles=[radians(10),radians(0)]
+#    motionProxy.setAngles(names,angles,fractionMaxSpeed)
 
     '''
     #motionProxy.waitUntilMoveIsFinished()
