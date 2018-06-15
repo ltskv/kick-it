@@ -7,3 +7,4 @@ if __name__ == "__main__":
     mover = NaoMover(cfg['ip'])
     mover.stand_up()
     mover.kick(foot="R")
+    mover.stand_up()

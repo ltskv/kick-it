@@ -7,7 +7,7 @@ from naoqi import ALProxy
 class NaoMover(object):
 
     KICK_SEQUENCE = [
-        (0, 'ShoulderRoll', 45, 0.0125),
+        (0, 'ShoulderRoll', 45, 0.025),
         #'wait',
         (0, 'AnkleRoll', 10, 0.05),
         (1, 'AnkleRoll', 10, 0.05),
@@ -40,7 +40,7 @@ class NaoMover(object):
         self.set_hip_stiffness(0.8)
         self.set_knee_stiffness(0.8)
         self.set_ankle_stiffness(0.8)
-        multiplier = 5
+        multiplier = 4
         if foot == 'L':
             sides = ['R', 'L']
         elif foot == 'R':
