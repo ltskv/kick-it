@@ -22,7 +22,7 @@ class NaoMover(object):
         [[(1, 0, 'HipPitch', -45, 0.08),
           (1, 0, 'KneePitch', 10, 0.20),
           (1, 0, 'AnklePitch', 20, 0.16)],
-         10]
+         4]
     ]
 
     def __init__(self, nao_ip, nao_port=9559):
