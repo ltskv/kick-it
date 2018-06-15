@@ -55,6 +55,9 @@ class NaoMover(object):
                 self.mp.setAngles(
                     [sides[side] + joint], [radians(angle)], speed * multiplier
                 )
+            sleep(wait)
+
+        self.stand_up()
 
     def stand_up(self):
         self.set_arm_stiffness(0.9)
