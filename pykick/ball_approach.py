@@ -6,13 +6,13 @@ from time import sleep
 
 from .utils import read_config
 from .imagereaders import NaoImageReader
-from .finders import BallFinder
+from .finders import BallFinder, GoalFinder
 from .movements import NaoMover
 
 
-class BallFollower(object):
+class Striker(object):
 
-    def __init__(self, nao_ip, nao_port, res, hsv_lower, hsv_upper,
+    def __init__(self, nao_ip, nao_port, res, red_hsv, white_hsv,
                  min_radius, run_after):
         self.mover = NaoMover(nao_ip=nao_ip, nao_port=nao_port)
         self.mover.stand_up()
@@ -20,7 +20,7 @@ class BallFollower(object):
                                         fps=30, cam_id=0)
         self.video_bot = NaoImageReader(nao_ip, port=nao_port, res=res,
                                         fps=30, cam_id=1)
-        self.finder = BallFinder(hsv_lower, hsv_upper, min_radius, None)
+        self.finder = BallFinder(red_hsv[0], red_hsv[1], min_radius, None)
         self.lock_counter = 0
         self.loss_counter = 0
         self.run_after = run_after
@@ -103,8 +103,6 @@ class BallFollower(object):
 
         print('moving')
         increment = 0.1
-        # if y < -pi / 8:
-            # self.mover.move_to(-0.1, 0, 0)
         if y > 0.35:
             self.mover.move_to(-0.05, 0, 0)
         elif y < 0.25:
@@ -123,12 +121,12 @@ class BallFollower(object):
 if __name__ == '__main__':
 
     cfg = read_config()
-    follower = BallFollower(
+    follower = Striker(
         nao_ip=cfg['ip'],
         nao_port=cfg['port'],
         res=cfg['res'],
-        hsv_lower=tuple(map(cfg.get, ('low_h', 'low_s', 'low_v'))),
-        hsv_upper=tuple(map(cfg.get, ('high_h', 'high_s', 'high_v'))),
+        red_hsv=cfg['red'],
+        white_hsv=cfg['white'],
         min_radius=cfg['min_radius'],
         run_after=False
     )

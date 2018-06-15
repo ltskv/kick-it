@@ -1,7 +1,6 @@
 from __future__ import division
 from __future__ import print_function
 
-import json
 from collections import deque
 
 import cv2
@@ -34,12 +33,11 @@ class GoalFinder(object):
 
         # Final similarity score is just the sum of both
         final_score = shape_sim + area_sim
-        print(shape_sim, area_sim, final_score)
+        print('Goal:', shape_sim, area_sim, final_score)
         return final_score
 
     def find_goal_contour(self, frame):
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-        print(self.hsv_lower, self.hsv_upper)
         thr = cv2.inRange(hsv, self.hsv_lower, self.hsv_upper)
 
         # The ususal
@@ -70,8 +68,8 @@ class GoalFinder(object):
 
         similarities = [self.goal_similarity(cnt) for cnt in good_cnts]
         best = min(similarities)
-        # if best > 0.4:
-            # return None
+        if best > 0.35:
+            return None
         # Find the contour with the shape closest to that of the goal
         goal = good_cnts[similarities.index(best)]
         return goal
@@ -87,17 +85,12 @@ class GoalFinder(object):
 
 class BallFinder(object):
 
-    def __init__(self, hsv_lower, hsv_upper, min_radius, viz=False):
+    def __init__(self, hsv_lower, hsv_upper, min_radius):
 
         self.hsv_lower = hsv_lower
         self.hsv_upper = hsv_upper
         self.min_radius = min_radius
         self.history = deque(maxlen=64)
-        self.viz = viz
-
-        if self.viz:
-            cv2.namedWindow('ball_mask')
-            cv2.namedWindow('Frame')
 
     def find_colored_ball(self, frame):
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
@@ -152,8 +145,8 @@ class BallFinder(object):
             thickness = int((64 / (i + 1))**0.5 * 2.5)
             cv2.line(frame, center_now, center_prev, (0, 255, 0), thickness)
 
-    def load_hsv_config(self, filename):
-        with open(filename) as f:
-            hsv = json.load(f)
-        self.hsv_lower = tuple(map(hsv.get, ('low_h', 'low_s', 'low_v')))
-        self.hsv_upper = tuple(map(hsv.get, ('high_h', 'high_s', 'high_v')))
+    # def load_hsv_config(self, filename):
+        # with open(filename) as f:
+            # hsv = json.load(f)
+        # self.hsv_lower = tuple(map(hsv.get, ('low_h', 'low_s', 'low_v')))
+        # self.hsv_upper = tuple(map(hsv.get, ('high_h', 'high_s', 'high_v')))

@@ -54,7 +54,8 @@ class Colorpicker(object):
         ]
 
     def do_print(self):
-        print(self.settings)
+        print(tuple(map(self.settings.get, ('low_h', 'low_s', 'low_v'))),
+              tuple(map(self.settings.get, ('high_h', 'high_s', 'high_v'))))
 
     def _on_trackbar(self, val, name, checker):
         self.settings[name] = checker(val)
@@ -63,10 +64,7 @@ class Colorpicker(object):
     def _hsv_updated(self, param):
         cv2.setTrackbarPos(param, self.WINDOW_DETECTION_NAME,
                            self.settings[param])
-        print(param)
         for marker in self.markers:
-            print(self.markers[marker])
-            print(self.settings)
             self.markers[marker].hsv_lower = tuple(
                 map(self.settings.get, ('low_h', 'low_s', 'low_v'))
             )
@@ -94,19 +92,28 @@ class Colorpicker(object):
         cv2.imshow(self.WINDOW_DETECTION_NAME, frame_threshold)
         return cv2.waitKey(1)
 
-    def save(self, filename):
+    def save(self, filename, color):
         try:
             with open(filename) as f:
                 conf = json.load(f)
         except IOError:
             conf = {}
-        conf.update(self.settings)
+        conf.update(
+            {color:
+             [list(map(self.settings.get, ['low_h', 'low_s', 'low_v'])),
+              list(map(self.settings.get, ['high_h', 'high_s', 'high_v']))]
+            }
+        )
         with open(filename, 'w') as f:
             json.dump(conf, f, indent=4)
 
-    def load(self, filename):
+    def load(self, filename, color):
         with open(filename) as f:
-            self.settings = json.load(f)
+            jdict = json.load(f)
+            self.settings = dict(
+                zip(['low_h', 'low_s', 'low_v', 'high_h', 'high_s', 'high_v'],
+                    jdict[color][0] + jdict[color][1])
+            )
         for name in self.settings:
             self._hsv_updated(name)
 
@@ -167,11 +174,16 @@ if __name__ == '__main__':
         type=int,
         default=640
     )
+    parser.add_argument(
+        '--color',
+        help='specify which color is being calibrated',
+        default='white'
+    )
     args = parser.parse_args()
 
-    cp = Colorpicker(['goal'])
+    cp = Colorpicker()
     if args.input_config:
-        cp.load(args.input_config)
+        cp.load(args.input_config, args.color)
 
     if args.video_file:
         rdr = VideoReader(args.video_file, loop=True)
@@ -199,6 +211,6 @@ if __name__ == '__main__':
     finally:
         cp.do_print()
         if args.output_config:
-            cp.save(args.output_config)
+            cp.save(args.output_config, args.color)
         if not args.still:
             rdr.close()
