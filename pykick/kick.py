@@ -33,13 +33,22 @@ def main(robotIP, PORT=9559):
 #    angles=[radians(-20),radians(-20),radians(-15),radians(-5),radians(0)]
     motionProxy.setAngles(names, angles, fractionMaxSpeed)
 
-     
     time.sleep(3)
-    names=["LHipPitch","LAnklePitch"]
-    angles=[radians(-45),radians(-5)]
-    fractionMaxSpeed=0.8
+    fractionMaxSpeed=0.2
+    names=["LKneePitch","LAnklePitch"] 
+    angles=[radians(90),radians(-40)]
     motionProxy.setAngles(names,angles,fractionMaxSpeed)
-
+    
+    time.sleep(3)
+    names=["LHipPitch"]
+    angles=[radians(-45)]
+    fractionMaxSpeed=0.01
+    motionProxy.setAngles(names,angles,fractionMaxSpeed)
+    names=["LKneePitch","LAnklePitch"]
+    angles=[radians(20),radians(-5)]
+    fractionMaxSpeed=0.05
+    motionProxy.setAngles(names,angles,fractionMaxSpeed)
+    
     '''
     time.sleep(3)
     names=["LShoulderRoll"]
