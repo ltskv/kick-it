@@ -7,17 +7,22 @@ from naoqi import ALProxy
 class NaoMover(object):
 
     KICK_SEQUENCE = [
-        (0, 'ShoulderRoll', 45, 0.025),
-        #'wait',
-        (0, 'AnkleRoll', 10, 0.05),
-        (1, 'AnkleRoll', 10, 0.05),
-        'wait',
-        (1, 'KneePitch', 90, 0.05),
-        (1, 'AnklePitch', -40, 0.05),
-        'wait',
-        (1, 'HipPitch', -45, 0.08),
-        (1, 'KneePitch', 10, 0.20),
-        (1, 'AnklePitch', 20, 0.16)
+        # base_or_kicking, unsymmetric, joint, angle, speed
+
+        [[(0, 1, 'ShoulderRoll', -70, 0.025)], 1],
+
+        [[(0, 1, 'AnkleRoll', -10, 0.05),
+          (1, 1, 'AnkleRoll', -10, 0.05)],
+         2],
+
+        [[(1, 0, 'KneePitch', 90, 0.05),
+          (1, 0, 'AnklePitch', -40, 0.05)],
+         3,],
+
+        [[(1, 0, 'HipPitch', -45, 0.08),
+          (1, 0, 'KneePitch', 10, 0.20),
+          (1, 0, 'AnklePitch', 20, 0.16)],
+         10]
     ]
 
     def __init__(self, nao_ip, nao_port=9559):
@@ -45,13 +50,12 @@ class NaoMover(object):
             sides = ['R', 'L']
         elif foot == 'R':
             sides = ['L', 'R']
-        reverse = []
-        for motion in self.KICK_SEQUENCE:
-            if motion == 'wait':
-                sleep(3)
-            else:
-                print(motion)
-                side, joint, angle, speed = motion
+        for motion, wait in self.KICK_SEQUENCE:
+            for part in motion:
+                print(part)
+                side, unsymmetric, joint, angle, speed = part
+                if foot == 'R' and unsymmetric:
+                    angle *= -1
                 self.mp.setAngles(
                     [sides[side] + joint], [radians(angle)], speed * multiplier
                 )
