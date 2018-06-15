@@ -13,13 +13,16 @@ def main(robotIP, PORT=9559):
     # Example showing how to set angles, using a fraction of max speed
     #names  = ["HeadYaw", "HeadPitch"]
     #angles  = [0.2, -0.2]
+    
+    
     fractionMaxSpeed = 0.5
-    names=["RShoulderRoll","LShoulderRoll"]
-    angles=[radians(-76),radians(76)]
+    names=["RShoulderRoll",]
+    
+    angles=[radians(-76)]
     motionProxy.setAngles(names,angles,fractionMaxSpeed)
-
+    
     time.sleep(3)
-
+   
     fractionMaxSpeed  = 0.05
     motionProxy.setStiffnesses("RAnkleRoll",0.9)
     #names=["LHipRoll","RHipRoll","RAnkleRoll","LAnkleRoll"]
@@ -31,9 +34,9 @@ def main(robotIP, PORT=9559):
     motionProxy.setAngles(names, angles, fractionMaxSpeed)
 
      
-    time.sleep(4)
-    names=["LHipPitch"]
-    angles=[radians(-45)]
+    time.sleep(3)
+    names=["LHipPitch","LAnklePitch"]
+    angles=[radians(-45),radians(-5)]
     fractionMaxSpeed=0.8
     motionProxy.setAngles(names,angles,fractionMaxSpeed)
 
