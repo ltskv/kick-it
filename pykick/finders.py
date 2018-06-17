@@ -104,8 +104,6 @@ class BallFinder(object):
         mask = cv2.inRange(hsv, self.hsv_lower, self.hsv_upper)
         mask = cv2.erode(mask, None, iterations=2)
         mask = cv2.dilate(mask, None, iterations=2)
-        if self.viz:
-            cv2.imshow('ball_mask', mask)
 
         # find contours in the mask and initialize the current
         # (x, y) center of the ball

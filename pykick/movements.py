@@ -21,7 +21,7 @@ class NaoMover(object):
 
         [[(1, 0, 'HipPitch', -45, 0.08),
           (1, 0, 'KneePitch', 10, 0.20),
-          (1, 0, 'AnklePitch', 20, 0.16)],
+          (1, 0, 'AnklePitch', 30, 0.16)],
          4]
     ]
 
@@ -61,12 +61,12 @@ class NaoMover(object):
                 )
             sleep(wait)
 
-        self.stand_up()
+        self.stand_up(0.5)
 
-    def stand_up(self):
+    def stand_up(self, speed=0.8):
         self.set_arm_stiffness(0.9)
         self.set_hand_stiffness(0.9)
-        self.pp.goToPosture('StandInit', 1.0)
+        self.pp.goToPosture('StandInit', speed)
         self.set_hand_stiffness()
         self.set_arm_stiffness()
 
@@ -130,3 +130,7 @@ class NaoMover(object):
 
     def wait(self):
         self.mp.waitUntilMoveIsFinished()
+
+    def stop_moving(self):
+        print('STOOOP')
+        self.mp.stopMove()

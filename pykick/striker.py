@@ -2,7 +2,7 @@ from __future__ import print_function
 from __future__ import division
 
 from math import pi
-from time import sleep
+from time import sleep, time
 
 from .utils import read_config
 from .imagereaders import NaoImageReader
@@ -20,11 +20,13 @@ class Striker(object):
                                         fps=30, cam_id=0)
         self.video_bot = NaoImageReader(nao_ip, port=nao_port, res=res,
                                         fps=30, cam_id=1)
-        self.ball_finder = BallFinder(red_hsv[0], red_hsv[1], min_radius, None)
+        self.ball_finder = BallFinder(tuple(red_hsv[0]), tuple(red_hsv[1]),
+                                      min_radius)
         self.goal_finder = GoalFinder(white_hsv[0], white_hsv[1])
         self.lock_counter = 0
         self.loss_counter = 0
         self.run_after = run_after
+        self.in_move = False
 
     def ball_scan(self):
         yaw = self.mover.get_head_angles()[0]
@@ -54,7 +56,7 @@ class Striker(object):
         cams = [self.video_top, self.video_bot]
         in_sight = False
         for cam in cams:
-            ball_angles = self.get_ball_angles_from_camera(self, cam)
+            ball_angles = self.get_ball_angles_from_camera(cam)
             if ball_angles is not None:
                 x, y = ball_angles
                 in_sight = True
@@ -68,18 +70,19 @@ class Striker(object):
                 self.ball_scan()
             return False
 
-        if abs(x) > 0.05:
+        if abs(x) > 0.15:
+            self.mover.stop_moving()
             self.turn_to_ball(x, y)
             return False
         else:
             return True
 
-    def run_after(self):
-        self.mover.move_to(0.3, 0, 0)
+    def run_to_ball(self):
+        self.mover.move_to(1, 0, 0)
 
     def turn_to_ball(self, ball_x, ball_y):
         d_yaw, d_pitch = ball_x, 0
-        print('ball yaw', d_yaw)
+        print('ball yaw:', d_yaw)
 
         if (abs(d_yaw) > 0.01):
             self.mover.change_head_angles(d_yaw, d_pitch,
@@ -95,6 +98,22 @@ class Striker(object):
             self.mover.move_to(0, 0, yaw)
             self.mover.wait()
 
+    def align_to_ball(self):
+        ball_angles = self.get_ball_angles_from_camera(self.video_bot)
+        if ball_angles is None:
+            raise ValueError('No ball')
+        x, y = ball_angles
+        goal_x, goal_y = 0.115, 0.25
+        dx, dy = goal_x - x, goal_y - y
+        if abs(dx) < 0.05 and abs(dy) < 0.05:
+            print(x, y)
+            return True
+        self.mover.move_to(dy * 0.5, 0, 0)
+        self.mover.wait()
+        self.mover.move_to(0, -dx * 0.5, 0)
+        self.mover.wait()
+        return False
+
     def align_to_goal(self):
         ball_angles = self.get_ball_angles_from_camera(self.video_bot)
         if ball_angles is None:
@@ -102,7 +121,7 @@ class Striker(object):
         x, y = ball_angles
 
         print(x, y)
-        if abs(x) > 0.05:
+        if abs(x) > 0.1:
             self.turn_to_ball(x, y)
             return False
 
@@ -165,29 +184,48 @@ if __name__ == '__main__':
         red_hsv=cfg['red'],
         white_hsv=cfg['white'],
         min_radius=cfg['min_radius'],
+        run_after=False
     )
     try:
         state = 'tracking'
         while True:
+            loop_start = time()
+            print('State:', state)
             if state == 'tracking':
                 if striker.ball_tracking():
-                    state = 'try_align'
-            if state == 'try_align':
-                if (striker.get_ball_angles_from_camera(striker.video_bot)
-                    is not None):
+                    state = 'ball_approach'
+
+            elif state == 'ball_approach':
+                ball_in_lower = striker.get_ball_angles_from_camera(
+                    striker.video_bot
+                )
+
+                print(ball_in_lower)
+                if (ball_in_lower is not None
+                    and ball_in_lower[1] > 0.25):
+
+                    print('Ball is in lower camera, go to align')
+                    striker.mover.stop_moving()
                     state = 'align'
                 else:
-                    striker.run_after()
+                    print('Continue running')
+                    striker.run_to_ball()
                     state = 'tracking'
-            if state == 'align':
+            elif state == 'align':
+                striker.mover.set_head_angles(0, 0.25, 0.3)
+                sleep(0.5)
                 try:
-                    success = striker.align_to_goal()
+                    success = striker.align_to_ball()
                     if success:
                         state = 'kick'
                 except ValueError:
+                    striker.mover.set_head_angles(0, 0, 0.3)
                     state = 'tracking'
-            if state == 'kick':
-                print('YEEEEEEEE')
+            elif state == 'kick':
+                print('KICK!')
+                striker.mover.kick()
                 break
+            loop_end = time()
+            print('Loop time:', loop_end - loop_start)
     finally:
         striker.close()

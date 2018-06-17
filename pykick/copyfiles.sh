@@ -10,8 +10,8 @@ else
     nao_ip=$1
 fi
 
-destination="$nao_ip:/home/nao/kicker_scripts/"
+destination="$nao_ip:/home/nao/pykick/"
 
 # copy the files with scp
-sshpass -p 'nao' scp ball_approach.py utils.py finders.py \
+scp -v striker.py utils.py finders.py \
     movements.py imagereaders.py $destination
