@@ -2,6 +2,7 @@
 
 # Exit immediately if something fails
 set -e
+repo="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd )"
 
 if [ -z "$1" ]
 then
@@ -10,8 +11,7 @@ else
     nao_ip=$1
 fi
 
-destination="$nao_ip:/home/nao/pykick/"
+destination="nao@$nao_ip:/home/nao/pykick/"
 
 # copy the files with scp
-scp -v striker.py utils.py finders.py \
-    movements.py imagereaders.py $destination
+scp "$repo/"*.py $destination
