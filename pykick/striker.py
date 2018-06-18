@@ -207,12 +207,21 @@ if __name__ == '__main__':
                     and ball_in_lower[1] > 0.28):
 
                     print('Ball is in lower camera, go to align')
-                    striker.mover.stop_moving()
-                    state = 'align'
+                    #striker.mover.stop_moving()
+                    #state = 'align'
+                    state='simple_kick'
                 else:
                     print('Continue running')
                     striker.run_to_ball()
                     state = 'tracking'
+            
+            elif state == 'simple_kick':
+                #striker.mover.set_head_angles(0,0.25,0.3)
+                print('Doing the simple kick')
+                striker.mover.move_to(0.3,0,0)
+                striker.mover.wait()
+                state = 'tracking'
+                
             elif state == 'align':
                 striker.mover.set_head_angles(0, 0.25, 0.3)
                 sleep(0.5)
