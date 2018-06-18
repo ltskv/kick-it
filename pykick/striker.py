@@ -22,7 +22,7 @@ class Striker(object):
                                         fps=30, cam_id=1)
         self.ball_finder = BallFinder(tuple(red_hsv[0]), tuple(red_hsv[1]),
                                       min_radius)
-        self.goal_finder = GoalFinder(white_hsv[0], white_hsv[1])
+        self.goal_finder = GoalFinder(tuple(white_hsv[0]), tuple(white_hsv[1]))
         self.lock_counter = 0
         self.loss_counter = 0
         self.run_after = run_after
@@ -160,8 +160,10 @@ class Striker(object):
         self.video_top.close()
         self.video_bot.close()
 
-#        +----> Ball tracking until lock <--------------+
-#        |       (search + rotation)                    |
+# ____________________ STRIKER __________________________
+#
+#        +----> Ball tracking (see below) <-------------+
+#        |                                              |
 #        |               |                              |
 #        |               |                              |
 #        |               v                              |
@@ -175,6 +177,35 @@ class Striker(object):
 #     successful |
 #                v
 #             Kick it!
+#
+# _______________________________________________________
+
+# ____________________ TRACKING _________________________
+#
+#                        yes
+# check if ball visible ---> rotate head to the ball
+#     ^            |                    |
+#     |            | no                 |
+#     |            v                    |
+#     +--- ball scan rotation           |
+#     |                                 |
+#     |                  no             V
+#     |               +---------- already rotating body?
+#     |               |                 |
+#     |               v                 | yes
+#     |       head angle too big?       v
+#     |             /  \            head angle
+#     |        yes /    \ no     is below threshold?
+#     |           v      v              |         |
+#     |        stop    successful       | no      | yes
+#     |       moving      exit          |         v
+#     +----- and start                  |    stop rotating body
+#     |    rotating body                |         |
+#     |                                 |         |
+#     +---------------------------------+---------+
+#
+# _______________________________________________________
+
 
 if __name__ == '__main__':
 
@@ -214,14 +245,14 @@ if __name__ == '__main__':
                     print('Continue running')
                     striker.run_to_ball()
                     state = 'tracking'
-            
+
             elif state == 'simple_kick':
                 #striker.mover.set_head_angles(0,0.25,0.3)
                 print('Doing the simple kick')
                 striker.mover.move_to(0.3,0,0)
                 striker.mover.wait()
                 state = 'tracking'
-                
+
             elif state == 'align':
                 striker.mover.set_head_angles(0, 0.25, 0.3)
                 sleep(0.5)
