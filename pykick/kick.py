@@ -21,3 +21,4 @@ if __name__ == "__main__":
     mover = NaoMover(cfg['ip'])
     mover.stand_up()
     mover.kick(foot=args.foot)
+    mover.rest()

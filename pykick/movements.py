@@ -9,21 +9,24 @@ class NaoMover(object):
     KICK_SEQUENCE = [
         # base_or_kicking, unsymmetric, joint, angle, speed
 
-        [[(0, 1, 'ShoulderRoll', -70, 0.025)], 1],
+        [[(0, 1, 'ShoulderRoll', -70, 0.4)], 1],
 
-        [[(0, 1, 'AnkleRoll', -9, 0.05),
-          (1, 1, 'AnkleRoll', -9, 0.05)],
-         2],
-
-        [[(1, 0, 'KneePitch', 90, 0.05),
-          (1, 0, 'AnklePitch', -40, 0.05)],
-         2,],
-
-        [[(1, 0, 'HipPitch', -45, 0.08),
-          (1, 0, 'KneePitch', 10, 0.20),
-          (1, 0, 'AnklePitch', 20, 0.16)],
+        [[(0, 1, 'AnkleRoll', -9, 0.2),
+          (1, 1, 'AnkleRoll', -9, 0.2)],
          1],
-        [[(1, 0, 'HipPitch', -55, 0.08)], 1]
+
+        [[(1, 0, 'KneePitch', 90, 0.3),
+          (1, 0, 'AnklePitch', -40, 0.4)],
+         1.5,],
+
+        [[(1, 0, 'HipPitch', -45, 0.05),
+          (1, 0, 'KneePitch', 10, 0.8),
+          (1, 0, 'AnklePitch', 20, 0.7)],
+         1],
+
+        [[(1, 0, 'KneePitch', 40, 0.25),
+          (1, 0, 'AnklePitch', 10, 0.25)],
+         1,],
     ]
 
     def __init__(self, nao_ip, nao_port=9559):
@@ -46,7 +49,6 @@ class NaoMover(object):
         self.set_hip_stiffness(0.8)
         self.set_knee_stiffness(0.8)
         self.set_ankle_stiffness(1)
-        multiplier = 5
         if foot == 'L':
             sides = ['R', 'L']
         elif foot == 'R':
@@ -58,11 +60,15 @@ class NaoMover(object):
                 if foot == 'R' and unsymmetric:
                     angle *= -1
                 self.mp.setAngles(
-                    [sides[side] + joint], [radians(angle)], speed * multiplier
+                    [sides[side] + joint], [radians(angle)], speed
                 )
             sleep(wait)
 
         self.stand_up(0.5)
+        self.set_arm_stiffness()
+        self.set_hip_stiffness()
+        self.set_knee_stiffness()
+        self.set_ankle_stiffness()
 
     def stand_up(self, speed=0.8):
         self.set_arm_stiffness(0.9)
