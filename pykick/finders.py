@@ -33,7 +33,7 @@ class GoalFinder(object):
 
         # Final similarity score is just the sum of both
         final_score = shape_sim + area_sim
-        print('Goal:', shape_sim, area_sim, final_score)
+        print('Candidate:', shape_sim, area_sim, final_score)
         return final_score
 
     def find_goal_contour(self, frame):
@@ -68,6 +68,8 @@ class GoalFinder(object):
 
         similarities = [self.goal_similarity(cnt) for cnt in good_cnts]
         best = min(similarities)
+        print('Final score:', best)
+        print()
         if best > 0.35:
             return None
         # Find the contour with the shape closest to that of the goal
