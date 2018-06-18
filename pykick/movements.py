@@ -11,18 +11,19 @@ class NaoMover(object):
 
         [[(0, 1, 'ShoulderRoll', -70, 0.025)], 1],
 
-        [[(0, 1, 'AnkleRoll', -10, 0.05),
-          (1, 1, 'AnkleRoll', -10, 0.05)],
+        [[(0, 1, 'AnkleRoll', -9, 0.05),
+          (1, 1, 'AnkleRoll', -9, 0.05)],
          2],
 
         [[(1, 0, 'KneePitch', 90, 0.05),
           (1, 0, 'AnklePitch', -40, 0.05)],
-         3,],
+         2,],
 
         [[(1, 0, 'HipPitch', -45, 0.08),
           (1, 0, 'KneePitch', 10, 0.20),
-          (1, 0, 'AnklePitch', 30, 0.16)],
-         4]
+          (1, 0, 'AnklePitch', 20, 0.16)],
+         1],
+        [[(1, 0, 'HipPitch', -55, 0.08)], 1]
     ]
 
     def __init__(self, nao_ip, nao_port=9559):
@@ -44,8 +45,8 @@ class NaoMover(object):
         self.set_arm_stiffness(0.8)
         self.set_hip_stiffness(0.8)
         self.set_knee_stiffness(0.8)
-        self.set_ankle_stiffness(0.8)
-        multiplier = 4
+        self.set_ankle_stiffness(1)
+        multiplier = 5
         if foot == 'L':
             sides = ['R', 'L']
         elif foot == 'R':

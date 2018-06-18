@@ -103,15 +103,17 @@ class Striker(object):
         if ball_angles is None:
             raise ValueError('No ball')
         x, y = ball_angles
-        goal_x, goal_y = 0.115, 0.25
+        goal_x, goal_y = 0.115, 0.32
         dx, dy = goal_x - x, goal_y - y
         if abs(dx) < 0.05 and abs(dy) < 0.05:
             print(x, y)
             return True
-        self.mover.move_to(dy * 0.5, 0, 0)
-        self.mover.wait()
-        self.mover.move_to(0, -dx * 0.5, 0)
-        self.mover.wait()
+        if abs(dy) > 0.05:
+            self.mover.move_to(dy * 0.5, 0, 0)
+            self.mover.wait()
+        if abs(dx) > 0.05:
+            self.mover.move_to(0, -dx * 0.5, 0)
+            self.mover.wait()
         return False
 
     def align_to_goal(self):
@@ -202,7 +204,7 @@ if __name__ == '__main__':
 
                 print(ball_in_lower)
                 if (ball_in_lower is not None
-                    and ball_in_lower[1] > 0.25):
+                    and ball_in_lower[1] > 0.28):
 
                     print('Ball is in lower camera, go to align')
                     striker.mover.stop_moving()
@@ -216,6 +218,7 @@ if __name__ == '__main__':
                 sleep(0.5)
                 try:
                     success = striker.align_to_ball()
+                    sleep(0.3)
                     if success:
                         state = 'kick'
                 except ValueError:
