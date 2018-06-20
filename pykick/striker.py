@@ -12,17 +12,17 @@ from .movements import NaoMover
 
 class Striker(object):
 
-    def __init__(self, nao_ip, nao_port, res, red_hsv, white_hsv,
-                 min_radius, run_after):
+    def __init__(self, nao_ip, nao_port, res, ball_hsv, goal_hsv,
+                 ball_min_radius, run_after):
         self.mover = NaoMover(nao_ip=nao_ip, nao_port=nao_port)
         self.mover.stand_up()
         self.video_top = NaoImageReader(nao_ip, port=nao_port, res=res,
                                         fps=30, cam_id=0)
         self.video_bot = NaoImageReader(nao_ip, port=nao_port, res=res,
                                         fps=30, cam_id=1)
-        self.ball_finder = BallFinder(tuple(red_hsv[0]), tuple(red_hsv[1]),
-                                      min_radius)
-        self.goal_finder = GoalFinder(tuple(white_hsv[0]), tuple(white_hsv[1]))
+        self.ball_finder = BallFinder(tuple(ball_hsv[0]), tuple(ball_hsv[1]),
+                                      ball_min_radius)
+        self.goal_finder = GoalFinder(tuple(goal_hsv[0]), tuple(goal_hsv[1]))
         self.lock_counter = 0
         self.loss_counter = 0
         self.run_after = run_after
@@ -214,9 +214,9 @@ if __name__ == '__main__':
         nao_ip=cfg['ip'],
         nao_port=cfg['port'],
         res=cfg['res'],
-        red_hsv=cfg['red'],
-        white_hsv=cfg['white'],
-        min_radius=cfg['min_radius'],
+        ball_hsv=cfg['ball'],
+        goal_hsv=cfg['goal'],
+        ball_min_radius=cfg['ball_min_radius'],
         run_after=False
     )
     try:

@@ -2,7 +2,8 @@ from __future__ import division
 
 import os
 import json
-from cv2 import resize as cv2_resize
+
+import cv2
 
 
 HERE = os.path.dirname(os.path.realpath(__file__))
@@ -26,4 +27,15 @@ def imresize(frame, width=None, height=None):
     if width and height:
         sf = 0
         sz = (width, height)
-    return cv2_resize(frame, sz, fx=sf, fy=sf)
+    return cv2.resize(frame, sz, fx=sf, fy=sf)
+
+
+def field_mask(frame, hsv_lower, hsv_upper):
+    hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+    blurred = cv2.GaussianBlur(hsv, (25, 25), 20)
+    thr = cv2.inRange(blurred, tuple(hsv_lower), tuple(hsv_upper))
+
+    # The ususal
+    thr = cv2.erode(thr, None, iterations=6)
+    thr = cv2.dilate(thr, None, iterations=20)
+    return thr

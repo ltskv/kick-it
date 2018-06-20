@@ -8,7 +8,7 @@ import cv2
 
 from .imagereaders import VideoReader, NaoImageReader, PictureReader
 from .finders import GoalFinder
-from .utils import read_config, imresize
+from .utils import read_config, imresize, field_mask
 
 class Colorpicker(object):
 
@@ -72,25 +72,28 @@ class Colorpicker(object):
                 map(self.settings.get, ('high_h', 'high_s', 'high_v'))
             )
 
-    def show_frame(self, frame, width=None):
-        hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-        frame_threshold = cv2.inRange(
-            hsv,
+    def show_frame(self, frame, width=None, manual=False):
+        # hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+        # frame_threshold = cv2.inRange(
+            # hsv,
+            # tuple(map(self.settings.get, ('low_h', 'low_s', 'low_v'))),
+            # tuple(map(self.settings.get, ('high_h', 'high_s', 'high_v')))
+        # )
+        frame = imresize(frame, width=width)
+        # frame_threshold = imresize(frame_threshold, width=width)
+
+        frame_threshold = field_mask(
+            frame,
             tuple(map(self.settings.get, ('low_h', 'low_s', 'low_v'))),
             tuple(map(self.settings.get, ('high_h', 'high_s', 'high_v')))
         )
-        frame = imresize(frame, width=width)
-        frame_threshold = imresize(frame_threshold, width=width)
 
-        if 'goal' in self.markers:
-            self.markers['goal'].draw(frame)
-
-        if 'ball' in self.markers:
-            self.markers['ball'].draw(frame)
+        for marker in self.markers:
+            self.markers[marker].draw(frame)
 
         cv2.imshow(self.WINDOW_CAPTURE_NAME, frame)
         cv2.imshow(self.WINDOW_DETECTION_NAME, frame_threshold)
-        return cv2.waitKey(1)
+        return cv2.waitKey(0 if manual else 1)
 
     def save(self, filename, color):
         try:
@@ -155,6 +158,13 @@ if __name__ == '__main__':
         action='store_true'
     )
     parser.add_argument(
+        '--manual',
+        help='switch frames manually',
+        action='store_true',
+        default=False
+    )
+
+    parser.add_argument(
         '--nao-cam',
         choices=[0, 1],
         type=int,
@@ -175,15 +185,15 @@ if __name__ == '__main__':
         default=640
     )
     parser.add_argument(
-        '--color',
-        help='specify which color is being calibrated',
-        default='white'
+        '--target',
+        help='specify for what target is being calibrated',
+        default='field'
     )
     args = parser.parse_args()
 
     cp = Colorpicker()
     if args.input_config:
-        cp.load(args.input_config, args.color)
+        cp.load(args.input_config, args.target)
 
     if args.video_file:
         rdr = VideoReader(args.video_file, loop=True)
@@ -205,12 +215,12 @@ if __name__ == '__main__':
         while True:
             if not args.still:
                 frame = rdr.get_frame()
-            key = cp.show_frame(frame, width=args.width)
+            key = cp.show_frame(frame, width=args.width, manual=args.manual)
             if key == ord('q') or key == 27:
                 break
     finally:
         cp.do_print()
         if args.output_config:
-            cp.save(args.output_config, args.color)
+            cp.save(args.output_config, args.target)
         if not args.still:
             rdr.close()
