@@ -104,8 +104,7 @@ if __name__ == '__main__':
                 cv2.bitwise_and(frame, frame, mask=field))
             goal_finder.draw(frame, goal)
             ball_finder.draw(frame, ball)
-            cv2.imshow(window_name,
-                cv2.bitwise_and(frame, frame, mask=field))
+            cv2.imshow(window_name, frame)
 
             key = cv2.waitKey(0 if args.manual else 1)
             if key == ord('q') or key == 27:
