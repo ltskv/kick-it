@@ -8,7 +8,7 @@ from .utils import read_config
 from .imagereaders import NaoImageReader
 from .finders import BallFinder, GoalFinder
 from .movements import NaoMover
-
+import sys
 
 class Striker(object):
 
@@ -271,90 +271,110 @@ if __name__ == '__main__':
         ball_min_radius=cfg['ball_min_radius'],
         run_after=False
     )
-    
+
+
+    args=''
     try:
-        # start with ball tracking first        
-        state = 'tracking'
-        
-        # state machine of the striker
-        while True:
+        args=sys.argv[1]   
+    except:
+        print("error")
 
-            # start time meassure for debbuging
-            loop_start = time()
+    if args:
+        if args == 'stand': 
+            striker.mover.stand_up()
+        elif args == 'rest':
+            striker.mover.rest()
+        elif args == 'kick':
+            striker.mover.stand_up()
+            striker.mover.kick()
+            striker.mover.rest()
+    
+    else:
 
-            # print the current state of the state machine
-            print('State:', state)
 
-            # actions in the tracking state
-            if state == 'tracking':
+	    try:
+		# start with ball tracking first        
+		state = 'tracking'
+		
+		# state machine of the striker
+		while True:
 
-                # start ball approach when ball is visible
-                if striker.ball_tracking():
-                    state = 'ball_approach'
+		    # start time meassure for debbuging
+		    loop_start = time()
 
-            # actions in the ball_approach state
-            elif state == 'ball_approach':
+		    # print the current state of the state machine
+		    print('State:', state)
 
-                # get the angle of the ball in the picture of the lower camera
-                ball_in_lower = striker.get_ball_angles_from_camera(
-                    striker.video_bot
-                )
+		    # actions in the tracking state
+		    if state == 'tracking':
 
-                # print the angle of the ball in the lower camera
-                print(ball_in_lower)
+		        # start ball approach when ball is visible
+		        if striker.ball_tracking():
+		            state = 'ball_approach'
 
-                # check if the ball is in the lower camera
-                # and the angle is above a specific threshold (ball is close enough)
-                if (ball_in_lower is not None
-                    and ball_in_lower[1] > 0.28):
+		    # actions in the ball_approach state
+		    elif state == 'ball_approach':
 
-                    print('Ball is in lower camera, go to align')
-                    #striker.mover.stop_moving()
-                    #state = 'align'
+		        # get the angle of the ball in the picture of the lower camera
+		        ball_in_lower = striker.get_ball_angles_from_camera(
+		            striker.video_bot
+		        )
 
-                    # perform a simple kick
-                    state='simple_kick'
+		        # print the angle of the ball in the lower camera
+		        print(ball_in_lower)
 
-                # continue moving, if the ball is not close enough
-                # or not in the view of the lower camera
-                else:
-                    print('Continue running')
-                    striker.run_to_ball()
+		        # check if the ball is in the lower camera
+		        # and the angle is above a specific threshold (ball is close enough)
+		        if (ball_in_lower is not None
+		            and ball_in_lower[1] > 0.28):
 
-                    # go back to the tracking state
-                    state = 'tracking'
+		            print('Ball is in lower camera, go to align')
+		            #striker.mover.stop_moving()
+		            #state = 'align'
 
-            # actions in the simple_kick state
-            elif state == 'simple_kick':
-                #striker.mover.set_head_angles(0,0.25,0.3)
-                print('Doing the simple kick')
+		            # perform a simple kick
+		            state='simple_kick'
 
-                # just walk a short distance straight forward,
-                # as the ball should be straight ahead in a small distance
-                striker.mover.move_to(0.3,0,0)
-                striker.mover.wait()
+		        # continue moving, if the ball is not close enough
+		        # or not in the view of the lower camera
+		        else:
+		            print('Continue running')
+		            striker.run_to_ball()
 
-                # go back to the tracking state after the simple_kick
-                state = 'tracking'
+		            # go back to the tracking state
+		            state = 'tracking'
 
-            elif state == 'align':
-                striker.mover.set_head_angles(0, 0.25, 0.3)
-                sleep(0.5)
-                try:
-                    success = striker.align_to_ball()
-                    sleep(0.3)
-                    if success:
-                        state = 'kick'
-                except ValueError:
-                    striker.mover.set_head_angles(0, 0, 0.3)
-                    state = 'tracking'
-            elif state == 'kick':
-                print('KICK!')
-                striker.mover.kick()
-                break
+		    # actions in the simple_kick state
+		    elif state == 'simple_kick':
+		        #striker.mover.set_head_angles(0,0.25,0.3)
+		        print('Doing the simple kick')
 
-            # stop time meassuring for debbuging and print the time of the loop
-            loop_end = time()
-            print('Loop time:', loop_end - loop_start)
-    finally:
-        striker.close()
+		        # just walk a short distance straight forward,
+		        # as the ball should be straight ahead in a small distance
+		        striker.mover.move_to(0.3,0,0)
+		        striker.mover.wait()
+
+		        # go back to the tracking state after the simple_kick
+		        state = 'tracking'
+
+		    elif state == 'align':
+		        striker.mover.set_head_angles(0, 0.25, 0.3)
+		        sleep(0.5)
+		        try:
+		            success = striker.align_to_ball()
+		            sleep(0.3)
+		            if success:
+		                state = 'kick'
+		        except ValueError:
+		            striker.mover.set_head_angles(0, 0, 0.3)
+		            state = 'tracking'
+		    elif state == 'kick':
+		        print('KICK!')
+		        striker.mover.kick()
+		        break
+
+		    # stop time meassuring for debbuging and print the time of the loop
+		    loop_end = time()
+		    print('Loop time:', loop_end - loop_start)
+	    finally:
+		striker.close()
