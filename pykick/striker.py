@@ -278,28 +278,30 @@ if __name__ == '__main__':
     # rest
     # kick
 
-    # try to readout arguments
-    try:
-        args=sys.argv[1]   
-    except NameError:
-        args=''
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-s", "--stand", action="store_true",
+                    help="let the robot stand up")
+    parser.add_argument("-k", "--kick", action="store_true",
+                    help="let the robot do a fancy kick")
+    parser.add_argument("-r", "--rest", action="store_true",
+                    help="let the robot rest")
+                    
+    args = parser.parse_args()
 
-    # check input argument
-    if args:
+    # bring robot in stand_up position
+    if args.stand: 
+        striker.mover.stand_up()
 
-        # bring robot in stand_up position
-        if args == 'stand': 
-            striker.mover.stand_up()
+    # bring robot in rest postion
+    elif args.rest:
+        striker.mover.rest()
 
-        # bring robot in rest postion
-        elif args == 'rest':
-            striker.mover.rest()
-
-        # perform a fancy kick
-        elif args == 'kick':
-            striker.mover.stand_up()
-            striker.mover.kick()
-            striker.mover.rest()
+    # perform a fancy kick
+    elif args.kick:
+        striker.mover.stand_up()
+        striker.mover.kick()
+        striker.mover.rest()
+   
     
     # perform normal state-machine if no input argument is given
     else:
