@@ -39,6 +39,6 @@
         ]
     ], 
     "cam": 1, 
-    "min_radius": 0.01, 
+    "ball_min_radius": 0.01, 
     "port": 9559
 }
