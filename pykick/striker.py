@@ -273,25 +273,37 @@ if __name__ == '__main__':
     )
 
 
-    args=''
+    # allow additional arguments when running the function like 
+    # stand 
+    # rest
+    # kick
+
+    # try to readout arguments
     try:
         args=sys.argv[1]   
-    except:
-        print("error")
+    except NameError:
+        args=''
 
+    # check input argument
     if args:
+
+        # bring robot in stand_up position
         if args == 'stand': 
             striker.mover.stand_up()
+
+        # bring robot in rest postion
         elif args == 'rest':
             striker.mover.rest()
+
+        # perform a fancy kick
         elif args == 'kick':
             striker.mover.stand_up()
             striker.mover.kick()
             striker.mover.rest()
     
+    # perform normal state-machine if no input argument is given
     else:
-
-
+    
 	    try:
 		# start with ball tracking first        
 		state = 'tracking'
