@@ -28,15 +28,28 @@ class Striker(object):
         self.run_after = run_after
         self.in_move = False
 
+    # this function will scan for the ball, if it is not in sight
     def ball_scan(self):
+
+        # determine current head angle
         yaw = self.mover.get_head_angles()[0]
         mag = abs(yaw)
+
+        # determine direction of head rotation
         sign = 1 if yaw >= 0 else -1
+
+        # the robot starts to move arround his z-Axis in the direction where his head is aligned
+        # when the head yaw angle has reached his maximum
         if mag > 2:
             self.mover.move_to(0, 0, sign * pi / 12)
+
+        # rotate head to the left, if head yaw angle is equally zero or larger
+        # rotate head to the right, if head yaw angle is smaller than zero
         else:
             self.mover.change_head_angles(sign * pi / 4, 0, 0.5)
 
+    # this function detects the ball in the view of a given camera view
+    # and returns the angles of the ball to the camera
     def get_ball_angles_from_camera(self, cam):
         ball = self.ball_finder.find_colored_ball(
             cam.get_frame()
@@ -52,26 +65,50 @@ class Striker(object):
     def distance_to_ball(self):
         return 0.5
 
+    # this function tracks the ball in the camera views
     def ball_tracking(self):
+
+        # get video streams from both cameras
         cams = [self.video_top, self.video_bot]
         in_sight = False
+
+        # try to determine the angle of the ball to the cameras in both streams
         for cam in cams:
             ball_angles = self.get_ball_angles_from_camera(cam)
+
+            # check if the ball angles could be determined                        
             if ball_angles is not None:
+
+                # safe ball angles in x,y
                 x, y = ball_angles
+
+                # ball is in view -> set in_sight variable to true
                 in_sight = True
+
+                # reset ball loss counter
                 self.loss_counter = 0
                 break
 
+        # actions, if the ball is not in sight
         if not in_sight:
             print('No ball in sight')
+
+            # increase ball loss counter
             self.loss_counter += 1
+
+            # if ball is not in view for more than five times,
+            # start a ball scan
             if self.loss_counter > 5:
                 self.ball_scan()
             return False
 
+        # check if the x angle between the robot and the ball is above a specific threshold
         if abs(x) > 0.15:
+
+            # stop the robot, if the angle is to large
             self.mover.stop_moving()
+            
+            # align the robot to the ball
             self.turn_to_ball(x, y)
             return False
         else:
@@ -80,24 +117,39 @@ class Striker(object):
     def run_to_ball(self):
         self.mover.move_to(1, 0, 0)
 
+    # this function aligns the robot to the ball
     def turn_to_ball(self, ball_x, ball_y):
+
+        # only the x ball angle is relevant for the rotation
         d_yaw, d_pitch = ball_x, 0
         print('ball yaw:', d_yaw)
 
+        # check if the angle between the robot and the ball is above a specific threshold
         if (abs(d_yaw) > 0.01):
+            
+            # try to align camera with the ball
             self.mover.change_head_angles(d_yaw, d_pitch,
                                           abs(d_yaw) / 2)
             sleep(1)
             self.mover.wait()
 
+        # determine current head angle to estimate
+        # how far the robot has to rotate arround the z-Axis
         yaw = self.mover.get_head_angles()[0]
         print('head yaw', yaw)
-        if abs(yaw) > 0.05:
+
+        # determine if the angle of the head to the body is above a specific threshold
+        if abs(yaw) > 0.05:       
             print('Going to rotate')
+
+            # change the head angles to 0 0
             self.mover.set_head_angles(0, 0, 0.5)
+
+            # rotate robot arround the z-Axis for the estimated angle
             self.mover.move_to(0, 0, yaw)
             self.mover.wait()
 
+    
     def align_to_ball(self):
         ball_angles = self.get_ball_angles_from_camera(self.video_bot)
         if ball_angles is None:
@@ -219,38 +271,70 @@ if __name__ == '__main__':
         ball_min_radius=cfg['ball_min_radius'],
         run_after=False
     )
+    
     try:
+        # start with ball tracking first        
         state = 'tracking'
+        
+        # state machine of the striker
         while True:
+
+            # start time meassure for debbuging
             loop_start = time()
+
+            # print the current state of the state machine
             print('State:', state)
+
+            # actions in the tracking state
             if state == 'tracking':
+
+                # start ball approach when ball is visible
                 if striker.ball_tracking():
                     state = 'ball_approach'
 
+            # actions in the ball_approach state
             elif state == 'ball_approach':
+
+                # get the angle of the ball in the picture of the lower camera
                 ball_in_lower = striker.get_ball_angles_from_camera(
                     striker.video_bot
                 )
 
+                # print the angle of the ball in the lower camera
                 print(ball_in_lower)
+
+                # check if the ball is in the lower camera
+                # and the angle is above a specific threshold (ball is close enough)
                 if (ball_in_lower is not None
                     and ball_in_lower[1] > 0.28):
 
                     print('Ball is in lower camera, go to align')
                     #striker.mover.stop_moving()
                     #state = 'align'
+
+                    # perform a simple kick
                     state='simple_kick'
+
+                # continue moving, if the ball is not close enough
+                # or not in the view of the lower camera
                 else:
                     print('Continue running')
                     striker.run_to_ball()
+
+                    # go back to the tracking state
                     state = 'tracking'
 
+            # actions in the simple_kick state
             elif state == 'simple_kick':
                 #striker.mover.set_head_angles(0,0.25,0.3)
                 print('Doing the simple kick')
+
+                # just walk a short distance straight forward,
+                # as the ball should be straight ahead in a small distance
                 striker.mover.move_to(0.3,0,0)
                 striker.mover.wait()
+
+                # go back to the tracking state after the simple_kick
                 state = 'tracking'
 
             elif state == 'align':
@@ -268,6 +352,8 @@ if __name__ == '__main__':
                 print('KICK!')
                 striker.mover.kick()
                 break
+
+            # stop time meassuring for debbuging and print the time of the loop
             loop_end = time()
             print('Loop time:', loop_end - loop_start)
     finally:
