@@ -8,7 +8,7 @@ from .utils import read_config
 from .imagereaders import NaoImageReader
 from .finders import BallFinder, GoalFinder
 from .movements import NaoMover
-import sys
+import argparse
 
 class Striker(object):
 
@@ -277,6 +277,7 @@ if __name__ == '__main__':
     # stand 
     # rest
     # kick
+    # if no argument is given the state machine is run
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-s", "--stand", action="store_true",
