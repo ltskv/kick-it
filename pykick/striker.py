@@ -31,8 +31,6 @@ class Striker(object):
         self.run_after = run_after
         self.in_move = False
         self.speaker = ALProxy("ALTextToSpeech", bytes(nao_ip), nao_port)
-        self.speaker.setParameter("pitchShift", 2)
-        self.speaker.setParameter("speed", 50)
         self.tts_thread = None
         self.last_speak = None
 
