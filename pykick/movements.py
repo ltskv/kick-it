@@ -18,19 +18,18 @@ class NaoMover(object):
           (1, 1, 'AnkleRoll', -9, 0.2)],
          1],
 
-        # lift the feed using the knee joint and the ankle joint
+        # lift the foot using the knee joint and the ankle joint
         [[(1, 0, 'KneePitch', 90, 0.3),
           (1, 0, 'AnklePitch', -40, 0.4)],
          1.5,],
 
-        # move feed back using hip, knee and ankle joint
+        # kick-it!
         [[(1, 0, 'HipPitch', -45, 0.05),
           (1, 0, 'KneePitch', 10, 0.8),
           (1, 0, 'AnklePitch', 20, 0.7)],
          1],
 
-        # move feed forward using knee and ankle joint
-        # perform the kick
+        # prepare to return into standing position
         [[(1, 0, 'KneePitch', 40, 0.25),
           (1, 0, 'AnklePitch', 10, 0.25)],
          1,],
