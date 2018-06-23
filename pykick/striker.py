@@ -1,6 +1,8 @@
 from __future__ import print_function
 from __future__ import division
 
+import argparse
+from threading import Thread
 from math import pi
 from time import sleep, time
 
@@ -8,9 +10,7 @@ from .utils import read_config
 from .imagereaders import NaoImageReader
 from .finders import BallFinder, GoalFinder
 from .movements import NaoMover
-import argparse
 from naoqi import ALProxy
-from threading import Thread
 
 
 class Striker(object):
@@ -72,7 +72,7 @@ class Striker(object):
         """Detect the ball and return its angles in camera coordinates."""
         try:
             ball = self.ball_finder.find(cam.get_frame())
-        except RuntimeError as e:
+        except RuntimeError as e:  # Sometimes camera doesn't return an image
             print(e)
             return None
 

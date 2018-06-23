@@ -29,13 +29,22 @@ class FieldFinder(object):
             return None
         field = max(cnts, key=cv2.contourArea)
         field = cv2.convexHull(field)
-        mask = np.zeros(thr.shape, dtype=np.uint8)
-        cv2.drawContours(mask, (field,), -1, 255, -1)
-        return mask
+        return field
 
     def draw(self, frame, field):
         if field is not None:
-            frame = cv2.bitwise_and(frame, frame, mask=field)
+            frame = frame.copy()
+            cv2.drawContours(frame, (field,), -1, (0, 0, 255), 2)
+        return frame
+
+    def mask_it(self, frame, field, inverse=False):
+        if field is not None:
+            print(frame.shape)
+            mask = np.zeros(frame.shape[:2], dtype=np.uint8)
+            cv2.drawContours(mask, (field,), -1, 255, -1)
+            if inverse:
+                mask = cv2.bitwise_not(mask)
+            frame = cv2.bitwise_and(frame, frame, mask=mask)
         return frame
 
 

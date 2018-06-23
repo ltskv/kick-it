@@ -5,7 +5,7 @@ import argparse
 
 import cv2
 
-from .utils import read_config, imresize, field_mask
+from .utils import read_config, imresize
 from .imagereaders import NaoImageReader, VideoReader, PictureReader
 from .finders import BallFinder, GoalFinder, FieldFinder
 
@@ -100,10 +100,9 @@ if __name__ == '__main__':
             frame = imresize(frame, width=args.width)
 
             field = field_finder.find(frame)
-            not_field = cv2.bitwise_not(field)
 
-            ball_frame = field_finder.draw(frame, field)
-            goal_frame = field_finder.draw(frame, not_field)
+            ball_frame = field_finder.mask_it(frame, field)
+            goal_frame = field_finder.mask_it(frame, field, inverse=True)
 
             ball = ball_finder.find(ball_frame)
             goal = goal_finder.find(goal_frame)
