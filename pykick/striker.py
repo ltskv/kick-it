@@ -84,6 +84,21 @@ class Striker(object):
         x, y = cam.to_angles(x, y)
         return x, y
 
+    def get_goal_center_angle_from_camera(self, cam):
+        try:
+            goal = self.goal_finder.find(cam.get_frame())
+        except RuntimeError as e:  # Sometimes camera doesn't return an image
+            print(e)
+            return None
+
+        if goal is None:
+            return None
+
+        goal_x = self.goal_finder.goal_center(goal)
+        goal_x, _ = cam.to_relative(goal_x, 0)
+        goal_x, _ = cam.to_angles(goal_x, 0)
+        return goal_x
+
     def distance_to_ball(self):
         return 0.5
 
@@ -221,6 +236,35 @@ class Striker(object):
         self.upper_camera.close()
         self.lower_camera.close()
 
+    def ball_and_goal_search(self):
+        ball_x = None
+        goal_center_x = None
+        angles = [0, -pi/6, -pi/3, pi/6, pi/3]
+        for angle in angles:
+            self.mover.set_head_angles(angle, 0)
+            sleep(0.5)
+            if ball_x is None:
+                bx = self.get_ball_angles_from_camera(
+                    self.lower_camera
+                )
+                ball_x = bx[0] + angle if bx is not None else None
+                print('Ball found: ' + str(ball_x) if ball_x is not None
+                      else 'Ball not found at ' + str(angle))
+            for i in range(5):
+                print(i, goal_center_x)
+                if goal_center_x is None:
+                    gcx = self.get_goal_center_angle_from_camera(
+                        self.upper_camera
+                    )
+                    goal_center_x = gcx + angle if gcx is not None else None
+                    print('Goal found: ' + str(goal_center_x)
+                          if goal_center_x is not None
+                          else 'Goal not found at ' + str(angle))
+            if ball_x is not None and goal_center_x is not None:
+                return ball_x, goal_center_x
+        return None
+
+
 # ____________________ STRIKER __________________________
 #
 #        +----> Ball tracking (see below) <-------------+
@@ -228,16 +272,16 @@ class Striker(object):
 #        |               |                              |
 #        |               |                              |
 #        |               v                              |
-#        |          Try goal align                      |
+#        |          Ball in lower cam?                  |
 #        |              /  \                            |
-#   lost |      can do /    \ cannot do                 |
+#   lost |      yes    /    \ cannot do                 |
 #   ball |            v      v                          |
-#        +-- Align until   Ball is only in top camera --+
-#             success.          Move closer.
+#        +-- Goal align    Ball is only in top camera --+
+#                |              Move closer.
 #                |
 #     successful |
 #                v
-#             Kick it!
+#             Kick it! (Fancy or simple)
 #
 # _______________________________________________________
 
@@ -313,7 +357,7 @@ if __name__ == '__main__':
     # (see diagram above)
     else:
         try:  # Hit Ctrl-C to stop, cleanup and exit
-            state = 'tracking'
+            state = 'goal_align'
             # t = None
             while True:
                 # meassure time for debbuging
@@ -332,16 +376,13 @@ if __name__ == '__main__':
                         striker.lower_camera
                     )
                     print(ball_in_lower)
-                    if (ball_in_lower is not None and ball_in_lower[1] > 0.28):
-
+                    if (ball_in_lower is not None and ball_in_lower[1] > 0.10):
                         print('Ball is close enough, stop approach')
-                        # striker.speak("Ball is close enough stop approach")
-                        # striker.mover.stop_moving()
-                        # state = 'align'
-                        state = 'simple_kick'
+                        striker.mover.stop_moving()
+                        striker.say('Align to goal')
+                        state = 'goal_align'
                     else:
                         print('Continue running')
-                        # striker.speak("Continue running")
                         striker.run_to_ball()
                         state = 'tracking'
 
@@ -367,6 +408,10 @@ if __name__ == '__main__':
                     except ValueError:
                         striker.mover.set_head_angles(0, 0, 0.3)
                         state = 'tracking'
+
+                elif state == 'goal_align':
+                    print(striker.ball_and_goal_search())
+                    break
 
                 elif state == 'kick':
                     print('KICK!')

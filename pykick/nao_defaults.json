@@ -24,7 +24,7 @@
             255
         ]
     ], 
-    "res": 1, 
+    "res": 2, 
     "ball_min_radius": 0.01, 
     "field": [
         [

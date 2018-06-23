@@ -127,11 +127,11 @@ class NaoMover(object):
     def get_head_angles(self):
         return self.mp.getAngles(('HeadYaw', 'HeadPitch'), False)
 
-    def change_head_angles(self, d_yaw, d_pitch, speed):
+    def change_head_angles(self, d_yaw, d_pitch, speed=0.5):
         self.mp.changeAngles(('HeadYaw', 'HeadPitch'),
                              (d_yaw, d_pitch), speed)
 
-    def set_head_angles(self, yaw, pitch, speed):
+    def set_head_angles(self, yaw, pitch, speed=0.5):
         self.mp.setAngles(('HeadYaw', 'HeadPitch'),
                               (yaw, pitch), speed)
 
