@@ -21,8 +21,9 @@ class NaoImageReader(object):
         self.res = self.RESOLUTIONS[res]
         self.cam_id=cam_id
         self.vd = ALProxy('ALVideoDevice', ip, port)
+        streamer_name = '_'.join(['lower' if cam_id else 'upper', str(res)])
         self.sub = self.vd.subscribeCamera(
-            "video_streamer", cam_id, res, 13, fps
+            streamer_name, cam_id, res, 13, fps
         )
 
     def to_angles(self, x, y):
@@ -36,10 +37,8 @@ class NaoImageReader(object):
     def get_frame(self):
         result = self.vd.getImageRemote(self.sub)
         self.vd.releaseImage(self.sub)
-        if result == None:
-            raise RuntimeError('cannot capture')
-        elif result[6] == None:
-            raise ValueError('no image data string')
+        if result is None or result[6] is None:
+            raise RuntimeError("Couldn't capture")
         else:
             height, width = self.res
             return np.frombuffer(result[6], dtype=np.uint8).reshape(
