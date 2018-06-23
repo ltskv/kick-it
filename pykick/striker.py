@@ -9,6 +9,8 @@ from .imagereaders import NaoImageReader
 from .finders import BallFinder, GoalFinder
 from .movements import NaoMover
 import argparse
+from naoqi import ALProxy
+from threading import Thread
 
 
 class Striker(object):
@@ -28,7 +30,23 @@ class Striker(object):
         self.loss_counter = 0
         self.run_after = run_after
         self.in_move = False
+        self.speaker = ALProxy("ALTextToSpeech",bytes(nao_ip),nao_port)
+        self.speaker.setParameter("pitchShift",2)
+        self.speaker.setParameter("speed",50)
+        self.tts_thread = None
+        self.last_speak = None
 
+    def speak(self, text):
+        if (self.tts_thread is None or not self.tts_thread.isAlive() ) and text!=self.last_speak:
+            self.tts_thread = Thread(
+                target=lambda text: self.speaker.say(str(text)),
+                args=(text,)
+            )
+            self.tts_thread.start()
+            self.last_speak=text
+        
+        
+    
     def ball_scan(self):
         """Intelligently rotate the robot to search for stuff."""
         yaw = self.mover.get_head_angles()[0]
@@ -41,10 +59,11 @@ class Striker(object):
         # head is aligned when the head yaw angle has reached his maximum
         if mag > 2:
             self.mover.move_to(0, 0, sign * pi / 12)
-
+            self.speak("Where is the ball? I am searching for it")
         # rotate head to the left, if head yaw angle is equally zero or larger
         # rotate head to the right, if head yaw angle is smaller than zero
         else:
+            #self.speak("I have found the ball")
             self.mover.change_head_angles(sign * pi / 4, 0, 0.5)
 
     def get_ball_angles_from_camera(self, cam):
@@ -95,6 +114,7 @@ class Striker(object):
 
         # turn to ball, if the angle between the ball and the robot is too big
         if abs(x) > 0.15:
+            #self.speak('Align to the ball')
             self.mover.stop_moving()
             self.turn_to_ball(x, y)
             return False
@@ -130,6 +150,7 @@ class Striker(object):
         # align body with the head
         if abs(yaw) > 0.05:
             print('Going to rotate')
+            self.speak("Going to rotate")
             self.mover.set_head_angles(0, 0, 0.5)
             self.mover.move_to(0, 0, yaw)
             self.mover.wait()
@@ -291,14 +312,17 @@ if __name__ == '__main__':
     else:
         try:  # Hit Ctrl-C to stop, cleanup and exit
             state = 'tracking'
+            #t = None
             while True:
                 # meassure time for debbuging
                 loop_start = time()
                 print('State:', state)
-
+                #striker.speak(str(state))
+                
                 if state == 'tracking':
                     # start ball approach when ball is visible
                     if striker.ball_tracking():
+                        striker.speak("ball_approach")
                         state = 'ball_approach'
 
                 elif state == 'ball_approach':
@@ -307,12 +331,17 @@ if __name__ == '__main__':
                     )
                     print(ball_in_lower)
                     if (ball_in_lower is not None and ball_in_lower[1] > 0.28):
+                        
+                        #t = Thread(target=striker.speak, args=["Ball is close enough, stop approach"])
+                        #t.start()
                         print('Ball is close enough, stop approach')
+                        #striker.speak("Ball is close enough stop approach")
                         #striker.mover.stop_moving()
                         #state = 'align'
                         state='simple_kick'
                     else:
                         print('Continue running')
+                        ##striker.speak("Continue running")
                         striker.run_to_ball()
                         state = 'tracking'
 
@@ -322,6 +351,7 @@ if __name__ == '__main__':
 
                     # just walk a short distance forward, ball should be near
                     # and it will probably be kicked in the right direction
+                    striker.speak("Simple Kick")
                     striker.mover.move_to(0.3,0,0)
                     striker.mover.wait()
                     state = 'tracking'
