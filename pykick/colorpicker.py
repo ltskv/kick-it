@@ -7,15 +7,15 @@ import argparse
 import cv2
 
 from .imagereaders import VideoReader, NaoImageReader, PictureReader
-from .finders import GoalFinder
-from .utils import read_config, imresize, field_mask
+from .finders import GoalFinder, BallFinder, FieldFinder
+from .utils import read_config, imresize
 
 class Colorpicker(object):
 
-    WINDOW_CAPTURE_NAME = 'Video Capture'
-    WINDOW_DETECTION_NAME = 'Object Detection'
+    WINDOW_CAPTURE_NAME = 'Object Detection (or not)'
+    WINDOW_DETECTION_NAME = 'Primary Mask'
 
-    def __init__(self, markers=()):
+    def __init__(self, target=None):
         parameters = ['low_h', 'low_s', 'low_v', 'high_h', 'high_s', 'high_v']
         maxes = [180, 255, 255, 180, 255, 255]
         checkers = [
@@ -34,12 +34,22 @@ class Colorpicker(object):
             'high_s': 255,
             'high_v': 255
         }
-        self.markers = {}
-        if 'goal' in markers:
-            self.markers['goal'] = GoalFinder(
+        if target == 'goal':
+            Marker = GoalFinder
+        elif target == 'ball':
+            Marker = BallFinder
+        elif target == 'field':
+            Marker = FieldFinder
+        else:
+            Marker = None
+
+        if Marker is not None:
+            self.marker = Marker(
                 tuple(map(self.settings.get, ('low_h', 'low_s', 'low_v'))),
                 tuple(map(self.settings.get, ('high_h', 'high_s', 'high_v')))
             )
+        else:
+            self.marker = None
 
         cv2.namedWindow(self.WINDOW_CAPTURE_NAME)
         cv2.namedWindow(self.WINDOW_DETECTION_NAME)
@@ -64,35 +74,29 @@ class Colorpicker(object):
     def _hsv_updated(self, param):
         cv2.setTrackbarPos(param, self.WINDOW_DETECTION_NAME,
                            self.settings[param])
-        for marker in self.markers:
-            self.markers[marker].hsv_lower = tuple(
-                map(self.settings.get, ('low_h', 'low_s', 'low_v'))
-            )
-            self.markers[marker].hsv_upper = tuple(
-                map(self.settings.get, ('high_h', 'high_s', 'high_v'))
-            )
-
-    def show_frame(self, frame, width=None, manual=False):
-        # hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-        # frame_threshold = cv2.inRange(
-            # hsv,
-            # tuple(map(self.settings.get, ('low_h', 'low_s', 'low_v'))),
-            # tuple(map(self.settings.get, ('high_h', 'high_s', 'high_v')))
-        # )
-        frame = imresize(frame, width=width)
-        # frame_threshold = imresize(frame_threshold, width=width)
-
-        frame_threshold = field_mask(
-            frame,
-            tuple(map(self.settings.get, ('low_h', 'low_s', 'low_v'))),
-            tuple(map(self.settings.get, ('high_h', 'high_s', 'high_v')))
+        self.marker.hsv_lower = tuple(
+            map(self.settings.get, ('low_h', 'low_s', 'low_v'))
+        )
+        self.marker.hsv_upper = tuple(
+            map(self.settings.get, ('high_h', 'high_s', 'high_v'))
         )
 
-        for marker in self.markers:
-            self.markers[marker].draw(frame)
+    def show_frame(self, frame, width=None, manual=False):
+        frame = imresize(frame, width=width)
+        if self.marker is not None:
+            thr = self.marker.primary_mask(frame)
+            stuff = self.marker.find(frame)
+            frame = self.marker.draw(frame, stuff)
+        else:
+            hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+            thr = cv2.inRange(
+                hsv,
+                tuple(map(self.settings.get, ('low_h', 'low_s', 'low_v'))),
+                tuple(map(self.settings.get, ('high_h', 'high_s', 'high_v')))
+            )
 
         cv2.imshow(self.WINDOW_CAPTURE_NAME, frame)
-        cv2.imshow(self.WINDOW_DETECTION_NAME, frame_threshold)
+        cv2.imshow(self.WINDOW_DETECTION_NAME, thr)
         return cv2.waitKey(0 if manual else 1)
 
     def save(self, filename, color):
@@ -102,10 +106,10 @@ class Colorpicker(object):
         except IOError:
             conf = {}
         conf.update(
-            {color:
-             [list(map(self.settings.get, ['low_h', 'low_s', 'low_v'])),
-              list(map(self.settings.get, ['high_h', 'high_s', 'high_v']))]
-            }
+            {color: [
+                list(map(self.settings.get, ['low_h', 'low_s', 'low_v'])),
+                list(map(self.settings.get, ['high_h', 'high_s', 'high_v']))
+            ]}
         )
         with open(filename, 'w') as f:
             json.dump(conf, f, indent=4)
@@ -191,7 +195,7 @@ if __name__ == '__main__':
     )
     args = parser.parse_args()
 
-    cp = Colorpicker()
+    cp = Colorpicker(args.target)
     if args.input_config:
         cp.load(args.input_config, args.target)
 

@@ -7,7 +7,7 @@ import cv2
 
 from .utils import read_config, imresize, field_mask
 from .imagereaders import NaoImageReader, VideoReader, PictureReader
-from .finders import BallFinder, GoalFinder
+from .finders import BallFinder, GoalFinder, FieldFinder
 
 
 if __name__ == '__main__':
@@ -83,9 +83,12 @@ if __name__ == '__main__':
 
     goal_finder = GoalFinder(defaults['goal'][0], defaults['goal'][1])
     ball_finder = BallFinder(defaults['ball'][0], defaults['ball'][1],
-                             defaults['min_radius'])
-    window_name = 'Live detection'
-    cv2.namedWindow(window_name)
+                             defaults['ball_min_radius'])
+    field_finder = FieldFinder(defaults['field'][0], defaults['field'][1])
+    ball_window = 'Ball detection'
+    goal_window = 'Goal detection'
+    cv2.namedWindow(ball_window)
+    cv2.namedWindow(goal_window)
 
     try:
         if args.still:
@@ -95,16 +98,21 @@ if __name__ == '__main__':
             if not args.still:
                 frame = rdr.get_frame()
             frame = imresize(frame, width=args.width)
-            field_hsv = defaults['field']
-            field = field_mask(frame, field_hsv[0], field_hsv[1])
+
+            field = field_finder.find(frame)
             not_field = cv2.bitwise_not(field)
-            goal = goal_finder.find_goal_contour(
-                cv2.bitwise_and(frame, frame, mask=not_field))
-            ball = ball_finder.find_colored_ball(
-                cv2.bitwise_and(frame, frame, mask=field))
-            goal_finder.draw(frame, goal)
-            ball_finder.draw(frame, ball)
-            cv2.imshow(window_name, frame)
+
+            ball_frame = field_finder.draw(frame, field)
+            goal_frame = field_finder.draw(frame, not_field)
+
+            ball = ball_finder.find(ball_frame)
+            goal = goal_finder.find(goal_frame)
+
+            ball_frame = ball_finder.draw(ball_frame, ball)
+            goal_frame = goal_finder.draw(goal_frame, goal)
+
+            cv2.imshow(ball_window, ball_frame)
+            cv2.imshow(goal_window, goal_frame)
 
             key = cv2.waitKey(0 if args.manual else 1)
             if key == ord('q') or key == 27:

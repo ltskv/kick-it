@@ -7,12 +7,50 @@ import cv2
 import numpy as np
 
 
+class FieldFinder(object):
+
+    def __init__(self, hsv_lower, hsv_upper):
+        self.hsv_lower = tuple(hsv_lower)
+        self.hsv_upper = tuple(hsv_upper)
+
+    def primary_mask(self, frame):
+        hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+        blurred = cv2.GaussianBlur(hsv, (25, 25), 20)
+        thr = cv2.inRange(blurred, tuple(self.hsv_lower), tuple(self.hsv_upper))
+        thr = cv2.erode(thr, None, iterations=6)
+        thr = cv2.dilate(thr, None, iterations=10)
+        return thr
+
+    def find(self, frame):
+        thr = self.primary_mask(frame)
+        cnts, _ = cv2.findContours(thr.copy(), cv2.RETR_EXTERNAL,
+                                   cv2.CHAIN_APPROX_SIMPLE)
+        if not cnts:
+            return None
+        field = max(cnts, key=cv2.contourArea)
+        field = cv2.convexHull(field)
+        mask = np.zeros(thr.shape, dtype=np.uint8)
+        cv2.drawContours(mask, (field,), -1, 255, -1)
+        return mask
+
+    def draw(self, frame, field):
+        if field is not None:
+            frame = cv2.bitwise_and(frame, frame, mask=field)
+        return frame
+
+
 class GoalFinder(object):
 
     def __init__(self, hsv_lower, hsv_upper):
-
         self.hsv_lower = tuple(hsv_lower)
         self.hsv_upper = tuple(hsv_upper)
+
+    def primary_mask(self, frame):
+        hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+        thr = cv2.inRange(hsv, self.hsv_lower, self.hsv_upper)
+        thr = cv2.erode(thr, None, iterations=2)
+        thr = cv2.dilate(thr, None, iterations=2)
+        return thr
 
     def goal_similarity(self, contour):
         contour = contour.squeeze(axis=1)
@@ -36,13 +74,8 @@ class GoalFinder(object):
         print('Goal candidate:', shape_sim, area_sim, final_score)
         return final_score
 
-    def find_goal_contour(self, frame):
-        hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-        thr = cv2.inRange(hsv, self.hsv_lower, self.hsv_upper)
-
-        # The ususal
-        thr = cv2.erode(thr, None, iterations=2)
-        thr = cv2.dilate(thr, None, iterations=2)
+    def find(self, frame):
+        thr = self.primary_mask(frame)
         cnts, _ = cv2.findContours(thr, cv2.RETR_EXTERNAL,
                                             cv2.CHAIN_APPROX_SIMPLE)
         areas = np.array([cv2.contourArea(cnt) for cnt in cnts])
@@ -70,7 +103,7 @@ class GoalFinder(object):
         best = min(similarities)
         print('Final goal score:', best)
         print()
-        if best > 0.35:
+        if best > 0.45:
             return None
         # Find the contour with the shape closest to that of the goal
         goal = good_cnts[similarities.index(best)]
@@ -85,7 +118,9 @@ class GoalFinder(object):
 
     def draw(self, frame, goal):
         if goal is not None:
+            frame = frame.copy()
             cv2.drawContours(frame, (goal,), -1, (0, 255, 0), 2)
+        return frame
 
 
 class BallFinder(object):
@@ -97,7 +132,7 @@ class BallFinder(object):
         self.min_radius = min_radius
         self.history = deque(maxlen=64)
 
-    def find_colored_ball(self, frame):
+    def find(self, frame):
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
         # construct a mask for the color, then perform  a series of
@@ -139,8 +174,10 @@ class BallFinder(object):
 
     def draw(self, frame, ball):
         if ball is not None:
+            frame = frame.copy()
             center, radius = ball
             cv2.circle(frame, center, radius, (255, 255, 0), 1)
+        return frame
             # cv2.circle(frame, center, 5, (0, 255, 0), -1)
 
         # loop over the set of tracked points

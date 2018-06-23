@@ -68,9 +68,7 @@ class Striker(object):
 
     def get_ball_angles_from_camera(self, cam):
         """Detect the ball and return its angles in camera coordinates."""
-        ball = self.ball_finder.find_colored_ball(
-            cam.get_frame()
-        )
+        ball = self.ball_finder.find(cam.get_frame())
         if ball is None:
             return None
 
@@ -194,9 +192,7 @@ class Striker(object):
             self.mover.wait()
             return False
 
-        goal_contour = self.goal_finder.find_goal_contour(
-            self.upper_camera.get_frame()
-        )
+        goal_contour = self.goal_finder.find(self.upper_camera.get_frame())
         if goal_contour is not None:
             goal_center_x = self.goal_finder.goal_center(goal_contour)
             gcx_rel, _ = self.upper_camera.to_relative(goal_center_x, 0)
