@@ -31,6 +31,7 @@ class Striker(object):
         self.run_after = run_after
         self.in_move = False
         self.speaker = ALProxy("ALTextToSpeech", bytes(nao_ip), nao_port)
+
         self.tts_thread = None
         self.last_speak = None
 
@@ -39,6 +40,8 @@ class Striker(object):
             (self.tts_thread is None or not self.tts_thread.isAlive())
             and text != self.last_speak
         ):
+            if (self.last_speak=="Where is the ball? I am searching for it" and text=="Going to rotate"):
+                text="I have found the ball"
             self.tts_thread = Thread(
                 target=lambda text: self.speaker.say(str(text)),
                 args=(text,)
@@ -58,11 +61,11 @@ class Striker(object):
         # head is aligned when the head yaw angle has reached his maximum
         if mag > 2:
             self.mover.move_to(0, 0, sign * pi / 12)
-            self.speak("Where is the ball? I am searching for it")
+            #self.speak("Where is the ball? I am searching for it")
         # rotate head to the left, if head yaw angle is equally zero or larger
         # rotate head to the right, if head yaw angle is smaller than zero
         else:
-            # self.speak("I have found the ball")
+            #self.speak("I have found the ball")
             self.mover.change_head_angles(sign * pi / 4, 0, 0.5)
 
     def get_ball_angles_from_camera(self, cam):
@@ -111,6 +114,7 @@ class Striker(object):
             # if ball is not in sight for more than five consecutive frames,
             # start a ball scan
             if self.loss_counter > 5:
+                self.speak("Where is the ball? I am searching for it")
                 self.ball_scan()
             return False
 
