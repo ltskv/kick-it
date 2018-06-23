@@ -61,14 +61,15 @@ class GoalFinder(object):
         return thr
 
     def goal_similarity(self, contour):
-        contour = contour.squeeze(axis=1)
-        hull = cv2.convexHull(contour).squeeze(axis=1)
+        hull = cv2.convexHull(contour).squeeze()
         len_h = cv2.arcLength(hull, True)
 
-        # Wild assumption that the goal should lie close to its
+        # Supporting points of goal contour should lie close to its
         # enclosing convex hull
-        shape_sim = np.linalg.norm(contour[:,None] - hull,
-                                   axis=2).min(axis=1).sum() / len_h
+        distances = np.array([[np.sqrt(np.sum(point**2)) for point in node]
+                              for node in contour - hull])
+        min_dist = np.array([d.min() for d in distances])
+        shape_sim = min_dist.sum() / len_h
 
         # Wild assumption that the area of the goal is rather small
         # compared to its enclosing convex hull
