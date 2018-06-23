@@ -212,12 +212,14 @@ class Striker(object):
 
         print(x, y)
         self.turn_to_ball(x, y, tol=0.15)
-
-        goal_center_x = self.get_goal_center_angle_from_camera(
-            self.upper_camera
-        )
+        goal_center_x = None
+        for i in range(3):
+            if goal_center_x is None:
+                goal_center_x = self.get_goal_center_angle_from_camera(
+                    self.upper_camera
+                )
         print('Goal center:', goal_center_x)
-        if goal_center_x is not None and abs(goal_center_x) < 0.01:
+        if goal_center_x is not None and abs(goal_center_x) < 0.1:
             print('Goal ball aligned!')
             raise SystemExit
 
@@ -232,7 +234,9 @@ class Striker(object):
             # return False
 
         self.mover.move_to(0, 0.2, 0)
+        print('Moving sideways')
         self.mover.wait()
+        print('Finished moving')
         return False
 
     def close(self):
@@ -362,7 +366,7 @@ if __name__ == '__main__':
     # (see diagram above)
     else:
         try:  # Hit Ctrl-C to stop, cleanup and exit
-            state = 'goal_align'
+            state = 'tracking'
             # t = None
             while True:
                 # meassure time for debbuging
@@ -381,10 +385,10 @@ if __name__ == '__main__':
                         striker.lower_camera
                     )
                     print(ball_in_lower)
-                    if (ball_in_lower is not None and ball_in_lower[1] > 0.10):
+                    if (ball_in_lower is not None and ball_in_lower[1] > 0):
                         print('Ball is close enough, stop approach')
                         striker.mover.stop_moving()
-                        striker.say('Align to goal')
+                        striker.speak('Align to goal')
                         state = 'goal_align'
                     else:
                         print('Continue running')
@@ -425,5 +429,6 @@ if __name__ == '__main__':
 
                 loop_end = time()
                 print('Loop time:', loop_end - loop_start)
+                print('\n\n')
         finally:
             striker.close()

@@ -39,7 +39,6 @@ class FieldFinder(object):
 
     def mask_it(self, frame, field, inverse=False):
         if field is not None:
-            print(frame.shape)
             mask = np.zeros(frame.shape[:2], dtype=np.uint8)
             cv2.drawContours(mask, (field,), -1, 255, -1)
             if inverse:
@@ -123,6 +122,8 @@ class GoalFinder(object):
 
     def goal_center(self, contour):
         l, r = self.left_right_post(contour)
+        print('Left goal post:', l,
+              'Right goal post:', r)
         return (l + r) / 2
 
     def draw(self, frame, goal):

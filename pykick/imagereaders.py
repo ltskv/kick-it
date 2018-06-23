@@ -32,6 +32,7 @@ class NaoImageReader(object):
         )
 
     def to_relative(self, x, y):
+        print('Camera resolution:', self.res)
         return x / self.res[1], y / self.res[0]
 
     def get_frame(self):
