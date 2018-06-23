@@ -8,14 +8,14 @@ from time import sleep, time
 
 from .utils import read_config
 from .imagereaders import NaoImageReader
-from .finders import BallFinder, GoalFinder
+from .finders import BallFinder, GoalFinder, FieldFinder
 from .movements import NaoMover
 from naoqi import ALProxy
 
 
 class Striker(object):
 
-    def __init__(self, nao_ip, nao_port, res, ball_hsv, goal_hsv,
+    def __init__(self, nao_ip, nao_port, res, ball_hsv, goal_hsv, field_hsv,
                  ball_min_radius, run_after):
         self.mover = NaoMover(nao_ip=nao_ip, nao_port=nao_port)
         self.mover.stand_up()
@@ -25,6 +25,7 @@ class Striker(object):
                                            fps=30, cam_id=1)
         self.ball_finder = BallFinder(tuple(ball_hsv[0]), tuple(ball_hsv[1]),
                                       ball_min_radius)
+        self.field_finder = FieldFinder(tuple(field_hsv[0]), tuple(field_hsv[1]))
         self.goal_finder = GoalFinder(tuple(goal_hsv[0]), tuple(goal_hsv[1]))
         self.lock_counter = 0
         self.loss_counter = 0
@@ -68,13 +69,18 @@ class Striker(object):
             #self.speak("I have found the ball")
             self.mover.change_head_angles(sign * pi / 4, 0, 0.5)
 
-    def get_ball_angles_from_camera(self, cam):
+    def get_ball_angles_from_camera(self, cam, mask=True):
         """Detect the ball and return its angles in camera coordinates."""
         try:
-            ball = self.ball_finder.find(cam.get_frame())
+            frame = cam.get_frame()
         except RuntimeError as e:  # Sometimes camera doesn't return an image
             print(e)
             return None
+
+        if mask:
+            field = self.field_finder.find(frame)
+            frame = self.field_finder.mask_it(frame, field)
+        ball = self.ball_finder.find(frame)
 
         if ball is None:
             return None
@@ -84,13 +90,17 @@ class Striker(object):
         x, y = cam.to_angles(x, y)
         return x, y
 
-    def get_goal_center_angle_from_camera(self, cam):
+    def get_goal_center_angle_from_camera(self, cam, mask=True):
         try:
-            goal = self.goal_finder.find(cam.get_frame())
+            frame = cam.get_frame()
         except RuntimeError as e:  # Sometimes camera doesn't return an image
             print(e)
             return None
 
+        if mask:
+            field = self.field_finder.find(frame)
+            frame = self.field_finder.mask_it(frame, field, inverse=True)
+        goal = self.goal_finder.find(frame)
         if goal is None:
             return None
 
@@ -145,7 +155,7 @@ class Striker(object):
     def run_to_ball(self):
         self.mover.move_to(1, 0, 0)
 
-    def turn_to_ball(self, ball_x, ball_y):
+    def turn_to_ball(self, ball_x, ball_y, tol=0.05):
         """Align robot to the ball.
 
         If head is not centered at the ball (within tolerance), then
@@ -169,7 +179,7 @@ class Striker(object):
         print('head yaw', yaw)
 
         # align body with the head
-        if abs(yaw) > 0.05:
+        if abs(yaw) > tol:
             print('Going to rotate')
             self.speak("Going to rotate")
             self.mover.set_head_angles(0, 0, 0.5)
@@ -201,33 +211,27 @@ class Striker(object):
         x, y = ball_angles
 
         print(x, y)
-        if abs(x) > 0.1:
-            self.turn_to_ball(x, y)
-            return False
+        self.turn_to_ball(x, y, tol=0.15)
+
+        goal_center_x = self.get_goal_center_angle_from_camera(
+            self.upper_camera
+        )
+        print('Goal center:', goal_center_x)
+        if goal_center_x is not None and abs(goal_center_x) < 0.01:
+            print('Goal ball aligned!')
+            raise SystemExit
+
 
         if y > 0.35:
             self.mover.move_to(-0.05, 0, 0)
             self.mover.wait()
-            return False
+            # return False
         elif y < 0.25:
             self.mover.move_to(0.05, 0, 0)
             self.mover.wait()
-            return False
+            # return False
 
-        goal_contour = self.goal_finder.find(self.upper_camera.get_frame())
-        if goal_contour is not None:
-            goal_center_x = self.goal_finder.goal_center(goal_contour)
-            gcx_rel, _ = self.upper_camera.to_relative(goal_center_x, 0)
-            if abs(gcx_rel - 0.5) > 0.1:
-                increment = 0.1 if gcx_rel > 0.5 else -0.1
-            else:
-                print('Alignment achieved')
-                return True
-        else:
-            increment = 0.1
-            print('No goal found, doing random stuff')
-
-        self.mover.move_to(0, increment, 0)
+        self.mover.move_to(0, 0.2, 0)
         self.mover.wait()
         return False
 
@@ -243,13 +247,6 @@ class Striker(object):
         for angle in angles:
             self.mover.set_head_angles(angle, 0)
             sleep(0.5)
-            if ball_x is None:
-                bx = self.get_ball_angles_from_camera(
-                    self.lower_camera
-                )
-                ball_x = bx[0] + angle if bx is not None else None
-                print('Ball found: ' + str(ball_x) if ball_x is not None
-                      else 'Ball not found at ' + str(angle))
             for i in range(5):
                 print(i, goal_center_x)
                 if goal_center_x is None:
@@ -260,6 +257,13 @@ class Striker(object):
                     print('Goal found: ' + str(goal_center_x)
                           if goal_center_x is not None
                           else 'Goal not found at ' + str(angle))
+                if ball_x is None:
+                    bx = self.get_ball_angles_from_camera(
+                        self.lower_camera, mask=False
+                    )
+                    ball_x = bx[0] + angle if bx is not None else None
+                    print('Ball found: ' + str(ball_x) if ball_x is not None
+                          else 'Ball not found at ' + str(angle))
             if ball_x is not None and goal_center_x is not None:
                 return ball_x, goal_center_x
         return None
@@ -321,6 +325,7 @@ if __name__ == '__main__':
         res=cfg['res'],
         ball_hsv=cfg['ball'],
         goal_hsv=cfg['goal'],
+        field_hsv=cfg['field'],
         ball_min_radius=cfg['ball_min_radius'],
         run_after=False
     )
@@ -410,8 +415,8 @@ if __name__ == '__main__':
                         state = 'tracking'
 
                 elif state == 'goal_align':
-                    print(striker.ball_and_goal_search())
-                    break
+                    # print(striker.ball_and_goal_search())
+                    striker.align_to_goal()
 
                 elif state == 'kick':
                     print('KICK!')
