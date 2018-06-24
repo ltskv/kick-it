@@ -197,7 +197,8 @@ class Striker(object):
         # sign = 1 if dy > 0 else -1
 
     def align_to_ball(self):
-        ball_angles = self.get_ball_angles_from_camera(self.lower_camera)
+        ball_angles = self.get_ball_angles_from_camera(self.lower_camera,
+                                                       mask=False)
         if ball_angles is None:
             raise ValueError('No ball')
         x, y = ball_angles
@@ -268,7 +269,7 @@ class Striker(object):
 
     def goal_search(self):
         goal_center_x = None
-        angles = [0, -pi/6, -pi/3, pi/6, pi/3]
+        angles = [0, -pi/6, -pi/4, -pi/3, -pi/2, pi/6, pi/4, pi/3, pi/2]
         for angle in angles:
             self.mover.set_head_angles(angle, 0)
             sleep(0.5)
@@ -389,7 +390,7 @@ if __name__ == '__main__':
                 if state == 'tracking':
                     # start ball approach when ball is visible
                     if striker.ball_tracking():
-                        striker.speak("ball_approach")
+                        striker.speak("Ball approach")
                         state = 'ball_approach'
 
                 elif state == 'ball_approach':
@@ -407,33 +408,34 @@ if __name__ == '__main__':
                         striker.run_to_ball()
                         state = 'tracking'
 
-                elif state == 'simple_kick':
+                # elif state == 'simple_kick':
                     # striker.mover.set_head_angles(0,0.25,0.3)
-                    print('Doing the simple kick')
+                    # print('Doing the simple kick')
 
                     # just walk a short distance forward, ball should be near
                     # and it will probably be kicked in the right direction
-                    striker.speak("Simple Kick")
-                    striker.mover.move_to(0.3, 0, 0)
-                    striker.mover.wait()
-                    state = 'tracking'
+                    # striker.speak("Simple Kick")
+                    # striker.mover.move_to(0.3, 0, 0)
+                    # striker.mover.wait()
+                    # state = 'tracking'
 
                 elif state == 'goal_align':
                     # print(striker.ball_and_goal_search())
                     try:
                         if striker.align_to_goal():
+                            striker.speak('I am aligning to ball')
                             state = "align"
                     except ValueError:
                             state = 'tracking'
 
                 elif state == 'align':
-                    striker.speak('I am aligning to ball')
                     striker.mover.set_head_angles(0, 0.25, 0.3)
                     sleep(0.5)
                     try:
                         success = striker.align_to_ball()
                         sleep(0.3)
                         if success:
+                            striker.speak('I am going. To kick ass')
                             state = 'kick'
                     except ValueError:
                         striker.mover.set_head_angles(0, 0, 0.3)
