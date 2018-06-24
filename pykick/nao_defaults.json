@@ -23,7 +23,7 @@
             255
         ]
     ], 
-    "fps": 30, 
+    "fps": 10, 
     "res": 2, 
     "ball_min_radius": 0.01, 
     "field": [

@@ -24,6 +24,7 @@ class NaoImageReader(object):
         self.fps = fps
         self.vd = ALProxy('ALVideoDevice', ip, port)
         streamer_name = '_'.join(['lower' if cam_id else 'upper', str(res)])
+        print(streamer_name)
         self.sub = self.vd.subscribeCamera(
             streamer_name, cam_id, res, 13, fps
         )

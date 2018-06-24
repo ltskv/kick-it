@@ -37,7 +37,7 @@ class NaoMover(object):
         # lift the foot using the knee joint and the ankle joint
         [[(1, 0, 'KneePitch', 90),
           (1, 0, 'AnklePitch', -40)],
-         0.7,],
+         0.7],
 
         # kick-it!
         [[(1, 0, 'HipPitch', -45),
@@ -48,7 +48,7 @@ class NaoMover(object):
         # prepare to return into standing position
         [[(1, 0, 'KneePitch', 40),
           (1, 0, 'AnklePitch', 10)],
-         0.5,],
+         0.5],
     ]
 
 
