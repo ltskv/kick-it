@@ -8,30 +8,30 @@ class NaoMover(object):
 
     # fancy kick
     KICK_SEQUENCE = [
-        # base_or_kicking, unsymmetric, joint, angle, speed
+        # base_or_kicking, unsymmetric, joint, angle
 
         # lift the arm
-        [[(0, 1, 'ShoulderRoll', -70, 0.4)], 1],
+        [[(0, 1, 'ShoulderRoll', -70)], 0.5],
 
         # lean to the side using the ankle joints
-        [[(0, 1, 'AnkleRoll', -9, 0.2),
-          (1, 1, 'AnkleRoll', -9, 0.2)],
+        [[(0, 1, 'AnkleRoll', -10),
+          (1, 1, 'AnkleRoll', -10)],
          1],
 
         # lift the foot using the knee joint and the ankle joint
-        [[(1, 0, 'KneePitch', 90, 0.3),
-          (1, 0, 'AnklePitch', -40, 0.4)],
-         1.5,],
+        [[(1, 0, 'KneePitch', 90),
+          (1, 0, 'AnklePitch', -40)],
+         0.7,],
 
         # kick-it!
-        [[(1, 0, 'HipPitch', -45, 0.05),
-          (1, 0, 'KneePitch', 10, 0.8),
-          (1, 0, 'AnklePitch', 20, 0.7)],
-         1],
+        [[(1, 0, 'HipPitch', -45),
+          (1, 0, 'KneePitch', 10),
+          (1, 0, 'AnklePitch', 0)],
+         0.3],
 
         # prepare to return into standing position
-        [[(1, 0, 'KneePitch', 40, 0.25),
-          (1, 0, 'AnklePitch', 10, 0.25)],
+        [[(1, 0, 'KneePitch', 40),
+          (1, 0, 'AnklePitch', 10)],
          1,],
     ]
 
@@ -60,15 +60,17 @@ class NaoMover(object):
         elif foot == 'R':
             sides = ['L', 'R']
         for motion, wait in self.KICK_SEQUENCE:
+            joints = []
+            angles = []
             for part in motion:
                 print(part)
-                side, unsymmetric, joint, angle, speed = part
+                side, unsymmetric, joint, angle = part
                 if foot == 'R' and unsymmetric:
                     angle *= -1
-                self.mp.setAngles(
-                    [sides[side] + joint], [radians(angle)], speed
-                )
-            sleep(wait)
+                joints.append(sides[side] + joint)
+                angles.append(radians(angle))
+            self.mp.angleInterpolation(joints, angles, wait, True)
+            # sleep(wait)
 
         self.stand_up(0.5)
         self.set_arm_stiffness()
