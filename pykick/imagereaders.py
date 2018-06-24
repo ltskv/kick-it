@@ -18,8 +18,10 @@ class NaoImageReader(object):
 
     def __init__(self, ip, port=9559, res=1, fps=30, cam_id=0):
         ip = bytes(ip)
+        self.res_id = res
         self.res = self.RESOLUTIONS[res]
         self.cam_id=cam_id
+        self.fps = fps
         self.vd = ALProxy('ALVideoDevice', ip, port)
         streamer_name = '_'.join(['lower' if cam_id else 'upper', str(res)])
         self.sub = self.vd.subscribeCamera(
@@ -39,7 +41,8 @@ class NaoImageReader(object):
         result = self.vd.getImageRemote(self.sub)
         self.vd.releaseImage(self.sub)
         if result is None or result[6] is None:
-            raise RuntimeError("Couldn't capture")
+            self.restart()
+            raise RuntimeError(self.sub + " couldn't capture")
         else:
             height, width = self.res
             return np.frombuffer(result[6], dtype=np.uint8).reshape(
@@ -48,6 +51,12 @@ class NaoImageReader(object):
 
     def close(self):
         self.vd.unsubscribe(self.sub)
+
+    def restart(self):
+        self.close()
+        self.sub = self.vd.subscribeCamera(
+            self.sub, self.cam_id, self.res_id, 13, self.fps
+        )
 
 
 class VideoReader(object):
