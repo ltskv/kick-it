@@ -207,10 +207,13 @@ class Striker(object):
     def align_to_goal(self):
         ball_angles = self.get_ball_angles_from_camera(self.lower_camera)
         if ball_angles is None:
-            raise ValueError('No ball')
+            self.speak("Cannot see the ball")
+            #raise ValueError('No ball')
+            return false
         x, y = ball_angles
 
         print(x, y)
+        self.speak("Turn to ball")
         self.turn_to_ball(x, y, tol=0.15)
         goal_center_x = None
         for i in range(3):
@@ -220,20 +223,25 @@ class Striker(object):
                 )
         print('Goal center:', goal_center_x)
         if goal_center_x is not None and abs(goal_center_x) < 0.1:
+            self.speak("Goal and ball are aligned")
             print('Goal ball aligned!')
-            raise SystemExit
+            #raise SystemExit
+            return True
 
 
         if y > 0.35:
+            self.speak("moving backward")
             self.mover.move_to(-0.05, 0, 0)
             self.mover.wait()
             # return False
         elif y < 0.25:
+            self.speak("moving forward")
             self.mover.move_to(0.05, 0, 0)
             self.mover.wait()
             # return False
 
         self.mover.move_to(0, 0.2, 0)
+        self.speak("Moving sideways")
         print('Moving sideways')
         self.mover.wait()
         print('Finished moving')
@@ -420,7 +428,8 @@ if __name__ == '__main__':
 
                 elif state == 'goal_align':
                     # print(striker.ball_and_goal_search())
-                    striker.align_to_goal()
+                    if striker.align_to_goal():
+                        state="simple_kick"
 
                 elif state == 'kick':
                     print('KICK!')
