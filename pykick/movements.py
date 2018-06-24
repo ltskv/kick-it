@@ -6,34 +6,20 @@ from naoqi import ALProxy
 
 class NaoMover(object):
 
-    # fancy kick
     KICK_SEQUENCE = [
-        # base_or_kicking, unsymmetric, joint, angle
-
-        # lift the arm
-        [[(0, 1, 'ShoulderRoll', -70)], 0.5],
 
         # lean to the side using the ankle joints
-        [[(0, 1, 'AnkleRoll', -10),
-          (1, 1, 'AnkleRoll', -10)],
-         1],
+        [[(0, 1, 'ShoulderRoll', -70),(0 , 1, 'AnkleRoll', -9),(1 , 1 , 'AnkleRoll', -9)], 0.3],
 
-        # lift the foot using the knee joint and the ankle joint
-        [[(1, 0, 'KneePitch', 90),
-          (1, 0, 'AnklePitch', -40)],
-         0.7,],
+        # perform the fast kick
+        [[(1,0, 'HipPitch',-45),(1,0, 'AnklePitch',10),(1,0, 'KneePitch',10)],0.15],
 
-        # kick-it!
-        [[(1, 0, 'HipPitch', -45),
-          (1, 0, 'KneePitch', 10),
-          (1, 0, 'AnklePitch', 0)],
-         0.3],
+        # bring knee back for better kick recovery
+        [[(1,0, 'KneePitch',40)],0.2],        
+       
 
-        # prepare to return into standing position
-        [[(1, 0, 'KneePitch', 40),
-          (1, 0, 'AnklePitch', 10)],
-         1,],
     ]
+
 
     def __init__(self, nao_ip, nao_port=9559):
         nao_ip = bytes(nao_ip)
