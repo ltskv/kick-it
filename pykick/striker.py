@@ -415,29 +415,29 @@ if __name__ == '__main__':
                     striker.mover.wait()
                     state = 'tracking'
 
-                # elif state == 'align':
-                    # striker.mover.set_head_angles(0, 0.25, 0.3)
-                    # sleep(0.5)
-                    # try:
-                        # success = striker.align_to_ball()
-                        # sleep(0.3)
-                        # if success:
-                            # state = 'kick'
-                    # except ValueError:
-                        # striker.mover.set_head_angles(0, 0, 0.3)
-                        # state = 'tracking'
-
                 elif state == 'goal_align':
                     # print(striker.ball_and_goal_search())
                     try:
                         if striker.align_to_goal():
-                            state="simple_kick"
+                            state = "align"
                     except ValueError:
                             state = 'tracking'
 
+                elif state == 'align':
+                    striker.mover.set_head_angles(0, 0.25, 0.3)
+                    sleep(0.5)
+                    try:
+                        success = striker.align_to_ball()
+                        sleep(0.3)
+                        if success:
+                            state = 'kick'
+                    except ValueError:
+                        striker.mover.set_head_angles(0, 0, 0.3)
+                        state = 'tracking'
+
                 elif state == 'kick':
                     print('KICK!')
-                    striker.mover.kick()
+                    striker.mover.kick(fancy=True)
                     break
 
                 loop_end = time()
