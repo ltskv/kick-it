@@ -1,4 +1,4 @@
-from time import sleep
+# from time import sleep
 from math import radians
 
 from naoqi import ALProxy
@@ -9,15 +9,46 @@ class NaoMover(object):
     KICK_SEQUENCE = [
 
         # lean to the side using the ankle joints
-        [[(0, 1, 'ShoulderRoll', -70),(0 , 1, 'AnkleRoll', -9),(1 , 1 , 'AnkleRoll', -9)], 0.3],
+        [[(0, 1, 'ShoulderRoll', -70),
+          (0 , 1, 'AnkleRoll', -9),
+          (1 , 1 , 'AnkleRoll', -9)], 0.3],
 
         # perform the fast kick
-        [[(1,0, 'HipPitch',-45),(1,0, 'AnklePitch',10),(1,0, 'KneePitch',10)],0.15],
+        [[(1, 0, 'HipPitch', -45),
+          (1, 0, 'AnklePitch', 10),
+          (1, 0, 'KneePitch', 10)], 0.15],
 
         # bring knee back for better kick recovery
-        [[(1,0, 'KneePitch',40)],0.2],        
-       
+        [[(1, 0, 'KneePitch', 40)], 0.2]
+    ]
 
+    # fancy kick
+    KICK_SEQUENCE_FANCY = [
+        # base_or_kicking, unsymmetric, joint, angle
+
+        # lift the arm
+        [[(0, 1, 'ShoulderRoll', -70)], 0.5],
+
+        # lean to the side using the ankle joints
+        [[(0, 1, 'AnkleRoll', -10),
+          (1, 1, 'AnkleRoll', -10)],
+         1],
+
+        # lift the foot using the knee joint and the ankle joint
+        [[(1, 0, 'KneePitch', 90),
+          (1, 0, 'AnklePitch', -40)],
+         0.7,],
+
+        # kick-it!
+        [[(1, 0, 'HipPitch', -45),
+          (1, 0, 'KneePitch', 10),
+          (1, 0, 'AnklePitch', 0)],
+         0.3],
+
+        # prepare to return into standing position
+        [[(1, 0, 'KneePitch', 40),
+          (1, 0, 'AnklePitch', 10)],
+         0.5,],
     ]
 
 
@@ -36,7 +67,7 @@ class NaoMover(object):
         self.set_ankle_stiffness()
         self.ready_to_move = False
 
-    def kick(self, foot='L'):
+    def kick(self, foot='L', fancy=False):
         self.set_arm_stiffness(0.8)
         self.set_hip_stiffness(0.8)
         self.set_knee_stiffness(0.8)
@@ -45,7 +76,9 @@ class NaoMover(object):
             sides = ['R', 'L']
         elif foot == 'R':
             sides = ['L', 'R']
-        for motion, wait in self.KICK_SEQUENCE:
+        kick_sequence = (self.KICK_SEQUENCE_FANCY if fancy
+                         else self.KICK_SEQUENCE)
+        for motion, wait in kick_sequence:
             joints = []
             angles = []
             for part in motion:
@@ -119,9 +152,17 @@ class NaoMover(object):
         self.mp.changeAngles(('HeadYaw', 'HeadPitch'),
                              (d_yaw, d_pitch), speed)
 
+    def change_head_angles_blocking(self, d_yaw, d_pitch, speed=0.5):
+        self.mp.angleInterpolatioWithSpeed(('HeadYaw', 'HeadPitch'),
+                                           (d_yaw, d_pitch), speed, False)
+
     def set_head_angles(self, yaw, pitch, speed=0.5):
         self.mp.setAngles(('HeadYaw', 'HeadPitch'),
-                              (yaw, pitch), speed)
+                          (yaw, pitch), speed)
+
+    def set_head_angles_blocking(self, yaw, pitch, speed=0.5):
+        self.mp.angleInterpolatioWithSpeed(('HeadYaw', 'HeadPitch'),
+                                           (yaw, pitch), speed, True)
 
     def move_to(self, front, side, rotation, wait=False):
         if not self.ready_to_move:
