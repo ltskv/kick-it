@@ -208,8 +208,7 @@ class Striker(object):
         ball_angles = self.get_ball_angles_from_camera(self.lower_camera)
         if ball_angles is None:
             self.speak("Cannot see the ball")
-            #raise ValueError('No ball')
-            return false
+            raise ValueError('No ball')
         x, y = ball_angles
 
         print(x, y)
@@ -428,8 +427,11 @@ if __name__ == '__main__':
 
                 elif state == 'goal_align':
                     # print(striker.ball_and_goal_search())
-                    if striker.align_to_goal():
-                        state="simple_kick"
+                    try:
+                        if striker.align_to_goal():
+                            state="simple_kick"
+                    except ValueError:
+                            state = 'tracking'
 
                 elif state == 'kick':
                     print('KICK!')
