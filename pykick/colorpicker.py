@@ -218,7 +218,11 @@ if __name__ == '__main__':
             rdr.close()
         while True:
             if not args.still:
-                frame = rdr.get_frame()
+                try:
+                    frame = rdr.get_frame()
+                except RuntimeError as e:
+                    print(e)
+                    continue
             key = cp.show_frame(frame, width=args.width, manual=args.manual)
             if key == ord('q') or key == 27:
                 break

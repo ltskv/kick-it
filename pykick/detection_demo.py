@@ -96,7 +96,11 @@ if __name__ == '__main__':
             rdr.close()
         while True:
             if not args.still:
-                frame = rdr.get_frame()
+                try:
+                    frame = rdr.get_frame()
+                except RuntimeError as e:
+                    print(e)
+                    continue
             frame = imresize(frame, width=args.width)
 
             field = field_finder.find(frame)

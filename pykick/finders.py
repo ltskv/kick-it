@@ -133,12 +133,17 @@ class GoalFinder(object):
 
 class BallFinder(object):
 
-    def __init__(self, hsv_lower, hsv_upper, min_radius):
+    def __init__(self, hsv_lower, hsv_upper, min_radius=0.02):
 
         self.hsv_lower = tuple(hsv_lower)
         self.hsv_upper = tuple(hsv_upper)
         self.min_radius = min_radius
         self.history = deque(maxlen=64)
+
+    def primary_mask(self, frame):
+        hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+        mask = cv2.inRange(hsv, self.hsv_lower, self.hsv_upper)
+        return mask
 
     def find(self, frame):
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
