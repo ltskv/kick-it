@@ -246,7 +246,7 @@ class Striker(object):
             # return False
 
         sign = -1 if goal_center_x > 0 else 1
-        num_steps = int(min(abs(goal_center_x), 0.2) // 0.05)
+        num_steps = int(min(abs(goal_center_x), 0.15) // 0.05)
         self.speak("Moving sideways")
         print('Moving sideways')
         for _ in range(num_steps):
@@ -289,8 +289,7 @@ class Striker(object):
 #        |                                              |
 #        |               |                              |
 #        |               |                              |
-#        |               v                              |
-#        |          Ball in lower cam?                  |
+#        |               v                              | #        |          Ball in lower cam?                  |
 #        |              /  \                            |
 #   lost |      yes    /    \ cannot do                 |
 #   ball |            v      v                          |
@@ -309,9 +308,7 @@ class Striker(object):
 # check if ball visible ---> rotate head to the ball
 #     ^            |                    |
 #     |            | no                 |
-#     |            v                    |
-#     +--- ball scan rotation           |
-#     |                                 |
+#     |            v                    | #     +--- ball scan rotation           | #     |                                 |
 #     |                  no             V
 #     |               +---------- already rotating body?
 #     |               |                 |
@@ -394,7 +391,7 @@ if __name__ == '__main__':
                         striker.lower_camera
                     )
                     print(ball_in_lower)
-                    if (ball_in_lower is not None and ball_in_lower[1] > 0):
+                    if (ball_in_lower is not None and ball_in_lower[1] > 0.25):
                         print('Ball is close enough, stop approach')
                         striker.mover.stop_moving()
                         striker.speak('Align to goal')
