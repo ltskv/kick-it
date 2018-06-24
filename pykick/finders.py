@@ -87,12 +87,9 @@ class GoalFinder(object):
         thr = self.primary_mask(frame)
         cnts, _ = cv2.findContours(thr, cv2.RETR_EXTERNAL,
                                             cv2.CHAIN_APPROX_SIMPLE)
-        areas = np.array([cv2.contourArea(cnt) for cnt in cnts])
-        # Candidates are at most 6 biggest white areas
+        cnts.sort(key=cv2.contourArea, reverse=True)
         top_x = 6
-        if len(areas) > top_x:
-            cnt_ind = np.argpartition(areas, -top_x)[-top_x:]
-            cnts = [cnts[i] for i in cnt_ind]
+        cnts = cnts[:top_x]
 
         epsilon = [0.01 * cv2.arcLength(cnt, True) for cnt in cnts]
 
