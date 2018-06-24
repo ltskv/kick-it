@@ -25,7 +25,8 @@ class Striker(object):
                                            fps=30, cam_id=1)
         self.ball_finder = BallFinder(tuple(ball_hsv[0]), tuple(ball_hsv[1]),
                                       ball_min_radius)
-        self.field_finder = FieldFinder(tuple(field_hsv[0]), tuple(field_hsv[1]))
+        self.field_finder = FieldFinder(tuple(field_hsv[0]),
+                                        tuple(field_hsv[1]))
         self.goal_finder = GoalFinder(tuple(goal_hsv[0]), tuple(goal_hsv[1]))
         self.lock_counter = 0
         self.loss_counter = 0
@@ -41,8 +42,11 @@ class Striker(object):
             (self.tts_thread is None or not self.tts_thread.isAlive())
             and text != self.last_speak
         ):
-            if (self.last_speak=="Where is the ball? I am searching for it" and text=="Going to rotate"):
-                text="I have found the ball"
+            if (
+                self.last_speak == "Where is the ball? I am searching for it"
+                and text == "Going to rotate"
+            ):
+                text = "I have found the ball"
             self.tts_thread = Thread(
                 target=lambda text: self.speaker.say(str(text)),
                 args=(text,)
@@ -186,6 +190,9 @@ class Striker(object):
             self.mover.move_to(0, 0, yaw)
             self.mover.wait()
 
+    # def move_sideways(self, dy):
+        # sign = 1 if dy > 0 else -1
+
     def align_to_ball(self):
         ball_angles = self.get_ball_angles_from_camera(self.lower_camera)
         if ball_angles is None:
@@ -207,26 +214,25 @@ class Striker(object):
     def align_to_goal(self):
         ball_angles = self.get_ball_angles_from_camera(self.lower_camera)
         if ball_angles is None:
-            self.speak("Cannot see the ball")
-            raise ValueError('No ball')
+            self.mover.move_to(-0.1, 0, 0)
+            self.mover.wait()
+            ball_angles = self.get_ball_angles_from_camera(self.lower_camera)
+            if ball_angles is None:
+                self.speak("Cannot see the ball")
+                raise ValueError('No ball')
         x, y = ball_angles
 
         print(x, y)
         self.speak("Turn to ball")
         self.turn_to_ball(x, y, tol=0.15)
-        goal_center_x = None
-        for i in range(3):
-            if goal_center_x is None:
-                goal_center_x = self.get_goal_center_angle_from_camera(
-                    self.upper_camera
-                )
+        goal_center_x = self.goal_search()
+
         print('Goal center:', goal_center_x)
         if goal_center_x is not None and abs(goal_center_x) < 0.1:
             self.speak("Goal and ball are aligned")
             print('Goal ball aligned!')
             #raise SystemExit
             return True
-
 
         if y > 0.35:
             self.speak("moving backward")
@@ -239,10 +245,13 @@ class Striker(object):
             self.mover.wait()
             # return False
 
-        self.mover.move_to(0, 0.2, 0)
+        sign = -1 if goal_center_x > 0 else 1
+        num_steps = int(min(abs(goal_center_x), 0.2) // 0.05)
         self.speak("Moving sideways")
         print('Moving sideways')
-        self.mover.wait()
+        for _ in range(num_steps):
+            self.mover.move_to(0, 0.05 * sign, 0)
+            self.mover.wait()
         print('Finished moving')
         return False
 
@@ -251,8 +260,7 @@ class Striker(object):
         self.upper_camera.close()
         self.lower_camera.close()
 
-    def ball_and_goal_search(self):
-        ball_x = None
+    def goal_search(self):
         goal_center_x = None
         angles = [0, -pi/6, -pi/3, pi/6, pi/3]
         for angle in angles:
@@ -268,15 +276,10 @@ class Striker(object):
                     print('Goal found: ' + str(goal_center_x)
                           if goal_center_x is not None
                           else 'Goal not found at ' + str(angle))
-                if ball_x is None:
-                    bx = self.get_ball_angles_from_camera(
-                        self.lower_camera, mask=False
-                    )
-                    ball_x = bx[0] + angle if bx is not None else None
-                    print('Ball found: ' + str(ball_x) if ball_x is not None
-                          else 'Ball not found at ' + str(angle))
-            if ball_x is not None and goal_center_x is not None:
-                return ball_x, goal_center_x
+            if goal_center_x is not None:
+                self.mover.set_head_angles(0, 0)
+                return goal_center_x
+        self.mover.set_head_angles(0, 0)
         return None
 
 
@@ -413,17 +416,17 @@ if __name__ == '__main__':
                     striker.mover.wait()
                     state = 'tracking'
 
-                elif state == 'align':
-                    striker.mover.set_head_angles(0, 0.25, 0.3)
-                    sleep(0.5)
-                    try:
-                        success = striker.align_to_ball()
-                        sleep(0.3)
-                        if success:
-                            state = 'kick'
-                    except ValueError:
-                        striker.mover.set_head_angles(0, 0, 0.3)
-                        state = 'tracking'
+                # elif state == 'align':
+                    # striker.mover.set_head_angles(0, 0.25, 0.3)
+                    # sleep(0.5)
+                    # try:
+                        # success = striker.align_to_ball()
+                        # sleep(0.3)
+                        # if success:
+                            # state = 'kick'
+                    # except ValueError:
+                        # striker.mover.set_head_angles(0, 0, 0.3)
+                        # state = 'tracking'
 
                 elif state == 'goal_align':
                     # print(striker.ball_and_goal_search())

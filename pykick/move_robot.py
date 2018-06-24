@@ -8,11 +8,12 @@ if __name__ == "__main__":
     mover.stand_up()
     while True:
         amount = float(raw_input('How much: '))
-        mover.move_to(0, 0, 0.5 * amount)
-        mover.wait()
-        mover.move_to(0, -0.3 * amount, 0)
-        mover.wait()
-        mover.move_to(-0.1 * abs(amount), 0, 0)
+        mover.move_to(0, amount, 0)
+        # mover.move_to(0, 0, 0.5 * amount)
+        # mover.wait()
+        # mover.move_to(0, -0.3 * amount, 0)
+        # mover.wait()
+        # mover.move_to(-0.1 * abs(amount), 0, 0)
         # amount = float(raw_input('How much: '))
         # if axis == 0:
             # mover.move_to(amount, 0, 0)
