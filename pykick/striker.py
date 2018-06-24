@@ -370,7 +370,6 @@ if __name__ == '__main__':
     elif args.kick:
         striker.mover.stand_up()
         striker.mover.kick()
-        striker.mover.rest()
 
     # perform normal state-machine if no input argument is given
     # (see diagram above)
