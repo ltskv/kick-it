@@ -170,6 +170,13 @@ class NaoMover(object):
             self.ready_to_move = True
         self.mp.post.moveTo(front, side, rotation)
 
+    def move_toward(self, front, side, rotation):
+        if not self.ready_to_move:
+            self.mp.moveInit()
+            self.ready_to_move = True
+        self.mp.post.moveToward(front, side, rotation)
+
+
     def wait(self):
         self.mp.waitUntilMoveIsFinished()
 

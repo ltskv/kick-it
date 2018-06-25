@@ -36,6 +36,10 @@ class Striker(object):
 
         self.tts_thread = None
         self.last_speak = None
+        self.rotating = False
+        self.rot_dir = 0
+        self.timer_start = 0
+        self.timer_stop = 0
 
     def speak(self, text):
         if (
@@ -56,6 +60,8 @@ class Striker(object):
 
     def ball_scan(self):
         """Intelligently rotate the robot to search for stuff."""
+        self.mover.stop_moving()
+        self.rotating = False
         yaw = self.mover.get_head_angles()[0]
         mag = yaw
 
@@ -64,17 +70,19 @@ class Striker(object):
 
         # the robot starts to move arround his z-Axis in the direction where his
         # head is aligned when the head yaw angle has reached his maximum
-        if mag > 2:
-            self.mover.set_head_angles(-pi / 4, 0, 0.5)
-        elif mag < -2:
-            self.mover.move_to(0, 0, -pi / 12)
+        if mag > 0.8:
+            self.mover.set_head_angles(-pi / 8, 0, 0.5)
+            sleep(0.5)
+        elif mag < -0.8:
+            self.mover.move_to(0, 0, -pi / 6)
+            self.mover.wait()
             #self.speak("Where is the ball? I am searching for it")
         # rotate head to the left, if head yaw angle is equally zero or larger
         # rotate head to the right, if head yaw angle is smaller than zero
         else:
             #self.speak("I have found the ball")
-            self.mover.change_head_angles(sign * pi / 4, 0, 0.5)
-        sleep(0.1)
+            self.mover.change_head_angles(sign * pi / 8, 0, 0.5)
+            sleep(0.3)
 
     def get_ball_angles_from_camera(self, cam, mask=True):
         """Detect the ball and return its angles in camera coordinates."""
@@ -131,41 +139,38 @@ class Striker(object):
             True if robot is nicely aligned to ball; else False.
 
         """
-        cams = [self.upper_camera, self.lower_camera]
-        in_sight = False
 
-        for cam in cams:
-            ball_angles = self.get_ball_angles_from_camera(cam)
-            if ball_angles is not None:
-                x, y = ball_angles
-                in_sight = True
-                self.loss_counter = 0
-                break
+        ball_locked = False
+        while not ball_locked:
+            # visibility check
+            for i in range(3):
+                cams = [self.upper_camera, self.lower_camera]
+                in_sight = False
 
-        if not in_sight:
-            print('No ball in sight')
-            self.loss_counter += 1
+                for cam in cams:
+                    ball_angles = self.get_ball_angles_from_camera(cam)
+                    if ball_angles is not None:
+                        x, y = ball_angles
+                        self.timer_start = time()
+                        in_sight = True
+                        self.loss_counter = 0
+                        break
+                if in_sight:
+                    break
+            # stop visibility check
 
-            # if ball is not in sight for more than five consecutive frames,
-            # start a ball scan
-            if self.loss_counter > 5:
-                self.speak("Where is the ball? I am searching for it")
+            if not in_sight:
                 self.ball_scan()
-            return False
+                continue
 
-        # turn to ball, if the angle between the ball and the robot is too big
-        if abs(x) > 0.15:
-            # self.speak('Align to the ball')
-            self.mover.stop_moving()
-            self.turn_to_ball(x, y, soll=soll)
-            return False
-        else:
-            return True
+            ball_locked = self.turn_to_ball(x, y, soll=soll)
+            print()
+        return True
 
     def run_to_ball(self):
         self.mover.move_to(1, 0, 0)
 
-    def turn_to_ball(self, ball_x, ball_y, tol=0.05, soll=0):
+    def turn_to_ball(self, ball_x, ball_y, tol=0.15, soll=0, m_delta=0.2):
         """Align robot to the ball.
 
         If head is not centered at the ball (within tolerance), then
@@ -181,25 +186,39 @@ class Striker(object):
         # center head at the ball
         if (abs(d_yaw) > 0.01):
             self.mover.change_head_angles(d_yaw, d_pitch,
-                                          abs(d_yaw) / 2)
-            sleep(1)
-            self.mover.wait()
+                                          min(1, abs(d_yaw) * 1.25))
+            sleep(0.05)
 
         yaw = self.mover.get_head_angles()[0]
-        print('head yaw', yaw)
+        self.timer_stop = time()
+        print('Ball to head', self.timer_stop - self.timer_start)
+        print('head yaw', yaw, end=' ')
         d_yaw = yaw - soll
         print('head d_yaw', d_yaw)
+        print('Rotating', self.rotating, end=' ')
+        print('Rotation direction', self.rot_dir, end=' ')
+        print('Allowed tolerance', tol)
 
         # align body with the head
-        if abs(d_yaw) > tol:
-            print('Going to rotate')
-            self.speak("Going to rotate")
-            self.mover.set_head_angles(soll, 0, 0.5)
-            self.mover.move_to(0, 0, d_yaw)
-            self.mover.wait()
-
-    # def move_sideways(self, dy):
-        # sign = 1 if dy > 0 else -1
+        if not self.rotating:
+            if abs(d_yaw) > tol:
+                self.mover.stop_moving()
+                self.rotating = True
+                self.rot_dir = -1 if d_yaw > 0 else 1
+                print('Going to rotate')
+                self.speak("Going to rotate")
+                self.mover.move_toward(0, 0, -self.rot_dir)
+                sleep(0.8)
+                return False
+            else:
+                print('Success')
+                self.speak('Ball locked')
+                return True
+        else:
+            if d_yaw * self.rot_dir > -tol - m_delta:
+                self.rotating = False
+                self.mover.stop_moving()
+            return False
 
     def align_to_ball(self):
         ball_angles = self.get_ball_angles_from_camera(self.lower_camera,
@@ -301,7 +320,8 @@ class Striker(object):
 #        |                                              |
 #        |               |                              |
 #        |               |                              |
-#        |               v                              | #        |          Ball in lower cam?                  |
+#        |               v                              |
+#        |          Ball in lower cam?                  |
 #        |              /  \                            |
 #   lost |      yes    /    \ cannot do                 |
 #   ball |            v      v                          |
@@ -377,7 +397,7 @@ if __name__ == '__main__':
     elif args.rest:
         striker.mover.rest()
 
-    # perform a fancy kick
+    # perform a (fancy) kick
     elif args.kick:
         striker.mover.stand_up()
         striker.mover.kick(fancy=True)
@@ -387,7 +407,7 @@ if __name__ == '__main__':
     else:
         try:  # Hit Ctrl-C to stop, cleanup and exit
             state = 'tracking'
-            start_soll = -0.8
+            start_soll = 0.8
             align_start = 0.29
             curve_start = -0.1
             curve_stop = 0.1
@@ -402,11 +422,11 @@ if __name__ == '__main__':
                 if state == 'tracking':
                     # start ball approach when ball is visible
                     print('Soll angle', soll)
-                    striker.mover.set_head_angles(soll, 0, 0.5)
-                    sleep(0.3)
                     if striker.ball_tracking(soll=soll):
                         striker.speak("Ball approach")
                         state = 'ball_approach'
+                        # striker.speak('I got the ball')
+                        # sleep(10)
 
                 elif state == 'ball_approach':
                     bil = striker.get_ball_angles_from_camera(
