@@ -84,6 +84,9 @@ class Striker(object):
             print(e)
             return None
 
+        if cam == self.lower_camera:
+            mask = False
+
         if mask:
             field = self.field_finder.find(frame)
             frame = self.field_finder.mask_it(frame, field)
@@ -119,7 +122,7 @@ class Striker(object):
     def distance_to_ball(self):
         return 0.5
 
-    def ball_tracking(self):
+    def ball_tracking(self, soll=0):
         """Track the ball using the feed from top and bottom camera.
 
         Returns
@@ -154,7 +157,7 @@ class Striker(object):
         if abs(x) > 0.15:
             # self.speak('Align to the ball')
             self.mover.stop_moving()
-            self.turn_to_ball(x, y)
+            self.turn_to_ball(x, y, soll=soll)
             return False
         else:
             return True
@@ -162,7 +165,7 @@ class Striker(object):
     def run_to_ball(self):
         self.mover.move_to(1, 0, 0)
 
-    def turn_to_ball(self, ball_x, ball_y, tol=0.05):
+    def turn_to_ball(self, ball_x, ball_y, tol=0.05, soll=0):
         """Align robot to the ball.
 
         If head is not centered at the ball (within tolerance), then
@@ -173,7 +176,7 @@ class Striker(object):
 
         # only the x ball angle is relevant for alignment
         d_yaw, d_pitch = ball_x, 0
-        print('ball yaw:', d_yaw)
+        print('ball yaw in camera:', d_yaw)
 
         # center head at the ball
         if (abs(d_yaw) > 0.01):
@@ -184,13 +187,15 @@ class Striker(object):
 
         yaw = self.mover.get_head_angles()[0]
         print('head yaw', yaw)
+        d_yaw = yaw - soll
+        print('head d_yaw', d_yaw)
 
         # align body with the head
-        if abs(yaw) > tol:
+        if abs(d_yaw) > tol:
             print('Going to rotate')
             self.speak("Going to rotate")
-            self.mover.set_head_angles(0, 0, 0.5)
-            self.mover.move_to(0, 0, yaw)
+            self.mover.set_head_angles(soll, 0, 0.5)
+            self.mover.move_to(0, 0, d_yaw)
             self.mover.wait()
 
     # def move_sideways(self, dy):
@@ -315,7 +320,9 @@ class Striker(object):
 # check if ball visible ---> rotate head to the ball
 #     ^            |                    |
 #     |            | no                 |
-#     |            v                    | #     +--- ball scan rotation           | #     |                                 |
+#     |            v                    |
+#     +--- ball scan rotation           |
+#     |                                 |
 #     |                  no             V
 #     |               +---------- already rotating body?
 #     |               |                 |
@@ -380,6 +387,11 @@ if __name__ == '__main__':
     else:
         try:  # Hit Ctrl-C to stop, cleanup and exit
             state = 'tracking'
+            start_soll = -0.8
+            align_start = 0.29
+            curve_start = -0.1
+            curve_stop = 0.1
+            soll = start_soll
             # t = None
             while True:
                 # meassure time for debbuging
@@ -389,24 +401,34 @@ if __name__ == '__main__':
 
                 if state == 'tracking':
                     # start ball approach when ball is visible
-                    if striker.ball_tracking():
+                    print('Soll angle', soll)
+                    striker.mover.set_head_angles(soll, 0, 0.5)
+                    sleep(0.3)
+                    if striker.ball_tracking(soll=soll):
                         striker.speak("Ball approach")
                         state = 'ball_approach'
 
                 elif state == 'ball_approach':
-                    ball_in_lower = striker.get_ball_angles_from_camera(
+                    bil = striker.get_ball_angles_from_camera(
                         striker.lower_camera
-                    )
-                    print(ball_in_lower)
-                    if (ball_in_lower is not None and ball_in_lower[1] > 0.20):
-                        print('Ball is close enough, stop approach')
-                        striker.mover.stop_moving()
-                        striker.speak('Align to goal')
-                        state = 'goal_align'
-                    else:
-                        print('Continue running')
-                        striker.run_to_ball()
-                        state = 'tracking'
+                    )  # Ball in lower
+                    print('Ball in lower', bil)
+                    if bil is not None:
+                        if bil[1] > curve_start and bil[1] < curve_stop:
+                            striker.speak('Going linear')
+                            soll = (-start_soll / (curve_stop - curve_start)
+                                    * bil[1]
+                                    + start_soll
+                                    / (curve_stop - curve_start) * curve_stop)
+                        elif bil[1] > align_start:
+                            print('Ball is close enough, stop approach')
+                            striker.mover.stop_moving()
+                            striker.speak('Align to goal')
+                            state = 'align'
+                            continue
+                    print('Continue running')
+                    striker.run_to_ball()
+                    state = 'tracking'
 
                 # elif state == 'simple_kick':
                     # striker.mover.set_head_angles(0,0.25,0.3)
