@@ -170,6 +170,13 @@ class NaoMover(object):
             self.ready_to_move = True
         self.mp.post.moveTo(front, side, rotation)
 
+    def move_to_fast(self, front, side, rotation, wait=False):
+        if not self.ready_to_move:
+            self.mp.moveInit()
+            self.ready_to_move = True
+        self.mp.post.moveTo(front, side, rotation,[['MaxStepX', 0.07999999821186066], ['MaxStepY', 0.1599999964237213], ['MaxStepTheta', 0.5235987901687622], ['MaxStepFrequency', 1.0], ['StepHeight', 0.02]])
+
+
     def move_toward(self, front, side, rotation):
         if not self.ready_to_move:
             self.mp.moveInit()
