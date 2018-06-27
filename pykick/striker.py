@@ -5,6 +5,7 @@ import argparse
 from threading import Thread
 from math import pi
 from time import sleep, time
+from collections import deque
 
 from .utils import read_config
 from .imagereaders import NaoImageReader
@@ -16,7 +17,7 @@ from naoqi import ALProxy
 class Striker(object):
 
     def __init__(self, nao_ip, nao_port, res, ball_hsv, goal_hsv, field_hsv,
-                 ball_min_radius, run_after):
+                 ball_min_radius):
         self.mover = NaoMover(nao_ip=nao_ip, nao_port=nao_port)
         self.mover.stand_up()
         self.upper_camera = NaoImageReader(nao_ip, port=nao_port, res=res,
@@ -28,35 +29,28 @@ class Striker(object):
         self.field_finder = FieldFinder(tuple(field_hsv[0]),
                                         tuple(field_hsv[1]))
         self.goal_finder = GoalFinder(tuple(goal_hsv[0]), tuple(goal_hsv[1]))
-        self.lock_counter = 0
-        self.loss_counter = 0
-        self.run_after = run_after
-        self.in_move = False
         self.speaker = ALProxy("ALTextToSpeech", bytes(nao_ip), nao_port)
 
-        self.tts_thread = None
-        self.last_speak = None
+        self.is_over = False
+
+        self.speach_queue = deque(maxlen=4)
+        self.tts_thread = Thread(target=self._speaker)
+        self.tts_thread.start()
+
         self.rotating = False
         self.rot_dir = 0
         self.timer_start = 0
         self.timer_stop = 0
 
+    def _speaker(self):
+        while not self.is_over:
+            while self.speach_queue:
+                self.speaker.say(self.speach_queue.pop())
+            sleep(0.1)
+
     def speak(self, text):
-        if (
-            (self.tts_thread is None or not self.tts_thread.isAlive())
-            and text != self.last_speak
-        ):
-            if (
-                self.last_speak == "Where is the ball? I am searching for it"
-                and text == "Going to rotate"
-            ):
-                text = "I have found the ball"
-            self.tts_thread = Thread(
-                target=lambda text: self.speaker.say(str(text)),
-                args=(text,)
-            )
-            self.tts_thread.start()
-            self.last_speak = text
+        if not self.speach_queue or self.speach_queue[0] != text:
+            self.speach_queue.appendleft(text)
 
     def ball_scan(self):
         """Intelligently rotate the robot to search for stuff."""
@@ -74,7 +68,7 @@ class Striker(object):
             self.mover.set_head_angles(-pi / 8, 0, 0.5)
             sleep(0.5)
         elif mag < -0.8:
-            self.mover.move_to(0, 0, -pi / 6)
+            self.mover.move_to_fast(0, 0, -pi / 4)
             self.mover.wait()
             #self.speak("Where is the ball? I am searching for it")
         # rotate head to the left, if head yaw angle is equally zero or larger
@@ -130,7 +124,7 @@ class Striker(object):
     def distance_to_ball(self):
         return 0.5
 
-    def ball_tracking(self, soll=0):
+    def ball_tracking(self, soll=0, tol=0.15):
         """Track the ball using the feed from top and bottom camera.
 
         Returns
@@ -153,24 +147,25 @@ class Striker(object):
                         x, y = ball_angles
                         self.timer_start = time()
                         in_sight = True
-                        self.loss_counter = 0
                         break
                 if in_sight:
                     break
             # stop visibility check
 
             if not in_sight:
+                self.speak('No ball visible search it')
                 self.ball_scan()
                 continue
 
-            ball_locked = self.turn_to_ball(x, y, soll=soll)
+            # self.speak('I see the ball')
+            ball_locked = self.turn_to_ball(x, y, soll=soll, tol=tol)
             print()
-        return True
 
     def run_to_ball(self):
-        self.mover.move_to(1, 0, 0)
+        self.mover.move_to_fast(1, 0, 0)
 
-    def turn_to_ball(self, ball_x, ball_y, tol=0.15, soll=0, m_delta=0.2):
+    def turn_to_ball(self, ball_x, ball_y, tol=0.15, soll=0, fancy=False,
+                     m_delta=0.2):
         """Align robot to the ball.
 
         If head is not centered at the ball (within tolerance), then
@@ -187,38 +182,52 @@ class Striker(object):
         if (abs(d_yaw) > 0.01):
             self.mover.change_head_angles(d_yaw, d_pitch,
                                           min(1, abs(d_yaw) * 1.25))
-            sleep(0.05)
+            sleep(0.1)
 
-        yaw = self.mover.get_head_angles()[0]
+        head_yaw, head_pitch = self.mover.get_head_angles()
         self.timer_stop = time()
         print('Ball to head', self.timer_stop - self.timer_start)
-        print('head yaw', yaw, end=' ')
-        d_yaw = yaw - soll
-        print('head d_yaw', d_yaw)
+        print('Head yaw', head_yaw, end=' ')
+        d_yaw = head_yaw - soll
+        print('Head d_yaw', d_yaw)
         print('Rotating', self.rotating, end=' ')
         print('Rotation direction', self.rot_dir, end=' ')
         print('Allowed tolerance', tol)
 
-        # align body with the head
-        if not self.rotating:
+        if not fancy:
             if abs(d_yaw) > tol:
                 self.mover.stop_moving()
-                self.rotating = True
-                self.rot_dir = -1 if d_yaw > 0 else 1
-                print('Going to rotate')
-                self.speak("Going to rotate")
-                self.mover.move_toward(0, 0, -self.rot_dir)
-                sleep(0.8)
+                print('Going to rotate by', d_yaw)
+                self.speak('Going to rotate')
+                self.mover.set_head_angles(soll, head_pitch, 0.3)
+                self.mover.move_to(0, 0, d_yaw)
+                self.mover.wait()
                 return False
             else:
-                print('Success')
-                self.speak('Ball locked')
+                print('Ball locked')
+                # self.speak('Ball locked')
                 return True
+
         else:
-            if d_yaw * self.rot_dir > -tol - m_delta:
-                self.rotating = False
-                self.mover.stop_moving()
-            return False
+            if not self.rotating:
+                if abs(d_yaw) > tol:
+                    self.mover.stop_moving()
+                    self.rotating = True
+                    self.rot_dir = -1 if d_yaw > 0 else 1
+                    print('Going to rotate')
+                    self.speak("Going to rotate")
+                    self.mover.move_toward(0, 0, -self.rot_dir)
+                    # sleep(1.5)
+                    return False
+                else:
+                    print('Success')
+                    # self.speak('Ball locked')
+                    return True
+            else:
+                if d_yaw * self.rot_dir > -tol - m_delta:
+                    self.rotating = False
+                    self.mover.stop_moving()
+                return False
 
     def align_to_ball(self):
         ball_angles = self.get_ball_angles_from_camera(self.lower_camera,
@@ -232,10 +241,10 @@ class Striker(object):
             print(x, y)
             return True
         if abs(dx) > 0.05:
-            self.mover.move_to(0, -dx * 0.2, 0)
+            self.mover.move_to_fast(0, -dx * 0.2, 0)
             self.mover.wait()
         if abs(dy) > 0.05:
-            self.mover.move_to(dy * 0.3, 0, 0)
+            self.mover.move_to_fast(dy * 0.3, 0, 0)
             self.mover.wait()
         return False
 
@@ -255,8 +264,9 @@ class Striker(object):
         print(x, y)
         self.speak("Turn to ball")
         self.turn_to_ball(x, y, tol=0.15)
-        self.speak('I am trying to find the goal')
+        self.speak('Trying to find the goal')
         goal_center_x = self.goal_search()
+        self.speak('Goal found')
 
         print('Goal center:', goal_center_x)
         if goal_center_x is not None and abs(goal_center_x) < 0.1:
@@ -266,27 +276,24 @@ class Striker(object):
             return True
 
         if y > 0.35:
-            self.speak("moving backward")
             self.mover.move_to(-0.05, 0, 0)
             self.mover.wait()
             # return False
         elif y < 0.25:
-            self.speak("moving forward")
             self.mover.move_to(0.05, 0, 0)
             self.mover.wait()
             # return False
 
         sign = -1 if goal_center_x > 0 else 1
         num_steps = int(min(abs(goal_center_x), 0.1) // 0.05)
-        self.speak("Moving sideways")
-        print('Moving sideways')
         for _ in range(num_steps):
             self.mover.move_to(0, 0.05 * sign, 0)
             self.mover.wait()
-        print('Finished moving')
         return False
 
     def close(self):
+        self.is_over = True
+        self.tts_thread.join()
         self.mover.rest()
         self.upper_camera.close()
         self.lower_camera.close()
@@ -372,7 +379,6 @@ if __name__ == '__main__':
         goal_hsv=cfg['goal'],
         field_hsv=cfg['field'],
         ball_min_radius=cfg['ball_min_radius'],
-        run_after=False
     )
 
     # allow additional arguments when running the function like
@@ -407,26 +413,22 @@ if __name__ == '__main__':
     else:
         try:  # Hit Ctrl-C to stop, cleanup and exit
             state = 'tracking'
-            start_soll = 0.8
-            align_start = 0.29
+            init_soll = 0.0
+            align_start = 0.15
             curve_start = -0.1
             curve_stop = 0.1
-            soll = start_soll
-            # t = None
+            soll = init_soll
+
             while True:
                 # meassure time for debbuging
                 loop_start = time()
                 print('State:', state)
-                # striker.speak(str(state))
 
                 if state == 'tracking':
                     # start ball approach when ball is visible
                     print('Soll angle', soll)
-                    if striker.ball_tracking(soll=soll):
-                        striker.speak("Ball approach")
-                        state = 'ball_approach'
-                        # striker.speak('I got the ball')
-                        # sleep(10)
+                    striker.ball_tracking(soll=soll, tol=0.20)
+                    state = 'ball_approach'
 
                 elif state == 'ball_approach':
                     bil = striker.get_ball_angles_from_camera(
@@ -434,35 +436,25 @@ if __name__ == '__main__':
                     )  # Ball in lower
                     print('Ball in lower', bil)
                     if bil is not None:
-                        if bil[1] > curve_start and bil[1] < curve_stop:
+                        if bil[1] > curve_start:
+                            soll = 0
+                        # if bil[1] > curve_start and bil[1] < curve_stop:
                             striker.speak('Going linear')
-                            soll = (-start_soll / (curve_stop - curve_start)
-                                    * bil[1]
-                                    + start_soll
-                                    / (curve_stop - curve_start) * curve_stop)
-                        elif bil[1] > align_start:
+                            # soll = (-init_soll / (curve_stop - curve_start)
+                                    # * bil[1] +
+                                    # init_soll
+                                    # / (curve_stop - curve_start) * curve_stop)
+                        if bil[1] > align_start:
                             print('Ball is close enough, stop approach')
                             striker.mover.stop_moving()
-                            striker.speak('Align to goal')
-                            state = 'align'
+                            striker.speak('Aligning to ball now')
+                            state = 'simple_kick'
                             continue
                     print('Continue running')
                     striker.run_to_ball()
                     state = 'tracking'
 
-                # elif state == 'simple_kick':
-                    # striker.mover.set_head_angles(0,0.25,0.3)
-                    # print('Doing the simple kick')
-
-                    # just walk a short distance forward, ball should be near
-                    # and it will probably be kicked in the right direction
-                    # striker.speak("Simple Kick")
-                    # striker.mover.move_to(0.3, 0, 0)
-                    # striker.mover.wait()
-                    # state = 'tracking'
-
                 elif state == 'goal_align':
-                    # print(striker.ball_and_goal_search())
                     try:
                         if striker.align_to_goal():
                             striker.speak('I am aligning to ball')
@@ -483,9 +475,22 @@ if __name__ == '__main__':
                         striker.mover.set_head_angles(0, 0, 0.3)
                         state = 'tracking'
 
+                elif state == 'simple_kick':
+                    striker.mover.set_head_angles(0,0.25,0.3)
+                    striker.ball_tracking(tol=0.10, soll=0)
+                    print('Doing the simple kick')
+
+                    # just walk a short distance forward, ball should be near
+                    # and it will probably be kicked in the right direction
+                    striker.speak("Simple Kick")
+                    sleep(1)
+                    striker.mover.move_to_fast(0.5, 0, 0)
+                    striker.mover.wait()
+                    break
+                    # state = 'tracking'
+
                 elif state == 'kick':
                     print('KICK!')
-                    striker.speak('I am going. To kick ass')
                     striker.mover.stand_up()
                     sleep(0.3)
                     striker.mover.kick(fancy=True, foot='L')
