@@ -29,3 +29,14 @@ def imresize(frame, width=None, height=None):
         sf = 0
         sz = (width, height)
     return cv2.resize(frame, sz, fx=sf, fy=sf)
+
+
+def hsv_mask(hsv, hsv_lower, hsv_upper):
+    if hsv_lower[0] > hsv_upper[0]:
+        mask_l = cv2.inRange(hsv, tuple(hsv_lower),
+                             tuple([180] + hsv_upper[1:]))
+        mask_u = cv2.inRange(hsv, tuple([0] + hsv_lower[1:]),
+                             tuple(hsv_upper))
+        return cv2.add(mask_l, mask_u)
+    else:
+        return cv2.inRange(hsv, tuple(hsv_lower), tuple(hsv_upper))

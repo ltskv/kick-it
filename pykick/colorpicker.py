@@ -8,7 +8,7 @@ import cv2
 
 from .imagereaders import VideoReader, NaoImageReader, PictureReader
 from .finders import GoalFinder, BallFinder, FieldFinder
-from .utils import read_config, imresize
+from .utils import read_config, imresize, hsv_mask
 
 class Colorpicker(object):
 
@@ -19,10 +19,12 @@ class Colorpicker(object):
         parameters = ['low_h', 'low_s', 'low_v', 'high_h', 'high_s', 'high_v']
         maxes = [180, 255, 255, 180, 255, 255]
         checkers = [
-            lambda x: min(x, self.settings['high_h'] - 1),  # LOW H
+            lambda x: x,  # LOW H
+            # lambda x: min(x, self.settings['high_h'] - 1),  # LOW H
             lambda x: min(x, self.settings['high_s'] - 1),  # LOW S
             lambda x: min(x, self.settings['high_v'] - 1),  # LOW V
-            lambda x: max(x, self.settings['low_h'] + 1),  # HIGH H
+            lambda x: x,  # HIGH H
+            # lambda x: max(x, self.settings['low_h'] + 1),  # HIGH H
             lambda x: max(x, self.settings['low_s'] + 1),  # HIGH S
             lambda x: max(x, self.settings['low_v'] + 1),  # HIGH V
         ]
@@ -89,7 +91,7 @@ class Colorpicker(object):
             frame = self.marker.draw(frame, stuff)
         else:
             hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-            thr = cv2.inRange(
+            thr = hsv_mask(
                 hsv,
                 tuple(map(self.settings.get, ('low_h', 'low_s', 'low_v'))),
                 tuple(map(self.settings.get, ('high_h', 'high_s', 'high_v')))
@@ -191,7 +193,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--target',
         help='specify for what target is being calibrated',
-        default='field'
+        default=None
     )
     args = parser.parse_args()
 
