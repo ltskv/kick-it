@@ -6,6 +6,8 @@ from collections import deque
 import cv2
 import numpy as np
 
+from .utils import hsv_mask
+
 
 class FieldFinder(object):
 
@@ -16,7 +18,7 @@ class FieldFinder(object):
     def primary_mask(self, frame):
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
         blurred = cv2.GaussianBlur(hsv, (25, 25), 20)
-        thr = cv2.inRange(blurred, tuple(self.hsv_lower), tuple(self.hsv_upper))
+        thr = hsv_mask(blurred, self.hsv_lower, self.hsv_upper)
         thr = cv2.erode(thr, None, iterations=6)
         thr = cv2.dilate(thr, None, iterations=10)
         return thr
@@ -55,7 +57,7 @@ class GoalFinder(object):
 
     def primary_mask(self, frame):
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-        thr = cv2.inRange(hsv, self.hsv_lower, self.hsv_upper)
+        thr = hsv_mask(hsv, self.hsv_lower, self.hsv_upper)
         thr = cv2.erode(thr, None, iterations=2)
         thr = cv2.dilate(thr, None, iterations=2)
         return thr
@@ -86,7 +88,7 @@ class GoalFinder(object):
     def find(self, frame):
         thr = self.primary_mask(frame)
         cnts, _ = cv2.findContours(thr, cv2.RETR_EXTERNAL,
-                                            cv2.CHAIN_APPROX_SIMPLE)
+                                   cv2.CHAIN_APPROX_SIMPLE)
         cnts.sort(key=cv2.contourArea, reverse=True)
         top_x = 6
         cnts = cnts[:top_x]
@@ -142,28 +144,19 @@ class BallFinder(object):
 
     def primary_mask(self, frame):
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-        mask = cv2.inRange(hsv, self.hsv_lower, self.hsv_upper)
+        mask = hsv_mask(hsv, self.hsv_lower, self.hsv_upper)
         return mask
 
     def find(self, frame):
-        hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-
-        # construct a mask for the color, then perform  a series of
-        # dilations and erosions to remove any small blobs left in the mask ?
-        mask = cv2.inRange(hsv, self.hsv_lower, self.hsv_upper)
-        # mask = cv2.erode(mask, None, iterations=2)
-        # mask = cv2.dilate(mask, None, iterations=2)
-
-        cnts = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL,
-                                cv2.CHAIN_APPROX_SIMPLE)[-2]
+        mask = self.primary_mask(frame)
+        cnts, _ = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL,
+                                cv2.CHAIN_APPROX_SIMPLE)
 
         if len(cnts) == 0:
             print('No red contours')
             self.history.appendleft(None)
             return None
 
-        # find the largest contour in the mask, then use it to compute
-        # the minimum enclosing circle and centroid
         c = max(cnts, key=cv2.contourArea)
         (x, y), radius = cv2.minEnclosingCircle(c)
 
@@ -191,16 +184,3 @@ class BallFinder(object):
             center, radius = ball
             cv2.circle(frame, center, radius, (255, 255, 0), 1)
         return frame
-            # cv2.circle(frame, center, 5, (0, 255, 0), -1)
-
-        # loop over the set of tracked points
-        # for i in range(1, len(self.history)):
-            # if either of the tracked points are None, ignore them
-            # if self.history[i - 1] is None or self.history[i] is None:
-                # continue
-            # otherwise, compute the thickness of the line and
-            # draw the connecting lines
-            # center_now = self.history[i - 1][0]
-            # center_prev = self.history[i][0]
-            # thickness = int((64 / (i + 1))**0.5 * 2.5)
-            # cv2.line(frame, center_now, center_prev, (0, 255, 0), thickness)

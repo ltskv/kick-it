@@ -76,6 +76,8 @@ class Colorpicker(object):
     def _hsv_updated(self, param):
         cv2.setTrackbarPos(param, self.WINDOW_DETECTION_NAME,
                            self.settings[param])
+        if self.marker is None:
+            return
         self.marker.hsv_lower = tuple(
             map(self.settings.get, ('low_h', 'low_s', 'low_v'))
         )
