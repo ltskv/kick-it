@@ -237,15 +237,14 @@ class Striker(object):
         x, y = ball_angles
         goal_x, goal_y = 0.095, 0.30
         dx, dy = goal_x - x, goal_y - y
-        if abs(dx) < 0.05 and abs(dy) < 0.05:
-            print(x, y)
+
+        dx = -dx * 0.2 if abs(dx) > 0.05 else 0
+        dy = dy * 0.3 if abs(dy) > 0.05 else 0
+        if dx == 0  and dy == 0:
             return True
-        if abs(dx) > 0.05:
-            self.mover.move_to_fast(0, -dx * 0.2, 0)
-            self.mover.wait()
-        if abs(dy) > 0.05:
-            self.mover.move_to_fast(dy * 0.3, 0, 0)
-            self.mover.wait()
+        print('Moving to dxdy', dx, dy)
+        self.mover.move_to(dy, dx, 0)
+        self.mover.wait()
         return False
 
     def align_to_goal(self):
@@ -412,7 +411,7 @@ if __name__ == '__main__':
     # (see diagram above)
     else:
         try:  # Hit Ctrl-C to stop, cleanup and exit
-            state = 'tracking'
+            state = 'align'
             init_soll = 0.0
             align_start = 0.15
             curve_start = -0.1
@@ -472,8 +471,9 @@ if __name__ == '__main__':
                             striker.speak('I am going. To kick ass')
                             state = 'kick'
                     except ValueError:
-                        striker.mover.set_head_angles(0, 0, 0.3)
-                        state = 'tracking'
+                        pass
+                        # striker.mover.set_head_angles(0, 0, 0.3)
+                        # state = 'tracking'
 
                 elif state == 'simple_kick':
                     striker.mover.set_head_angles(0,0.25,0.3)
