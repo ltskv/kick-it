@@ -1,7 +1,10 @@
 # from time import sleep
+import argparse
 from math import radians
 
 from naoqi import ALProxy
+
+from .utils import read_config
 
 
 class NaoMover(object):
@@ -89,7 +92,6 @@ class NaoMover(object):
                 joints.append(sides[side] + joint)
                 angles.append(radians(angle))
             self.mp.angleInterpolation(joints, angles, wait, True)
-            # sleep(wait)
 
         self.stand_up(0.5)
         self.set_arm_stiffness()
@@ -174,8 +176,13 @@ class NaoMover(object):
         if not self.ready_to_move:
             self.mp.moveInit()
             self.ready_to_move = True
-        self.mp.post.moveTo(front, side, rotation,[['MaxStepX', 0.07999999821186066], ['MaxStepY', 0.1599999964237213], ['MaxStepTheta', 0.5235987901687622], ['MaxStepFrequency', 1.0], ['StepHeight', 0.02]])
-
+        self.mp.post.moveTo(front, side, rotation, [
+                ['MaxStepX', 0.07999999821186066],
+                ['MaxStepY', 0.1599999964237213],
+                ['MaxStepTheta', 0.5235987901687622],
+                ['MaxStepFrequency', 1.0],
+                ['StepHeight', 0.02]
+        ])
 
     def move_toward(self, front, side, rotation):
         if not self.ready_to_move:
@@ -183,10 +190,50 @@ class NaoMover(object):
             self.ready_to_move = True
         self.mp.post.moveToward(front, side, rotation)
 
-
     def wait(self):
         self.mp.waitUntilMoveIsFinished()
 
     def stop_moving(self):
         print('STOOOP')
         self.mp.stopMove()
+
+
+
+if __name__ == '__main__':
+
+    cfg = read_config()
+
+    mover = NaoMover(cfg['ip'], cfg['port'])
+    parser = argparse.ArgumentParser()
+    actions = parser.add_mutually_exclusive_group()
+    actions.add_argument("-s", "--stand", action="store_true",
+                        help="let the robot stand up")
+    actions.add_argument("-k", "--kick", action="store_true",
+                        help="let the robot do a fancy kick")
+    actions.add_argument("-r", "--rest", action="store_true",
+                        help="let the robot rest")
+    actions.add_argument("-m", "--move", action="store_true",
+                        help="move around")
+
+    args = parser.parse_args()
+
+    if args.stand:
+        mover.stand_up()
+
+    elif args.rest:
+        mover.rest()
+
+    # perform a (fancy) kick
+    elif args.kick:
+        mover.stand_up()
+        mover.kick()
+
+    elif args.move:
+        mover.stand_up()
+        while True:
+            amount_x = float(raw_input('How much x: '))
+            amount_y = float(raw_input('How much y: '))
+            amount_z = float(raw_input('How much z: '))
+            print(amount_x, amount_y, amount_z)
+            mover.move_to(amount_x, amount_y, amount_z)
+            mover.wait()

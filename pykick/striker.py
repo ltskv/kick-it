@@ -1,7 +1,6 @@
 from __future__ import print_function
 from __future__ import division
 
-import argparse
 from threading import Thread
 from math import pi,tan,asin
 from time import sleep, time
@@ -157,7 +156,6 @@ class Striker(object):
                             y_angle=angles[1]
                             y_angle=pi/2-y_angle-15*pi/180
                             distance = 0.5 * tan(y_angle)
-            
                             # vertical distance to ball at the end
                             vert_dist=0.3
 
@@ -183,7 +181,7 @@ class Striker(object):
             print()
 
     def run_to_ball(self):
-        self.mover.move_toward(1, 3 * self.dy, 0)
+        self.mover.move_toward(1, min(2 * self.dy, 1), 0)
 
     def turn_to_ball(self, ball_x, ball_y, tol=0.15, soll=0, fancy=False,
                      m_delta=0.2):
@@ -313,9 +311,12 @@ class Striker(object):
 
     def close(self):
         self.is_over = True
-        self.tts_thread.join()
+        if self.tts_thread.isAlive():
+            self.tts_thread.join()
         self.upper_camera.close()
         self.lower_camera.close()
+        self.mover.stop_moving()
+        # self.mover.stand_up()
 
     def goal_search(self):
         goal_center_x = None
@@ -389,124 +390,88 @@ class Striker(object):
 
 if __name__ == '__main__':
 
-    cfg = read_config()
-    striker = Striker(
-        nao_ip=cfg['ip'],
-        nao_port=cfg['port'],
-        res=cfg['res'],
-        ball_hsv=cfg['ball'],
-        goal_hsv=cfg['goal'],
-        field_hsv=cfg['field'],
-        ball_min_radius=cfg['ball_min_radius'],
-    )
+    try:  # Hit Ctrl-C to stop, cleanup and exit
+        cfg = read_config()
+        striker = Striker(
+            nao_ip=cfg['ip'], nao_port=cfg['port'],
+            res=cfg['res'], ball_hsv=cfg['ball'],
+            goal_hsv=cfg['goal'], field_hsv=cfg['field'],
+            ball_min_radius=cfg['ball_min_radius'],
+        )
 
-    # allow additional arguments when running the function like
-    # stand
-    # rest
-    # kick
-    # if no argument is given the state machine is run
+        state = 'tracking'
+        init_soll = 0.0
+        align_start = 0.15
+        curve_start = -0.1
+        curve_stop = 0.1
+        soll = init_soll
+        while True:
+            # meassure time for debbuging
+            loop_start = time()
+            print('State:', state)
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-s", "--stand", action="store_true",
-                        help="let the robot stand up")
-    parser.add_argument("-k", "--kick", action="store_true",
-                        help="let the robot do a fancy kick")
-    parser.add_argument("-r", "--rest", action="store_true",
-                        help="let the robot rest")
+            if state == 'tracking':
+                # start ball approach when ball is visible
+                print('Soll angle')
+                striker.ball_tracking(tol=0.05)
+                state = 'ball_approach'
 
-    args = parser.parse_args()
+            elif state == 'ball_approach':
+                # bil = striker.get_ball_angles_from_camera(
+                    # striker.lower_camera
+                # )  # Ball in lower
 
-    if args.stand:
-        striker.mover.stand_up()
-        striker.close()
+                # print('Ball in lower', bil)
+                print('Continue running')
+                striker.run_to_ball()
+                # state = 'tracking'
 
-    elif args.rest:
-        striker.mover.rest()
-        striker.close()
+            elif state == 'goal_align':
+                try:
+                    if striker.align_to_goal():
+                        striker.speak('I am aligning to ball')
+                        state = "align"
+                except ValueError:
+                        state = 'tracking'
 
-    # perform a (fancy) kick
-    elif args.kick:
-        striker.mover.stand_up()
-        striker.mover.kick(fancy=True)
-        striker.close()
-
-    # perform normal state-machine if no input argument is given
-    # (see diagram above)
-    else:
-        try:  # Hit Ctrl-C to stop, cleanup and exit
-            state = 'tracking'
-            # init_soll = 0.0
-            # align_start = 0.15
-            # curve_start = -0.1
-            # curve_stop = 0.1
-            # soll = init_soll
-
-            while True:
-                # meassure time for debbuging
-                loop_start = time()
-                print('State:', state)
-
-                if state == 'tracking':
-                    # start ball approach when ball is visible
-                    print('Soll angle')
-                    striker.ball_tracking(tol=0.05)
-                    state = 'ball_approach'
-
-                elif state == 'ball_approach':
-                    # bil = striker.get_ball_angles_from_camera(
-                        # striker.lower_camera
-                    # )  # Ball in lower
-
-                    # print('Ball in lower', bil)
-                    print('Continue running')
-                    striker.run_to_ball()
-                    # state = 'tracking'
-
-                elif state == 'goal_align':
-                    try:
-                        if striker.align_to_goal():
-                            striker.speak('I am aligning to ball')
-                            state = "align"
-                    except ValueError:
-                            state = 'tracking'
-
-                elif state == 'align':
-                    striker.mover.set_head_angles(0, 0.25, 0.3)
-                    sleep(0.5)
-                    try:
-                        success = striker.align_to_ball()
-                        sleep(0.3)
-                        if success:
-                            striker.speak('I am going. To kick ass')
-                            state = 'kick'
-                    except ValueError:
-                        pass
-                        # striker.mover.set_head_angles(0, 0, 0.3)
-                        # state = 'tracking'
-
-                elif state == 'simple_kick':
-                    striker.mover.set_head_angles(0,0.25,0.3)
-                    striker.ball_tracking(tol=0.10, soll=0)
-                    print('Doing the simple kick')
-
-                    # just walk a short distance forward, ball should be near
-                    # and it will probably be kicked in the right direction
-                    striker.speak("Simple Kick")
-                    sleep(1)
-                    striker.mover.move_to_fast(0.5, 0, 0)
-                    striker.mover.wait()
-                    break
-                    # state = 'tracking'
-
-                elif state == 'kick':
-                    print('KICK!')
-                    striker.mover.stand_up()
+            elif state == 'align':
+                striker.mover.set_head_angles(0, 0.25, 0.3)
+                sleep(0.5)
+                try:
+                    success = striker.align_to_ball()
                     sleep(0.3)
-                    striker.mover.kick(fancy=True, foot='L')
-                    break
+                    if success:
+                        striker.speak('I am going. To kick ass')
+                        state = 'kick'
+                except ValueError:
+                    pass
+                    # striker.mover.set_head_angles(0, 0, 0.3)
+                    # state = 'tracking'
 
-                loop_end = time()
-                print('Loop time:', loop_end - loop_start)
-                print('\n\n')
-        finally:
-            striker.close()
+            elif state == 'simple_kick':
+                striker.mover.set_head_angles(0,0.25,0.3)
+                striker.ball_tracking(tol=0.10, soll=0)
+                print('Doing the simple kick')
+
+                # just walk a short distance forward, ball should be near
+                # and it will probably be kicked in the right direction
+                striker.speak("Simple Kick")
+                sleep(1)
+                striker.mover.move_to_fast(0.5, 0, 0)
+                striker.mover.wait()
+                break
+                # state = 'tracking'
+
+            elif state == 'kick':
+                print('KICK!')
+                striker.mover.stand_up()
+                sleep(0.3)
+                striker.mover.kick(fancy=True, foot='L')
+                break
+
+            loop_end = time()
+            print('Loop time:', loop_end - loop_start)
+            print('\n\n')
+    finally:
+        striker.close()
+        striker.mover.rest()
