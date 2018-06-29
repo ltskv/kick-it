@@ -2,8 +2,8 @@ from __future__ import print_function
 from __future__ import division
 
 from threading import Thread
-from math import pi,tan,asin
-from time import sleep, time
+from math import pi, cos, tan, asin, radians
+from time import sleep, time, strftime
 from collections import deque
 
 from .utils import read_config
@@ -15,8 +15,11 @@ from naoqi import ALProxy
 
 class Striker(object):
 
+    VIDEO_FOLDER = '/home/nao/recordings/'
+
     def __init__(self, nao_ip, nao_port, res, ball_hsv, goal_hsv, field_hsv,
                  ball_min_radius):
+        self.run_id = strftime('%Y%m%d%H%M%S')
         self.mover = NaoMover(nao_ip=nao_ip, nao_port=nao_port)
         self.mover.stand_up()
         self.upper_camera = NaoImageReader(nao_ip, port=nao_port, res=res,
@@ -28,7 +31,8 @@ class Striker(object):
         self.field_finder = FieldFinder(tuple(field_hsv[0]),
                                         tuple(field_hsv[1]))
         self.goal_finder = GoalFinder(tuple(goal_hsv[0]), tuple(goal_hsv[1]))
-        self.speaker = ALProxy("ALTextToSpeech", bytes(nao_ip), nao_port)
+        self.speaker = ALProxy('ALTextToSpeech', bytes(nao_ip), nao_port)
+        self.recorder = ALProxy('ALVideoRecorder', bytes(nao_ip), nao_port)
 
         self.is_over = False
 
@@ -48,11 +52,21 @@ class Striker(object):
                 self.speaker.say(self.speach_queue.pop())
             sleep(0.1)
 
-    def speak(self, text):
-        if not self.speach_queue or self.speach_queue[0] != text:
-            self.speach_queue.appendleft(text)
+    def start_record(self, cam_id):
+        if self.recorder.isRecording():
+            print('Already recording. Please stop first')
+            return
+        self.recorder.setCameraID(cam_id)
+        self.recorder.startRecording(self.VIDEO_FOLDER,
+                                     'cam' + str(cam_id) + self.run_id)
 
-    def ball_scan(self):
+    def stop_record(self):
+        self.recorder.stopRecording()
+
+    def speak(self, text):
+        self.speach_queue.appendleft(text)
+
+    def scan_rotation(self):
         """Intelligently rotate the robot to search for stuff."""
         self.mover.stop_moving()
         self.rotating = False
@@ -122,7 +136,15 @@ class Striker(object):
         return goal_x
 
     def distance_to_ball(self):
-        return 0.5
+        angles = self.get_ball_angles_from_camera(self.upper_camera)
+        if angles == None:
+            raise ValueError('No ball in sight')
+        y_angle = angles[1]
+        y_angle = pi/2 - y_angle - radians(15)
+        return 0.5 * tan(y_angle)
+
+    def walking_direction(self, lr, d):
+        return asin(0.5 / d) * lr
 
     def ball_tracking(self, soll=0, tol=0.15):
         """Track the ball using the feed from top and bottom camera.
@@ -147,25 +169,7 @@ class Striker(object):
                         x, y = ball_angles
                         self.timer_start = time()
                         in_sight = True
-                        if cam==self.upper_camera and not self.dy:
-                            #angles= self.video_top.to_angles(x,y)
-                            angles=ball_angles
-                            print("y (in radians) angle is:"+str(angles[1]))
 
-                            # calculate distance to the ball
-                            y_angle=angles[1]
-                            y_angle=pi/2-y_angle-15*pi/180
-                            distance = 0.5 * tan(y_angle)
-                            # vertical distance to ball at the end
-                            vert_dist=0.3
-
-                            # calculate angle of the walk
-                            angle_to_walk=asin(vert_dist/distance)
-                            self.dy=1*tan(angle_to_walk)
-
-                            print("Dy ist ----- "+str(self.dy))
-                            print("Distance --------------- ="+str(distance))
-                            print('Top camera\n')
                         break
                 if in_sight:
                     break
@@ -173,15 +177,16 @@ class Striker(object):
 
             if not in_sight:
                 self.speak('No ball visible search it')
-                self.ball_scan()
+                self.scan_rotation()
                 continue
 
             # self.speak('I see the ball')
             ball_locked = self.turn_to_ball(x, y, soll=soll, tol=tol)
             print()
 
-    def run_to_ball(self):
-        self.mover.move_toward(1, min(2 * self.dy, 1), 0)
+    def run_to_ball(self, d):
+        self.mover.move_to(d, 0, 0)
+        self.mover.wait()
 
     def turn_to_ball(self, ball_x, ball_y, tol=0.15, soll=0, fancy=False,
                      m_delta=0.2):
@@ -224,7 +229,6 @@ class Striker(object):
                 return False
             else:
                 print('Ball locked')
-                # self.speak('Ball locked')
                 return True
 
         else:
@@ -313,6 +317,8 @@ class Striker(object):
         self.is_over = True
         if self.tts_thread.isAlive():
             self.tts_thread.join()
+        if self.recorder.isRecording():
+            self.stop_record()
         self.upper_camera.close()
         self.lower_camera.close()
         self.mover.stop_moving()
@@ -320,7 +326,8 @@ class Striker(object):
 
     def goal_search(self):
         goal_center_x = None
-        angles = [0, -pi/6, -pi/4, -pi/3, -pi/2, pi/6, pi/4, pi/3, pi/2]
+        positions = [0, pi/6, pi/4, pi/3, pi/2]
+        angles = [-p for p in positions] + [p for p in positions][1:]
         for angle in angles:
             self.mover.set_head_angles(angle, 0)
             sleep(0.5)
@@ -399,7 +406,7 @@ if __name__ == '__main__':
             ball_min_radius=cfg['ball_min_radius'],
         )
 
-        state = 'tracking'
+        state = 'init'
         init_soll = 0.0
         align_start = 0.15
         curve_start = -0.1
@@ -410,11 +417,21 @@ if __name__ == '__main__':
             loop_start = time()
             print('State:', state)
 
-            if state == 'tracking':
+            if state == 'init':
+                striker.start_record(0)
+                striker.mover.set_head_angles(0, 0)
+                striker.ball_tracking(tol=0.05)
+                # goal_center = striker.goal_search()
+                # approach = 1 if goal_center < 0 else -1
+                approach = 1
+                state = 'ball_approach'
+
+            elif state == 'tracking':
                 # start ball approach when ball is visible
                 print('Soll angle')
                 striker.ball_tracking(tol=0.05)
-                state = 'ball_approach'
+                break
+                # state = 'ball_approach'
 
             elif state == 'ball_approach':
                 # bil = striker.get_ball_angles_from_camera(
@@ -422,9 +439,20 @@ if __name__ == '__main__':
                 # )  # Ball in lower
 
                 # print('Ball in lower', bil)
-                print('Continue running')
-                striker.run_to_ball()
-                # state = 'tracking'
+                try:
+                    d = striker.distance_to_ball()
+                except ValueError:
+                    state = 'tracking'
+                    continue
+                print('Distance to ball', d)
+                angle = striker.walking_direction(approach, d)
+                d_run = d * cos(angle)
+                print('Approach angle', angle)
+                striker.mover.move_to(0, 0, angle)
+                striker.mover.wait()
+                striker.run_to_ball(d_run)
+                striker.mover.move_to(0, 0, -pi/2 * approach)
+                state = 'tracking'
 
             elif state == 'goal_align':
                 try:
@@ -435,6 +463,8 @@ if __name__ == '__main__':
                         state = 'tracking'
 
             elif state == 'align':
+                striker.stop_record()
+                striker.start_record(1)
                 striker.mover.set_head_angles(0, 0.25, 0.3)
                 sleep(0.5)
                 try:
