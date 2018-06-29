@@ -15,24 +15,25 @@ from naoqi import ALProxy
 
 class Striker(object):
 
-    VIDEO_FOLDER = '/home/nao/recordings/'
-
     def __init__(self, nao_ip, nao_port, res, ball_hsv, goal_hsv, field_hsv,
                  ball_min_radius):
         self.run_id = strftime('%Y%m%d%H%M%S')
         self.mover = NaoMover(nao_ip=nao_ip, nao_port=nao_port)
         self.mover.stand_up()
-        self.upper_camera = NaoImageReader(nao_ip, port=nao_port, res=res,
-                                           fps=30, cam_id=0)
-        self.lower_camera = NaoImageReader(nao_ip, port=nao_port, res=res,
-                                           fps=30, cam_id=1)
+        self.upper_camera = NaoImageReader(
+            nao_ip, port=nao_port, res=res, fps=30, cam_id=0,
+            video_file='cam0_' + self.run_id + '.mpg'
+        )
+        self.lower_camera = NaoImageReader(
+            nao_ip, port=nao_port, res=res, fps=30, cam_id=1,
+            video_file='cam1_' + self.run_id + '.mpg'
+        )
         self.ball_finder = BallFinder(tuple(ball_hsv[0]), tuple(ball_hsv[1]),
                                       ball_min_radius)
         self.field_finder = FieldFinder(tuple(field_hsv[0]),
                                         tuple(field_hsv[1]))
         self.goal_finder = GoalFinder(tuple(goal_hsv[0]), tuple(goal_hsv[1]))
         self.speaker = ALProxy('ALTextToSpeech', bytes(nao_ip), nao_port)
-        self.recorder = ALProxy('ALVideoRecorder', bytes(nao_ip), nao_port)
 
         self.is_over = False
 
@@ -51,17 +52,6 @@ class Striker(object):
             while self.speach_queue:
                 self.speaker.say(self.speach_queue.pop())
             sleep(0.1)
-
-    def start_record(self, cam_id):
-        if self.recorder.isRecording():
-            print('Already recording. Please stop first')
-            return
-        self.recorder.setCameraID(cam_id)
-        self.recorder.startRecording(self.VIDEO_FOLDER,
-                                     'cam' + str(cam_id) + self.run_id)
-
-    def stop_record(self):
-        self.recorder.stopRecording()
 
     def speak(self, text):
         self.speach_queue.appendleft(text)
@@ -317,8 +307,6 @@ class Striker(object):
         self.is_over = True
         if self.tts_thread.isAlive():
             self.tts_thread.join()
-        if self.recorder.isRecording():
-            self.stop_record()
         self.upper_camera.close()
         self.lower_camera.close()
         self.mover.stop_moving()
@@ -418,7 +406,6 @@ if __name__ == '__main__':
             print('State:', state)
 
             if state == 'init':
-                striker.start_record(0)
                 striker.mover.set_head_angles(0, 0)
                 striker.ball_tracking(tol=0.05)
                 # goal_center = striker.goal_search()
@@ -430,8 +417,8 @@ if __name__ == '__main__':
                 # start ball approach when ball is visible
                 print('Soll angle')
                 striker.ball_tracking(tol=0.05)
-                break
-                # state = 'ball_approach'
+                # break
+                state = 'align'
 
             elif state == 'ball_approach':
                 # bil = striker.get_ball_angles_from_camera(
@@ -463,8 +450,6 @@ if __name__ == '__main__':
                         state = 'tracking'
 
             elif state == 'align':
-                striker.stop_record()
-                striker.start_record(1)
                 striker.mover.set_head_angles(0, 0.25, 0.3)
                 sleep(0.5)
                 try:
