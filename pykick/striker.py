@@ -166,7 +166,6 @@ class Striker(object):
                             self.dy=1*tan(angle_to_walk)
 
                             print("Dy ist ----- "+str(self.dy))
-                            
                             print("Distance --------------- ="+str(distance))
                             print('Top camera\n')
                         break
@@ -184,7 +183,7 @@ class Striker(object):
             print()
 
     def run_to_ball(self):
-        self.mover.move_to_fast(1, self.dy, 0)
+        self.mover.move_toward(1, 3 * self.dy, 0)
 
     def turn_to_ball(self, ball_x, ball_y, tol=0.15, soll=0, fancy=False,
                      m_delta=0.2):
@@ -315,7 +314,6 @@ class Striker(object):
     def close(self):
         self.is_over = True
         self.tts_thread.join()
-        self.mover.rest()
         self.upper_camera.close()
         self.lower_camera.close()
 
@@ -420,25 +418,28 @@ if __name__ == '__main__':
 
     if args.stand:
         striker.mover.stand_up()
+        striker.close()
 
     elif args.rest:
         striker.mover.rest()
+        striker.close()
 
     # perform a (fancy) kick
     elif args.kick:
         striker.mover.stand_up()
         striker.mover.kick(fancy=True)
+        striker.close()
 
     # perform normal state-machine if no input argument is given
     # (see diagram above)
     else:
         try:  # Hit Ctrl-C to stop, cleanup and exit
             state = 'tracking'
-            init_soll = 0.0
-            align_start = 0.15
-            curve_start = -0.1
-            curve_stop = 0.1
-            soll = init_soll
+            # init_soll = 0.0
+            # align_start = 0.15
+            # curve_start = -0.1
+            # curve_stop = 0.1
+            # soll = init_soll
 
             while True:
                 # meassure time for debbuging
@@ -447,33 +448,19 @@ if __name__ == '__main__':
 
                 if state == 'tracking':
                     # start ball approach when ball is visible
-                    print('Soll angle', soll)
-                    striker.ball_tracking(soll=soll, tol=0.20)
+                    print('Soll angle')
+                    striker.ball_tracking(tol=0.05)
                     state = 'ball_approach'
 
                 elif state == 'ball_approach':
-                    bil = striker.get_ball_angles_from_camera(
-                        striker.lower_camera
-                    )  # Ball in lower
-                    print('Ball in lower', bil)
-                    if bil is not None:
-                        if bil[1] > curve_start:
-                            soll = 0
-                        # if bil[1] > curve_start and bil[1] < curve_stop:
-                            striker.speak('Going linear')
-                            # soll = (-init_soll / (curve_stop - curve_start)
-                                    # * bil[1] +
-                                    # init_soll
-                                    # / (curve_stop - curve_start) * curve_stop)
-                        if bil[1] > align_start:
-                            print('Ball is close enough, stop approach')
-                            striker.mover.stop_moving()
-                            striker.speak('Aligning to ball now')
-                            state = 'simple_kick'
-                            continue
+                    # bil = striker.get_ball_angles_from_camera(
+                        # striker.lower_camera
+                    # )  # Ball in lower
+
+                    # print('Ball in lower', bil)
                     print('Continue running')
                     striker.run_to_ball()
-                    state = 'tracking'
+                    # state = 'tracking'
 
                 elif state == 'goal_align':
                     try:
