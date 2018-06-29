@@ -3,7 +3,7 @@ from __future__ import division
 
 import argparse
 from threading import Thread
-from math import pi
+from math import pi,tan,asin
 from time import sleep, time
 from collections import deque
 
@@ -41,6 +41,7 @@ class Striker(object):
         self.rot_dir = 0
         self.timer_start = 0
         self.timer_stop = 0
+        self.dy = False
 
     def _speaker(self):
         while not self.is_over:
@@ -147,6 +148,27 @@ class Striker(object):
                         x, y = ball_angles
                         self.timer_start = time()
                         in_sight = True
+                        if cam==self.upper_camera and not self.dy:
+                            #angles= self.video_top.to_angles(x,y)
+                            angles=ball_angles
+                            print("y (in radians) angle is:"+str(angles[1]))
+
+                            # calculate distance to the ball
+                            y_angle=angles[1]
+                            y_angle=pi/2-y_angle-15*pi/180
+                            distance = 0.5 * tan(y_angle)
+            
+                            # vertical distance to ball at the end
+                            vert_dist=0.3
+
+                            # calculate angle of the walk
+                            angle_to_walk=asin(vert_dist/distance)
+                            self.dy=1*tan(angle_to_walk)
+
+                            print("Dy ist ----- "+str(self.dy))
+                            
+                            print("Distance --------------- ="+str(distance))
+                            print('Top camera\n')
                         break
                 if in_sight:
                     break
@@ -162,7 +184,7 @@ class Striker(object):
             print()
 
     def run_to_ball(self):
-        self.mover.move_to_fast(1, 0, 0)
+        self.mover.move_to_fast(1, self.dy, 0)
 
     def turn_to_ball(self, ball_x, ball_y, tol=0.15, soll=0, fancy=False,
                      m_delta=0.2):
@@ -411,7 +433,7 @@ if __name__ == '__main__':
     # (see diagram above)
     else:
         try:  # Hit Ctrl-C to stop, cleanup and exit
-            state = 'align'
+            state = 'tracking'
             init_soll = 0.0
             align_start = 0.15
             curve_start = -0.1
