@@ -14,4 +14,4 @@ fi
 destination="nao@$nao_ip:/home/nao/pykick/"
 
 # copy the files with scp
-scp "$repo/"*.py $destination
+scp "$repo"/*.py "$repo"/nao_defaults.json $destination

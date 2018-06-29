@@ -198,11 +198,8 @@ class NaoMover(object):
         self.mp.stopMove()
 
 
-
 if __name__ == '__main__':
-
     cfg = read_config()
-
     mover = NaoMover(cfg['ip'], cfg['port'])
     parser = argparse.ArgumentParser()
     actions = parser.add_mutually_exclusive_group()
@@ -226,7 +223,7 @@ if __name__ == '__main__':
     # perform a (fancy) kick
     elif args.kick:
         mover.stand_up()
-        mover.kick()
+        mover.kick(fancy=True)
 
     elif args.move:
         mover.stand_up()
