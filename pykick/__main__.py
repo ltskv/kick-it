@@ -63,7 +63,7 @@ if __name__ == '__main__':
             elif state == 'tracking':
                 # start ball approach when ball is visible
                 print('Soll angle')
-                striker.ball_tracking(tol=0.05)
+                striker.ball_tracking(tol=0.15)
                 # break
                 if approach_steps < 2:
                     state = 'ball_approach'
@@ -74,7 +74,7 @@ if __name__ == '__main__':
                 bil = striker.get_ball_angles_from_camera(
                     striker.lower_camera
                 )  # Ball in lower
-                print(bil)
+                print('Ball in lower!', bil)
                 if bil is not None and bil[1] > 0.15:
                     striker.speak('Ball is close enough, stop approach')
                     striker.mover.stop_moving()
@@ -161,6 +161,7 @@ if __name__ == '__main__':
                 striker.mover.kick(fancy=True, foot='L')
                 ##striker.speak("Nice kick. Let's do a dance")
                 #striker.mover.dance()
+                sleep(2)
                 break
     finally:
         striker.close()

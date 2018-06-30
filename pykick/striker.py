@@ -29,17 +29,17 @@ class Striker(object):
             nao_ip, port=nao_port, res=res, fps=10, cam_id=0,
         )
         self.lower_camera = NaoImageReader(
-            nao_ip, port=nao_port, res=res, fps=10, cam_id=1,
+            nao_ip, port=nao_port, res=1, fps=10, cam_id=1,
         )
 
         # POV
         self.upper_pov = NaoImageReader(
-            nao_ip, port=nao_port, res=1, fps=15, cam_id=0,
+            nao_ip, port=nao_port, res=1, fps=10, cam_id=0,
             video_file='./cam0_' + self.run_id + '.avi'
         )
 
         self.lower_pov = NaoImageReader(
-            nao_ip, port=nao_port, res=1, fps=15, cam_id=1,
+            nao_ip, port=nao_port, res=1, fps=10, cam_id=1,
             video_file='./cam1_' + self.run_id + '.avi'
         )
         self.pov_thread = Thread(target=self._pov)
@@ -81,13 +81,14 @@ class Striker(object):
         while not self.is_over:
             while self.speach_queue:
                 self.speaker.say(self.speach_queue.pop())
-            sleep(0.1)
+            sleep(0.5)
 
     def _pov(self):
         while not self.is_over:
             try:
                 self.upper_pov.get_frame()
                 self.lower_pov.get_frame()
+                sleep(0.1)
             except RuntimeError as e:
                 print(e)
                 continue
