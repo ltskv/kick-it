@@ -248,7 +248,7 @@ class Striker(object):
         if ball_angles is None:
             raise ValueError('No ball')
         x, y = ball_angles
-        goal_x, goal_y = 0.095, 0.30
+        goal_x, goal_y = 0.095, 0.4
         dx, dy = goal_x - x, goal_y - y
 
         dx = -dx * 0.2 if abs(dx) > 0.05 else 0
@@ -400,6 +400,7 @@ if __name__ == '__main__':
         curve_start = -0.1
         curve_stop = 0.1
         soll = init_soll
+        striker.speak("Initialized")
         while True:
             # meassure time for debbuging
             loop_start = time()
@@ -407,6 +408,7 @@ if __name__ == '__main__':
 
             if state == 'init':
                 striker.mover.set_head_angles(0, 0)
+                striker.speak("Start the Ball tracking")
                 striker.ball_tracking(tol=0.05)
                 # goal_center = striker.goal_search()
                 # approach = 1 if goal_center < 0 else -1
@@ -426,18 +428,22 @@ if __name__ == '__main__':
                 # )  # Ball in lower
 
                 # print('Ball in lower', bil)
+                striker.speak("I have found the ball. Starting ball approach")  
                 try:
                     d = striker.distance_to_ball()
                 except ValueError:
                     state = 'tracking'
                     continue
                 print('Distance to ball', d)
+                striker.speak("The distance to the ball is approximately "+str(round(d,2))+" Meters")
                 angle = striker.walking_direction(approach, d)
                 d_run = d * cos(angle)
                 print('Approach angle', angle)
+                
                 striker.mover.move_to(0, 0, angle)
                 striker.mover.wait()
                 striker.run_to_ball(d_run)
+                striker.speak("I think I have reached the ball. I will start rotating")
                 striker.mover.move_to(0, 0, -pi/2 * approach)
                 state = 'tracking'
 
@@ -450,13 +456,14 @@ if __name__ == '__main__':
                         state = 'tracking'
 
             elif state == 'align':
+                striker.speak("I will try now to align to the ball")
                 striker.mover.set_head_angles(0, 0.25, 0.3)
                 sleep(0.5)
                 try:
                     success = striker.align_to_ball()
                     sleep(0.3)
                     if success:
-                        striker.speak('I am going. To kick ass')
+                        striker.speak('Hasta la vista, Baby')
                         state = 'kick'
                 except ValueError:
                     pass
