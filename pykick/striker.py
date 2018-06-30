@@ -219,8 +219,7 @@ class Striker(object):
         self.mover.move_to(d, 0, 0)
         self.mover.wait()
 
-    def turn_to_ball(self, ball_x, ball_y, tol=0.15, soll=0, fancy=False,
-                     m_delta=0.2):
+    def turn_to_ball(self, ball_x, ball_y, tol=0.15, soll=0):
         """Align robot to the ball.
 
         If head is not centered at the ball (within tolerance), then
@@ -245,43 +244,19 @@ class Striker(object):
         print('Head yaw', head_yaw, end=' ')
         d_yaw = head_yaw - soll
         print('Head d_yaw', d_yaw)
-        print('Rotating', self.rotating, end=' ')
-        print('Rotation direction', self.rot_dir, end=' ')
         print('Allowed tolerance', tol)
 
-        if not fancy:
-            if abs(d_yaw) > tol:
-                self.mover.stop_moving()
-                print('Going to rotate by', d_yaw)
-                self.speak('Going to rotate')
-                self.mover.set_head_angles(soll, head_pitch, 0.3)
-                self.mover.move_to(0, 0, d_yaw)
-                self.mover.wait()
-                return False
-            else:
-                print('Ball locked')
-                return True
-
+        if abs(d_yaw) > tol:
+            self.mover.stop_moving()
+            print('Going to rotate by', d_yaw)
+            self.speak('Going to rotate')
+            self.mover.set_head_angles(soll, head_pitch, 0.3)
+            self.mover.move_to(0, 0, d_yaw)
+            self.mover.wait()
+            return False
         else:
-            if not self.rotating:
-                if abs(d_yaw) > tol:
-                    self.mover.stop_moving()
-                    self.rotating = True
-                    self.rot_dir = -1 if d_yaw > 0 else 1
-                    print('Going to rotate')
-                    self.speak("Going to rotate")
-                    self.mover.move_toward(0, 0, -self.rot_dir)
-                    # sleep(1.5)
-                    return False
-                else:
-                    print('Success')
-                    # self.speak('Ball locked')
-                    return True
-            else:
-                if d_yaw * self.rot_dir > -tol - m_delta:
-                    self.rotating = False
-                    self.mover.stop_moving()
-                return False
+            print('Ball locked')
+            return True
 
     def align_to_ball(self):
         ball_angles = self.get_ball_angles_from_camera(self.lower_camera,

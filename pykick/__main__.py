@@ -70,13 +70,19 @@ if __name__ == '__main__':
             striker.mover.stand_up()
 
         state = 'init'
-        init_soll = 0.0
-        align_start = 0.15
-        curve_start = -0.1
-        curve_stop = 0.1
-        soll = init_soll
+        # init_soll = 0.0
+        # align_start = 0.15
+        # curve_start = -0.1
+        # curve_stop = 0.1
+        # soll = init_soll
         striker.speak("Initialized")
+        approach_steps = 0
+        loop_start = time()
         while True:
+            loop_end = time()
+            print('Loop time:', loop_end - loop_start)
+            print('\n\n')
+
             # meassure time for debbuging
             loop_start = time()
             print('State:', state)
@@ -85,7 +91,9 @@ if __name__ == '__main__':
                 striker.mover.set_head_angles(0, 0)
                 striker.speak("Start the Ball tracking")
                 striker.ball_tracking(tol=0.05)
-                striker.speak("I have found the Ball, starting with. Goal search")
+                striker.speak(
+                    "I have found the Ball, starting with. Goal search"
+                )
                 goal_center = striker.goal_search()
                 if goal_center <0:
                     striker.speak("I have found the. goal on the right")
@@ -93,7 +101,7 @@ if __name__ == '__main__':
                 else:
                     striker.speak("I have found the. goal on the left")
                     approach = -1
-               
+
                 striker.mover.set_head_angles(0, 0)
                 #approach = 1 if goal_center < 0 else -1
                 #approach = 1
@@ -105,22 +113,29 @@ if __name__ == '__main__':
                 print('Soll angle')
                 striker.ball_tracking(tol=0.05)
                 # break
-                state = 'align'
+                if approach_steps < 2:
+                    state = 'ball_approach'
+                else:
+                    state = 'goal_align'
 
             elif state == 'ball_approach':
-                # bil = striker.get_ball_angles_from_camera(
-                    # striker.lower_camera
-                # )  # Ball in lower
+                bil = striker.get_ball_angles_from_camera(
+                    striker.lower_camera
+                )  # Ball in lower
 
-                # print('Ball in lower', bil)
-                #striker.speak("I have found the ball. Starting ball approach")  
                 try:
                     d = striker.distance_to_ball()
                 except ValueError:
-                    state = 'tracking'
+                    if bil is not None:
+                        state = 'goal_align'
+                        striker.speak('Ball is close. Align to. Goal')
+                    else:
+                        state = 'tracking'
                     continue
+
                 print('Distance to ball', d)
-                striker.speak("The distance to the ball is approximately "+str(round(d,2))+" Meters")
+                striker.speak("The distance to the ball is approximately "
+                              + str(round(d,2)) + " Meters")
                 angle = striker.walking_direction(approach, d)
                 d_run = d * cos(angle)
                 print('Approach angle', angle)
@@ -128,14 +143,16 @@ if __name__ == '__main__':
                 striker.mover.move_to(0, 0, angle)
                 striker.mover.wait()
                 striker.run_to_ball(d_run)
-                striker.speak("I think I have reached the ball. I will start rotating")
+                striker.speak("I think I have reached the ball. " +
+                              "I will start rotating")
+                approach_steps += 1
                 striker.mover.move_to(0, 0, -pi/2 * approach)
+                striker.mover.wait()
                 state = 'tracking'
 
             elif state == 'goal_align':
                 try:
                     if striker.align_to_goal():
-                        striker.speak('Why am I in align. This makes no sense')
                         state = "align"
                 except ValueError:
                         state = 'tracking'
@@ -176,10 +193,6 @@ if __name__ == '__main__':
                 ##striker.speak("Nice kick. Let's do a dance")
                 #striker.mover.dance()
                 break
-
-            loop_end = time()
-            print('Loop time:', loop_end - loop_start)
-            print('\n\n')
     finally:
         striker.close()
         striker.mover.rest()
