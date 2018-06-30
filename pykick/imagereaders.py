@@ -11,6 +11,7 @@ except:
 class NaoImageReader(object):
 
     RESOLUTIONS = {
+        0: (120, 160),
         1: (240, 320),
         2: (480, 640),
         3: (960, 1280)
@@ -26,7 +27,6 @@ class NaoImageReader(object):
         self.fps = fps
         self.vd = ALProxy('ALVideoDevice', ip, port)
         streamer_name = '_'.join(['lower' if cam_id else 'upper', str(res)])
-        print(streamer_name)
         self.sub = self.vd.subscribeCamera(
             streamer_name, cam_id, res, 13, fps
         )
@@ -57,10 +57,11 @@ class NaoImageReader(object):
 
     def close(self):
         self.vd.unsubscribe(self.sub)
+        print(self.sub + 'captured %s frames' % len(self.recording))
         if self.video_file is not None:
             vf = cv2.VideoWriter(self.video_file,
                                  cv2.cv.FOURCC('X', 'V', 'I', 'D'),
-                                 5,
+                                 self.fps,
                                  (self.res[1], self.res[0]))
             for frame in self.recording:
                 vf.write(frame)
@@ -70,6 +71,7 @@ class NaoImageReader(object):
         self.sub = self.vd.subscribeCamera(
             self.sub, self.cam_id, self.res_id, 13, self.fps
         )
+        self.recording = []
 
 
 class VideoReader(object):

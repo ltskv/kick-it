@@ -66,6 +66,8 @@ if __name__ == '__main__':
                 goal_hsv=cfg['goal'], field_hsv=cfg['field'],
                 ball_min_radius=cfg['ball_min_radius'],
             )
+            print('Initialized')
+            striker.mover.stand_up()
 
         state = 'init'
         init_soll = 0.0

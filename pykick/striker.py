@@ -16,42 +16,81 @@ class Striker(object):
 
     def __init__(self, nao_ip, nao_port, res, ball_hsv, goal_hsv, field_hsv,
                  ball_min_radius):
+
+        # Timestamp
         self.run_id = strftime('%Y%m%d%H%M%S')
+
+        # Motion
         self.mover = NaoMover(nao_ip=nao_ip, nao_port=nao_port)
-        self.mover.stand_up()
+        self.is_over = False
+
+        # Sight
         self.upper_camera = NaoImageReader(
             nao_ip, port=nao_port, res=res, fps=30, cam_id=0,
-            video_file='cam0_' + self.run_id + '.mpg'
         )
         self.lower_camera = NaoImageReader(
             nao_ip, port=nao_port, res=res, fps=30, cam_id=1,
+        )
+
+        # POV
+        self.upper_pov = NaoImageReader(
+            nao_ip, port=nao_port, res=0, fps=15, cam_id=0,
+            video_file='cam0_' + self.run_id + '.mpg'
+        )
+
+        self.lower_pov = NaoImageReader(
+            nao_ip, port=nao_port, res=0, fps=15, cam_id=1,
             video_file='cam1_' + self.run_id + '.mpg'
         )
+        self.pov_thread = Thread(target=self._pov)
+        self.pov_thread.start()
+
+        # Recognition
         self.ball_finder = BallFinder(tuple(ball_hsv[0]), tuple(ball_hsv[1]),
                                       ball_min_radius)
         self.field_finder = FieldFinder(tuple(field_hsv[0]),
                                         tuple(field_hsv[1]))
         self.goal_finder = GoalFinder(tuple(goal_hsv[0]), tuple(goal_hsv[1]))
+
+        # Talking
         self.speaker = ALProxy('ALTextToSpeech', bytes(nao_ip), nao_port)
-
-        self.is_over = False
-
         self.speach_queue = deque(maxlen=4)
         self.speach_history = []
         self.tts_thread = Thread(target=self._speaker)
         self.tts_thread.start()
 
-        self.rotating = False
-        self.rot_dir = 0
-        self.timer_start = 0
-        self.timer_stop = 0
-        self.dy = False
+        # Debugging
+        self._timer_start = 0
+        self._timer_stop = 0
+
+    def close(self):
+        self.is_over = True
+
+        if self.tts_thread.isAlive():
+            self.tts_thread.join()
+        if self.pov_thread.isAlive():
+            self.pov_thread.join()
+
+        self.upper_camera.close()
+        self.lower_camera.close()
+        self.upper_pov.close()
+        self.lower_pov.close()
+        self.mover.stop_moving()
 
     def _speaker(self):
         while not self.is_over:
             while self.speach_queue:
                 self.speaker.say(self.speach_queue.pop())
             sleep(0.1)
+
+    def _pov(self):
+        while not self.is_over:
+            try:
+                self.upper_pov.get_frame()
+                self.lower_pov.get_frame()
+            except RuntimeError as e:
+                print(e)
+                continue
 
     def speak(self, text):
         if not self.speach_history or self.speach_history[-1] != text:
@@ -159,7 +198,7 @@ class Striker(object):
                     ball_angles = self.get_ball_angles_from_camera(cam)
                     if ball_angles is not None:
                         x, y = ball_angles
-                        self.timer_start = time()
+                        self._timer_start = time()
                         in_sight = True
 
                         break
@@ -201,8 +240,8 @@ class Striker(object):
             sleep(0.1)
 
         head_yaw, head_pitch = self.mover.get_head_angles()
-        self.timer_stop = time()
-        print('Ball to head', self.timer_stop - self.timer_start)
+        self._timer_stop = time()
+        print('Ball to head', self._timer_stop - self._timer_start)
         print('Head yaw', head_yaw, end=' ')
         d_yaw = head_yaw - soll
         print('Head d_yaw', d_yaw)
@@ -304,15 +343,6 @@ class Striker(object):
             self.mover.move_to(0, 0.05 * sign, 0)
             self.mover.wait()
         return False
-
-    def close(self):
-        self.is_over = True
-        if self.tts_thread.isAlive():
-            self.tts_thread.join()
-        self.upper_camera.close()
-        self.lower_camera.close()
-        self.mover.stop_moving()
-        # self.mover.stand_up()
 
     def goal_search(self):
         goal_center_x = None
