@@ -481,14 +481,15 @@ if __name__ == '__main__':
                 sleep(1)
                 striker.mover.move_to_fast(0.5, 0, 0)
                 striker.mover.wait()
-                break
-                # state = 'tracking'
+                break 
 
             elif state == 'kick':
                 print('KICK!')
                 striker.mover.stand_up()
                 sleep(0.3)
                 striker.mover.kick(fancy=True, foot='L')
+                striker.speak("Nice kick. Let's do a dance")
+                striker.mover.dance()
                 break
 
             loop_end = time()
