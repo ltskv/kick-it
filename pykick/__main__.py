@@ -83,9 +83,19 @@ if __name__ == '__main__':
                 striker.mover.set_head_angles(0, 0)
                 striker.speak("Start the Ball tracking")
                 striker.ball_tracking(tol=0.05)
-                # goal_center = striker.goal_search()
-                # approach = 1 if goal_center < 0 else -1
-                approach = 1
+                striker.speak("I have found the Ball, starting with. Goal search")
+                goal_center = striker.goal_search()
+                if goal_center <0:
+                    striker.speak("I have found the. goal on the right")
+                    approach = 1
+                else:
+                    striker.speak("I have found the. goal on the left")
+                    approach = -1
+               
+                striker.mover.set_head_angles(0, 0)
+                #approach = 1 if goal_center < 0 else -1
+                #approach = 1
+                sleep(0.5)
                 state = 'ball_approach'
 
             elif state == 'tracking':
@@ -101,7 +111,7 @@ if __name__ == '__main__':
                 # )  # Ball in lower
 
                 # print('Ball in lower', bil)
-                striker.speak("I have found the ball. Starting ball approach")  
+                #striker.speak("I have found the ball. Starting ball approach")  
                 try:
                     d = striker.distance_to_ball()
                 except ValueError:
@@ -123,7 +133,7 @@ if __name__ == '__main__':
             elif state == 'goal_align':
                 try:
                     if striker.align_to_goal():
-                        striker.speak('I am aligning to ball')
+                        striker.speak('Why am I in align. This makes no sense')
                         state = "align"
                 except ValueError:
                         state = 'tracking'
@@ -161,8 +171,8 @@ if __name__ == '__main__':
                 striker.mover.stand_up()
                 sleep(0.3)
                 striker.mover.kick(fancy=True, foot='L')
-                striker.speak("Nice kick. Let's do a dance")
-                striker.mover.dance()
+                ##striker.speak("Nice kick. Let's do a dance")
+                #striker.mover.dance()
                 break
 
             loop_end = time()
