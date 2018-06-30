@@ -8,7 +8,7 @@ import cv2
 
 from .imagereaders import VideoReader, NaoImageReader, PictureReader
 from .finders import GoalFinder, BallFinder, FieldFinder
-from .utils import read_config, imresize, hsv_mask
+from .utils import read_config, imresize, hsv_mask, InterruptDelayed
 
 class Colorpicker(object):
 
@@ -203,18 +203,19 @@ if __name__ == '__main__':
     if args.input_config:
         cp.load(args.input_config, args.target)
 
-    if args.video_file:
-        rdr = VideoReader(args.video_file, loop=True)
-    elif args.image_file:
-        rdr = PictureReader(args.image_file)
-    elif args.nao_ip:
-        rdr = NaoImageReader(
-            args.nao_ip,
-            cam_id=args.nao_cam,
-            res=args.nao_res
-        )
-    else:
-        rdr = VideoReader(0)
+    with InterruptDelayed():
+        if args.video_file:
+            rdr = VideoReader(args.video_file, loop=True)
+        elif args.image_file:
+            rdr = PictureReader(args.image_file)
+        elif args.nao_ip:
+            rdr = NaoImageReader(
+                args.nao_ip,
+                cam_id=args.nao_cam,
+                res=args.nao_res
+            )
+        else:
+            rdr = VideoReader(0)
 
     try:
         if args.still:

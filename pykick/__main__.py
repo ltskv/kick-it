@@ -4,7 +4,7 @@ from time import time, sleep
 from math import cos, pi
 
 from .striker import Striker
-from .utils import read_config
+from .utils import read_config, InterruptDelayed
 
 
 
@@ -59,12 +59,13 @@ if __name__ == '__main__':
 
     try:  # Hit Ctrl-C to stop, cleanup and exit
         cfg = read_config()
-        striker = Striker(
-            nao_ip=cfg['ip'], nao_port=cfg['port'],
-            res=cfg['res'], ball_hsv=cfg['ball'],
-            goal_hsv=cfg['goal'], field_hsv=cfg['field'],
-            ball_min_radius=cfg['ball_min_radius'],
-        )
+        with InterruptDelayed():
+            striker = Striker(
+                nao_ip=cfg['ip'], nao_port=cfg['port'],
+                res=cfg['res'], ball_hsv=cfg['ball'],
+                goal_hsv=cfg['goal'], field_hsv=cfg['field'],
+                ball_min_radius=cfg['ball_min_radius'],
+            )
 
         state = 'init'
         init_soll = 0.0
