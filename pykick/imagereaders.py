@@ -65,7 +65,6 @@ class NaoImageReader(object):
                                  self.fps,
                                  (self.res[1], self.res[0]))
             for frame in self.recording:
-                print('.')
                 vf.write(frame)
             vf.release()
 

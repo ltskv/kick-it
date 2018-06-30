@@ -26,20 +26,20 @@ class Striker(object):
 
         # Sight
         self.upper_camera = NaoImageReader(
-            nao_ip, port=nao_port, res=res, fps=30, cam_id=0,
+            nao_ip, port=nao_port, res=res, fps=10, cam_id=0,
         )
         self.lower_camera = NaoImageReader(
-            nao_ip, port=nao_port, res=res, fps=30, cam_id=1,
+            nao_ip, port=nao_port, res=res, fps=10, cam_id=1,
         )
 
         # POV
         self.upper_pov = NaoImageReader(
-            nao_ip, port=nao_port, res=0, fps=15, cam_id=0,
+            nao_ip, port=nao_port, res=1, fps=15, cam_id=0,
             video_file='./cam0_' + self.run_id + '.avi'
         )
 
         self.lower_pov = NaoImageReader(
-            nao_ip, port=nao_port, res=0, fps=15, cam_id=1,
+            nao_ip, port=nao_port, res=1, fps=15, cam_id=1,
             video_file='./cam1_' + self.run_id + '.avi'
         )
         self.pov_thread = Thread(target=self._pov)

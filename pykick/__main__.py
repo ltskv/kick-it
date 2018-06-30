@@ -7,54 +7,6 @@ from .striker import Striker
 from .utils import read_config, InterruptDelayed
 
 
-
-# ____________________ STRIKER __________________________
-#
-#        +----> Ball tracking (see below) <-------------+
-#        |                                              |
-#        |               |                              |
-#        |               |                              |
-#        |               v                              |
-#        |          Ball in lower cam?                  |
-#        |              /  \                            |
-#   lost |      yes    /    \ cannot do                 |
-#   ball |            v      v                          |
-#        +-- Goal align    Ball is only in top camera --+
-#                |              Move closer.
-#                |
-#     successful |
-#                v
-#             Kick it! (Fancy or simple)
-#
-# _______________________________________________________
-
-# ____________________ TRACKING _________________________
-#
-#                        yes
-# check if ball visible ---> rotate head to the ball
-#     ^            |                    |
-#     |            | no                 |
-#     |            v                    |
-#     +--- ball scan rotation           |
-#     |                                 |
-#     |                  no             V
-#     |               +---------- already rotating body?
-#     |               |                 |
-#     |               v                 | yes
-#     |       head angle too big?       v
-#     |             /  \            head angle
-#     |        yes /    \ no     is below threshold?
-#     |           v      v              |         |
-#     |        stop    successful       | no      | yes
-#     |       moving      exit          |         v
-#     +----- and start                  |    stop rotating body
-#     |    rotating body                |         |
-#     |                                 |         |
-#     +---------------------------------+---------+
-#
-# _______________________________________________________
-
-
 if __name__ == '__main__':
 
     try:  # Hit Ctrl-C to stop, cleanup and exit
@@ -213,3 +165,50 @@ if __name__ == '__main__':
     finally:
         striker.close()
         striker.mover.rest()
+
+
+# ____________________ STRIKER __________________________
+#
+#        +----> Ball tracking (see below) <-------------+
+#        |                                              |
+#        |               |                              |
+#        |               |                              |
+#        |               v                              |
+#        |          Ball in lower cam?                  |
+#        |              /  \                            |
+#   lost |      yes    /    \ cannot do                 |
+#   ball |            v      v                          |
+#        +-- Goal align    Ball is only in top camera --+
+#                |              Move closer.
+#                |
+#     successful |
+#                v
+#             Kick it! (Fancy or simple)
+#
+# _______________________________________________________
+
+# ____________________ TRACKING _________________________
+#
+#                        yes
+# check if ball visible ---> rotate head to the ball
+#     ^            |                    |
+#     |            | no                 |
+#     |            v                    |
+#     +--- ball scan rotation           |
+#     |                                 |
+#     |                  no             V
+#     |               +---------- already rotating body?
+#     |               |                 |
+#     |               v                 | yes
+#     |       head angle too big?       v
+#     |             /  \            head angle
+#     |        yes /    \ no     is below threshold?
+#     |           v      v              |         |
+#     |        stop    successful       | no      | yes
+#     |       moving      exit          |         v
+#     +----- and start                  |    stop rotating body
+#     |    rotating body                |         |
+#     |                                 |         |
+#     +---------------------------------+---------+
+#
+# _______________________________________________________
