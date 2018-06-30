@@ -35,12 +35,12 @@ class Striker(object):
         # POV
         self.upper_pov = NaoImageReader(
             nao_ip, port=nao_port, res=0, fps=15, cam_id=0,
-            video_file='cam0_' + self.run_id + '.mpg'
+            video_file='./cam0_' + self.run_id + '.avi'
         )
 
         self.lower_pov = NaoImageReader(
             nao_ip, port=nao_port, res=0, fps=15, cam_id=1,
-            video_file='cam1_' + self.run_id + '.mpg'
+            video_file='./cam1_' + self.run_id + '.avi'
         )
         self.pov_thread = Thread(target=self._pov)
         self.pov_thread.start()
@@ -217,7 +217,7 @@ class Striker(object):
 
     def run_to_ball(self, d):
         self.mover.move_to(d, 0, 0)
-        self.mover.wait()
+        # self.mover.wait()
 
     def turn_to_ball(self, ball_x, ball_y, tol=0.15, soll=0):
         """Align robot to the ball.

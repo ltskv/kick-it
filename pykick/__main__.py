@@ -116,7 +116,22 @@ if __name__ == '__main__':
                 if approach_steps < 2:
                     state = 'ball_approach'
                 else:
+                    state = 'straight_approach'
+
+            elif state == 'straight_approach':
+                bil = striker.get_ball_angles_from_camera(
+                    striker.lower_camera
+                )  # Ball in lower
+                print(bil)
+                if bil is not None and bil[1] > 0.15:
+                    striker.speak('Ball is close enough, stop approach')
+                    striker.mover.stop_moving()
+                    striker.speak('Align to goal')
                     state = 'goal_align'
+                else:
+                    striker.speak('Continue running')
+                    striker.run_to_ball(1)
+                    state = 'tracking'
 
             elif state == 'ball_approach':
                 bil = striker.get_ball_angles_from_camera(
@@ -127,8 +142,9 @@ if __name__ == '__main__':
                     d = striker.distance_to_ball()
                 except ValueError:
                     if bil is not None:
-                        state = 'goal_align'
-                        striker.speak('Ball is close. Align to. Goal')
+                        state = 'straight_approach'
+                        striker.speak('Ball is close. ' +
+                                      'But not close enough maybe')
                     else:
                         state = 'tracking'
                     continue
@@ -143,6 +159,7 @@ if __name__ == '__main__':
                 striker.mover.move_to(0, 0, angle)
                 striker.mover.wait()
                 striker.run_to_ball(d_run)
+                striker.mover.wait()
                 striker.speak("I think I have reached the ball. " +
                               "I will start rotating")
                 approach_steps += 1

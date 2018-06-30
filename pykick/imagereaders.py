@@ -58,13 +58,16 @@ class NaoImageReader(object):
     def close(self):
         self.vd.unsubscribe(self.sub)
         print(self.sub + 'captured %s frames' % len(self.recording))
+        print('Writing to', self.video_file)
         if self.video_file is not None:
             vf = cv2.VideoWriter(self.video_file,
                                  cv2.cv.FOURCC('X', 'V', 'I', 'D'),
                                  self.fps,
                                  (self.res[1], self.res[0]))
             for frame in self.recording:
+                print('.')
                 vf.write(frame)
+            vf.release()
 
     def restart(self):
         self.vd.unsubscribe(self.sub)
