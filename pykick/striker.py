@@ -37,6 +37,7 @@ class Striker(object):
         self.is_over = False
 
         self.speach_queue = deque(maxlen=4)
+        self.speach_history = []
         self.tts_thread = Thread(target=self._speaker)
         self.tts_thread.start()
 
@@ -53,7 +54,9 @@ class Striker(object):
             sleep(0.1)
 
     def speak(self, text):
-        self.speach_queue.appendleft(text)
+        if not self.speach_history or self.speach_history[-1] != text:
+            self.speach_queue.appendleft(text)
+            self.speach_history.append(text)
 
     def scan_rotation(self):
         """Intelligently rotate the robot to search for stuff."""
