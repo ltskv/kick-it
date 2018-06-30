@@ -161,7 +161,7 @@ if __name__ == '__main__':
                 striker.mover.kick(fancy=True, foot='L')
                 ##striker.speak("Nice kick. Let's do a dance")
                 #striker.mover.dance()
-                sleep(2)
+                sleep(4)
                 break
     finally:
         striker.close()

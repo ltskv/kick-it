@@ -118,7 +118,7 @@ class GoalFinder(object):
         return goal
 
     def left_right_post(self, contour):
-        return contour[:,0].min(), contour[:,0].max()
+        return contour[...,0].min(), contour[...,0].max()
 
     def goal_center(self, contour):
         l, r = self.left_right_post(contour)

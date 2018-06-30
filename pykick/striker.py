@@ -294,6 +294,7 @@ class Striker(object):
         self.speak("Turn to ball")
         self.turn_to_ball(x, y, tol=0.15)
         self.speak('Trying to find the goal')
+        sleep(0.2)
         goal_center_x = self.goal_search()
         self.speak('Goal found')
 

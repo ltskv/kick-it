@@ -111,6 +111,11 @@ if __name__ == '__main__':
             ball = ball_finder.find(ball_frame)
             goal = goal_finder.find(goal_frame)
 
+            if goal is not None:
+                print(goal)
+                print('LR post', goal_finder.left_right_post(goal))
+                print('----')
+
             ball_frame = ball_finder.draw(ball_frame, ball)
             goal_frame = goal_finder.draw(goal_frame, goal)
 
