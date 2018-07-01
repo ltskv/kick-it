@@ -4,8 +4,7 @@ from math import radians
 
 from naoqi import ALProxy
 
-from .utils import read_config
-
+from .utils import read_config 
 
 class NaoMover(object):
 
@@ -191,64 +190,27 @@ class NaoMover(object):
         self.mp.post.moveToward(front, side, rotation)
 
     def dance(self):
+        dance_sequence = [[["LLeg"], [[0.06, 0.1, 0.0]]],
+                         [["LLeg"], [[0.00, 0.16, 0.0]]],
+                         [["RLeg"], [[0.00, -0.1, 0.0]]],
+                         [["LLeg"], [[0.00, 0.16, 0.0]]],
+                         [["RLeg"], [[-0.04, -0.1, 0.0]]],
+                         [["RLeg"], [[0.00, -0.16, 0.0]]],
+                         [["LLeg"], [[0.00, 0.1, 0.0]]],
+                         [["RLeg"], [[0.00, -0.16, 0.0]]]]
+
+        step_frequency = 0.8
+        clear_existing = False
+        cycles = 2 # defined the number of cycle to make
+
+        for _ in range(cycles):
+            for leg, positions in dance_sequence:
+                self.mp.setFootStepsWithSpeed(
+                    leg, positions, (step_frequency,),
+                    clear_existing
+                )
+        self.wait()
         self.stand_up(0.5)
-
-
-        ###############################
-        # First we defined each step
-        ###############################
-        footStepsList = []
-
-        # 1) Step forward with your left foot
-        footStepsList.append([["LLeg"], [[0.06, 0.1, 0.0]]])
-
-        # 2) Sidestep to the left with your left foot
-        footStepsList.append([["LLeg"], [[0.00, 0.16, 0.0]]])
-
-        # 3) Move your right foot to your left foot
-        footStepsList.append([["RLeg"], [[0.00, -0.1, 0.0]]])
-
-        # 4) Sidestep to the left with your left foot
-        footStepsList.append([["LLeg"], [[0.00, 0.16, 0.0]]])
-
-        # 5) Step backward & left with your right foot
-        footStepsList.append([["RLeg"], [[-0.04, -0.1, 0.0]]])
-
-        # 6)Step forward & right with your right foot
-        footStepsList.append([["RLeg"], [[0.00, -0.16, 0.0]]])
-
-        # 7) Move your left foot to your right foot
-        footStepsList.append([["LLeg"], [[0.00, 0.1, 0.0]]])
-
-        # 8) Sidestep to the right with your right foot
-        footStepsList.append([["RLeg"], [[0.00, -0.16, 0.0]]])
-
-        ###############################
-        # Send Foot step
-        ###############################
-        stepFrequency = 0.8
-        clearExisting = False
-        nbStepDance = 2 # defined the number of cycle to make
-
-        for j in range( nbStepDance ):
-            for i in range( len(footStepsList) ):
-                try:
-                    self.mp.setFootStepsWithSpeed(
-                        footStepsList[i][0],
-                        footStepsList[i][1],
-                        [stepFrequency],
-                        clearExisting)
-                except Exception, errorMsg:
-                    print str(errorMsg)
-                    print "This example is not allowed on this robot."
-                    exit()
-
-
-        self.mp.waitUntilMoveIsFinished()
-
-        # Go to rest position
-        self.mp.rest()
-
 
     def wait(self):
         self.mp.waitUntilMoveIsFinished()
@@ -271,6 +233,8 @@ if __name__ == '__main__':
                         help="let the robot rest")
     actions.add_argument("-m", "--move", action="store_true",
                         help="move around")
+    actions.add_argument("-d", "--dance", action="store_true",
+                        help="blow up the dance floor")
 
     args = parser.parse_args()
 
@@ -294,3 +258,7 @@ if __name__ == '__main__':
             print(amount_x, amount_y, amount_z)
             mover.move_to(amount_x, amount_y, amount_z)
             mover.wait()
+
+    elif args.dance:
+        mover.stand_up()
+        mover.dance()
