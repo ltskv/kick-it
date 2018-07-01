@@ -148,7 +148,7 @@ class Striker(object):
         x, y = cam.to_angles(x, y)
         return x, y
 
-    def get_goal_center_angle_from_camera(self, cam, mask=True):
+    def get_goal_angles_from_camera(self, cam, mask=True):
         try:
             frame = cam.get_frame()
         except RuntimeError as e:  # Sometimes camera doesn't return an image
@@ -158,14 +158,21 @@ class Striker(object):
         if mask:
             field = self.field_finder.find(frame)
             frame = self.field_finder.mask_it(frame, field, inverse=True)
+
         goal = self.goal_finder.find(frame)
         if goal is None:
             return None
 
-        goal_x = self.goal_finder.goal_center(goal)
-        goal_x, _ = cam.to_relative(goal_x, 0)
-        goal_x, _ = cam.to_angles(goal_x, 0)
-        return goal_x
+        goal_l, goal_r = self.goal_finder.left_right_post(goal)
+        goal_c = self.goal_finder.goal_center(goal)
+
+        goal_l, _ = cam.to_relative(goal_l, 0)
+        goal_l, _ = cam.to_angles(goal_l, 0)
+        goal_r, _ = cam.to_relative(goal_r, 0)
+        goal_r, _ = cam.to_angles(goal_r, 0)
+        goal_c, _ = cam.to_relative(goal_c, 0)
+        goal_c, _ = cam.to_angles(goal_c, 0)
+        return goal_l, goal_r, goal_c
 
     def distance_to_ball(self):
         angles = self.get_ball_angles_from_camera(self.upper_camera)
@@ -192,7 +199,7 @@ class Striker(object):
         while not ball_locked:
             # visibility check
             for i in range(3):
-                cams = [self.upper_camera, self.lower_camera]
+                cams = [self.lower_camera, self.upper_camera]
                 in_sight = False
 
                 for cam in cams:
@@ -295,11 +302,16 @@ class Striker(object):
         self.turn_to_ball(x, y, tol=0.15)
         self.speak('Trying to find the goal')
         sleep(0.2)
-        goal_center_x = self.goal_search()
-        self.speak('Goal found')
 
-        print('Goal center:', goal_center_x)
-        if goal_center_x is not None and abs(goal_center_x) < 0.1:
+        goal = self.goal_search()
+        if goal is None:
+            return False
+
+        gcl, gcr, gcc = goal
+        self.speak('Goal found')
+        print('Goal:', gcl, gcr, gcc)
+
+        if gcl > 0 > gcr:
             self.speak("Goal and ball are aligned")
             print('Goal ball aligned!')
             #raise SystemExit
@@ -314,32 +326,32 @@ class Striker(object):
             self.mover.wait()
             # return False
 
-        sign = -1 if goal_center_x > 0 else 1
-        num_steps = int(min(abs(goal_center_x), 0.1) // 0.05)
+        sign = -1 if gcc > 0 else 1
+        num_steps = int(min(abs(gcc), 0.1) // 0.05)
         for _ in range(num_steps):
             self.mover.move_to(0, 0.05 * sign, 0)
             self.mover.wait()
         return False
 
     def goal_search(self):
-        goal_center_x = None
+        goal_angles = None
         positions = [0, pi/6, pi/4, pi/3, pi/2]
         angles = [-p for p in positions] + [p for p in positions][1:]
+
         for angle in angles:
             self.mover.set_head_angles(angle, 0)
             sleep(0.5)
             for i in range(5):
-                print(i, goal_center_x)
-                if goal_center_x is None:
-                    gcx = self.get_goal_center_angle_from_camera(
-                        self.upper_camera
-                    )
-                    goal_center_x = gcx + angle if gcx is not None else None
-                    print('Goal found: ' + str(goal_center_x)
-                          if goal_center_x is not None
-                          else 'Goal not found at ' + str(angle))
-            if goal_center_x is not None:
-                self.mover.set_head_angles(0, 0)
-                return goal_center_x
+                print(i, goal_angles)
+                goal_angles = self.get_goal_angles_from_camera(
+                    self.upper_camera
+                )
+                if goal_angles is not None:
+                    goal_angles = tuple(gc + angle for gc in goal_angles)
+                    self.mover.set_head_angles(0, 0)
+                    print('Goal found:', str(goal_angles))
+                    return goal_angles
+            print('Goal not found at ', str(angle))
+
         self.mover.set_head_angles(0, 0)
         return None

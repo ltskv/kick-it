@@ -46,8 +46,15 @@ if __name__ == '__main__':
                 striker.speak(
                     "I have found the Ball, starting with. Goal search"
                 )
-                goal_center = striker.goal_search()
-                if goal_center <0:
+                _, _, gcc = striker.goal_search()
+
+                if abs(gcc) < 0.4:
+                    striker.speak('Direct approach')
+                    state = 'straight_approach'
+                    approach = 0
+                    continue
+
+                if gcc < 0:
                     striker.speak("I have found the. goal on the right")
                     approach = 1
                 else:
@@ -65,7 +72,7 @@ if __name__ == '__main__':
                 print('Soll angle')
                 striker.ball_tracking(tol=0.15)
                 # break
-                if approach_steps < 2:
+                if approach_steps < 2 and approach != 0:
                     state = 'ball_approach'
                 else:
                     state = 'straight_approach'
@@ -86,6 +93,7 @@ if __name__ == '__main__':
                     state = 'tracking'
 
             elif state == 'ball_approach':
+                sleep(0.8)
                 bil = striker.get_ball_angles_from_camera(
                     striker.lower_camera
                 )  # Ball in lower
@@ -159,9 +167,10 @@ if __name__ == '__main__':
                 striker.mover.stand_up()
                 sleep(0.3)
                 striker.mover.kick(fancy=True, foot='L')
-                ##striker.speak("Nice kick. Let's do a dance")
-                #striker.mover.dance()
-                sleep(4)
+                striker.mover.stand_up()
+                sleep(2)
+                striker.speak("Nice kick. Let's do a dance")
+                striker.mover.dance()
                 break
     finally:
         striker.close()
