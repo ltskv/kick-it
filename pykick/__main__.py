@@ -18,12 +18,13 @@ if __name__ == '__main__':
                 goal_hsv=cfg['goal'], field_hsv=cfg['field'],
                 ball_min_radius=cfg['ball_min_radius'],
             )
-            striker.speak('tiger')
-            sleep(4.75)
+
+            # striker.speak('tiger')
+            # sleep(4.75)
             striker.mover.stand_up(1.0)
-            sleep(9)
-            print('Initialized')
-            striker.speak('Initialized')
+            # sleep(9)
+            # print('Initialized')
+        striker.speak('Initialized')
 
         state = 'init'
         loop_start = time()
@@ -47,12 +48,12 @@ if __name__ == '__main__':
                 _, _, gcc = striker.goal_search()
                 print('Goal center', gcc, 'Ball dist', bdist)
 
-                if abs(gcc) < 0.4 or bdist <= 0.2:
+                if abs(gcc) < 0.2 or bdist <= 0.35:
                     print('Straight approach')
                     state = 'straight_approach'
                     approach = 0
 
-                elif 0.20 < bdist < 0.50:
+                elif 0.35 < bdist < 0.50:
                     print('Rdist is hypo')
                     state = 'rdist_is_hypo'
                     approach = 1 if gcc < 0 else - 1
@@ -75,11 +76,10 @@ if __name__ == '__main__':
                 striker.ball_tracking(tol=0.20)
                 bil = striker.get_ball_angles_from_camera(
                     striker.lower_camera
-                )  # Ball in lower
-                print('Ball in lower!', bil)
+                )  # Ball in lower print('Ball in lower!', bil)
                 if bil is not None and bil[1] > 0.20:
                     striker.mover.stop_moving()
-                    striker.speak('Aligning to goal')
+                    striker.speak('Ball is close enough. Aligning to goal')
                     state = 'goal_align'
                 else:
                     striker.run_to_ball(1)
@@ -87,26 +87,30 @@ if __name__ == '__main__':
             elif state == 'bdist_is_hypo':
                 angle = striker.walking_direction(approach, bdist, 'bdist')
                 rdist = bdist * cos(angle)
-                print('Approach angle', angle)
+                print('Approach angle', angle, 'Run distance', rdist)
 
                 striker.mover.move_to(0, 0, angle)
                 striker.mover.wait()
-                striker.run_to_ball(rdist)
-                striker.mover.wait()
-                striker.mover.move_to(0, 0, -pi/2 * approach)
-                striker.mover.wait()
+                if rdist > 1.5:
+                    striker.run_to_ball(1.5)
+                    striker.mover.wait()
+                else:
+                    striker.run_to_ball(rdist)
+                    striker.mover.wait()
+                    striker.mover.move_to(0, 0, -pi/2 * approach)
+                    striker.mover.wait()
                 state = 'init'
 
             elif state == 'rdist_is_hypo':
                 angle = striker.walking_direction(approach, bdist, 'rdist')
                 rdist = bdist / cos(angle)
-                print('Approach angle', angle)
+                print('Approach angle', angle, 'Run distance', rdist)
 
                 striker.mover.move_to(0, 0, angle)
                 striker.mover.wait()
                 striker.run_to_ball(rdist)
                 striker.mover.wait()
-                striker.mover.move_to(0, 0, -(pi/2 - angle) * approach)
+                striker.mover.move_to(0, 0, (-pi/2 - angle) * approach)
                 striker.mover.wait()
                 state = 'init'
 
@@ -126,7 +130,7 @@ if __name__ == '__main__':
                     sleep(0.3)
                     if success:
                         state = 'kick'
-                        striker.speak('hasta')
+                        # striker.speak('hasta')
                 except ValueError:
                     striker.ball_tracking()
 
@@ -136,81 +140,53 @@ if __name__ == '__main__':
                 sleep(0.3)
                 striker.mover.kick(fancy=True, foot='L')
                 striker.mover.stand_up()
-                striker.speak('Nice kick. Lets do the dance')
-                sleep(2)
-                striker.mover.dance()
+                striker.mover.set_head_angles(0, 0)
+                striker.speak('Trying to confirm the goal')
+                sleep(3)
+                ball = striker.get_ball_angles_from_camera(striker.upper_camera)
+                goal = striker.goal_search()
+
+                if ball is not None and goal is not None:
+                    ball_x = ball[0]
+                    gcl, gcr, _ = goal
+                    print('Ball, goal', ball, goal)
+                    if not (gcl > ball_x > gcr):
+                        striker.speak('I Failed')
+                        sleep(0.5)
+                        break
+                    else:
+                        striker.speak('I succeeded, confirmed')
+                        sleep(0.5)
+                        break
+
+                striker.speak('I succeeded, presumably')
+                striker.mover.stand_up()
+                sleep(0.5)
+                # striker.speak('Nice kick. Lets do the dance')
+                # sleep(2)
+                # striker.mover.dance()
                 break
     finally:
         striker.close()
         striker.mover.rest()
 
 
-
-
-
-# ____________________ STRIKER NEW ________________________________
-#
-#  Ball tracking --> Distance to ball --> Goal angle
-#    ^                                           |
-#    |                                           |
-#    |                                yes        v
-#    |                  Ball distance <--  Goal angle > thr
-#    |                 /   |         \           |
-#    |        > 50 cm /    |(20,50)   \ < 20cm   | no
-#    |               /     v           \         v
-#    +- Distance is <   Walk is hypo    \  Straight approach
-#    |    hypo              |            >  until goal align
-#    |                      |                (bil > 0.2)
-#    -----------------------+                    |
-#                                                |
-#      | / |  /^ | /                             v
-#      |(  | (   |(       Ball           Goal align
-#      | \ |  \_ | \ <-- align <-- (if lost ball run backwards)
-#
-#__________________________________________________________________
-
-# ____________________ STRIKER __________________________
-#
-#        +----> Ball tracking (see below) <-------------+
-#        |                                              |
-#        |               |                              |
-#        |               |                              |
-#        |               v                              |
-#        |          Ball in lower cam?                  |
-#        |              /  \                            |
-#   lost |      yes    /    \ cannot do                 |
-#   ball |            v      v                          |
-#        +-- Goal align    Ball is only in top camera --+
-#                |              Move closer.
-#                |
-#     successful |
-#                v
-#             Kick it! (Fancy or simple)
-#
-# _______________________________________________________
-
-# ____________________ TRACKING _________________________
-#
-#                        yes
-# check if ball visible ---> rotate head to the ball
-#     ^            |                    |
-#     |            | no                 |
-#     |            v                    |
-#     +--- ball scan rotation           |
-#     |                                 |
-#     |                  no             V
-#     |               +---------- already rotating body?
-#     |               |                 |
-#     |               v                 | yes
-#     |       head angle too big?       v
-#     |             /  \            head angle
-#     |        yes /    \ no     is below threshold?
-#     |           v      v              |         |
-#     |        stop    successful       | no      | yes
-#     |       moving      exit          |         v
-#     +----- and start                  |    stop rotating body
-#     |    rotating body                |         |
-#     |                                 |         |
-#     +---------------------------------+---------+
-#
-# _______________________________________________________
+#  _________________________ STRIKER _____________________________
+# [                                                               ]
+# [  Ball tracking --> Distance to ball --> Goal angle            ]
+# [    ^                                           |              ]
+# [    |                                           |              ]
+# [    |                                yes        v              ]
+# [    |                  Ball distance <--  Goal angle > thr     ]
+# [    |                 /   |         \           |              ]
+# [    |        > 50 cm /    |(35,50)   \ < 35cm   | no           ]
+# [    |               /     v           \         v              ]
+# [    +- Distance is <   Walk is hypo    \  Straight approach    ]
+# [    |    hypo              |            >  until goal align    ]
+# [    |                      |                (bil > 0.2)        ]
+# [    -----------------------+                    |              ]
+# [                                                |              ]
+# [      | / |  /^ | /                             v              ]
+# [      |(  | (   |(       Ball           Goal align             ]
+# [      | \ |  \_ | \ <-- align <-- (if lost ball run backwards) ]
+# [_______________________________________________________________]

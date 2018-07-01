@@ -17,12 +17,13 @@ class Striker(object):
     def __init__(self, nao_ip, nao_port, res, ball_hsv, goal_hsv, field_hsv,
                  ball_min_radius):
 
-        # Timestamp
+        # Maintenance
         self.run_id = strftime('%Y%m%d%H%M%S')
+        self.is_over = False
+        self.last_goal = 'right'
 
         # Motion
         self.mover = NaoMover(nao_ip=nao_ip, nao_port=nao_port)
-        self.is_over = False
 
         # Sight
         self.upper_camera = NaoImageReader(
@@ -196,7 +197,7 @@ class Striker(object):
         return 0.5 * tan(y_angle)
 
     def walking_direction(self, lr, d, hypo):
-        return (asin(0.5 / d) if hypo == 'bdist' else atan(0.2 / d)) * lr
+        return (asin(0.40 / d) if hypo == 'bdist' else atan(0.2 / d)) * lr
 
     def ball_tracking(self, soll=0, tol=0.15):
         """Track the ball using the feed from top and bottom camera.
@@ -209,6 +210,7 @@ class Striker(object):
         """
 
         ball_locked = False
+        tried_step_back = False
         while not ball_locked:
             # visibility check
             for i in range(3):
@@ -228,7 +230,13 @@ class Striker(object):
             # stop visibility check
 
             if not in_sight:
-                self.scan_rotation()
+                if not tried_step_back:
+                    self.mover.move_to(-0.1, 0, 0)
+                    self.mover.wait()
+                    self.mover.stand_up()
+                    tried_step_back = True
+                else:
+                    self.scan_rotation()
                 continue
 
             ball_locked = self.turn_to_ball(x, y, soll=soll, tol=tol)
@@ -282,7 +290,7 @@ class Striker(object):
         if ball_angles is None:
             raise ValueError('No ball')
         x, y = ball_angles
-        goal_x, goal_y = 0.095, 0.4
+        goal_x, goal_y = 0.088, 0.4
         dx, dy = goal_x - x, goal_y - y
 
         dx = -dx * 0.2 if abs(dx) > 0.03 else 0
@@ -320,11 +328,11 @@ class Striker(object):
         if gcl > 0 > gcr:
             return True
 
-        if y > 0.35:
+        if y > 0.38:
             self.mover.move_to(-0.05, 0, 0)
             self.mover.wait()
             # return False
-        elif y < 0.25:
+        elif y < 0.28:
             self.mover.move_to(0.05, 0, 0)
             self.mover.wait()
             # return False
@@ -342,9 +350,12 @@ class Striker(object):
 
     def goal_search(self):
         self.speak('Searching for goal')
+        print('Last goal:', self.last_goal)
         goal_angles = None
         positions = [0, pi/6, pi/4, pi/3, pi/2]
+        direction = 1 if self.last_goal == 'right' else -1
         angles = [-p for p in positions] + [p for p in positions][1:]
+        angles = [a * direction for a in angles]
 
         for angle in angles:
             self.mover.set_head_angles(angle, -0.3)
@@ -358,6 +369,7 @@ class Striker(object):
                     goal_angles = tuple(gc + angle for gc in goal_angles)
                     self.mover.set_head_angles(0, 0)
                     print('Goal found:', str(goal_angles))
+                    self.last_goal = 'left' if goal_angles[2] > 0 else 'right'
                     return goal_angles
             print('Goal not found at ', str(angle))
 
