@@ -2,7 +2,7 @@ from __future__ import print_function
 from __future__ import division
 
 from threading import Thread
-from math import pi, tan, asin, radians
+from math import pi, tan, asin, atan, radians
 from time import sleep, time, strftime
 from collections import deque
 
@@ -53,7 +53,8 @@ class Striker(object):
         self.goal_finder = GoalFinder(tuple(goal_hsv[0]), tuple(goal_hsv[1]))
 
         # Talking
-        self.speaker = ALProxy('ALTextToSpeech', bytes(nao_ip), nao_port)
+        self.player = ALProxy('ALAudioPlayer', bytes(nao_ip), nao_port)
+        self.tts = ALProxy('ALTextToSpeech', bytes(nao_ip), nao_port)
         self.speach_queue = deque(maxlen=4)
         self.speach_history = []
         self.tts_thread = Thread(target=self._speaker)
@@ -80,7 +81,14 @@ class Striker(object):
     def _speaker(self):
         while not self.is_over:
             while self.speach_queue:
-                self.speaker.say(self.speach_queue.pop())
+                text = self.speach_queue.pop()
+                if text in ('hasta', 'tiger'):
+                    file_id = self.player.loadFile(
+                        '/home/nao/audio/' + text + '.mp3'
+                    )
+                    self.player.play(file_id)
+                else:
+                    self.tts.say(text)
             sleep(0.5)
 
     def _pov(self):
@@ -102,25 +110,22 @@ class Striker(object):
         """Intelligently rotate the robot to search for stuff."""
         self.mover.stop_moving()
         self.rotating = False
-        yaw = self.mover.get_head_angles()[0]
-        mag = yaw
+        yaw, pitch = self.mover.get_head_angles()
 
         # determine direction of head rotation
         sign = 1 if yaw >= 0 else -1
 
         # the robot starts to move arround his z-Axis in the direction where his
         # head is aligned when the head yaw angle has reached his maximum
-        if mag > 0.8:
-            self.mover.set_head_angles(-pi / 8, 0, 0.5)
+        if yaw > 0.8:
+            self.mover.set_head_angles(-pi / 8, pitch, 0.5)
             sleep(0.5)
-        elif mag < -0.8:
+        elif yaw < -0.8:
             self.mover.move_to_fast(0, 0, -pi / 4)
             self.mover.wait()
-            #self.speak("Where is the ball? I am searching for it")
         # rotate head to the left, if head yaw angle is equally zero or larger
         # rotate head to the right, if head yaw angle is smaller than zero
         else:
-            #self.speak("I have found the ball")
             self.mover.change_head_angles(sign * pi / 8, 0, 0.5)
             sleep(0.3)
 
@@ -175,15 +180,23 @@ class Striker(object):
         return goal_l, goal_r, goal_c
 
     def distance_to_ball(self):
+        camera = 'upper'
         angles = self.get_ball_angles_from_camera(self.upper_camera)
         if angles == None:
-            raise ValueError('No ball in sight')
+            camera = 'lower'
+            angles = self.get_ball_angles_from_camera(self.lower_camera)
+            if angles == None:
+                raise ValueError('No ball in sight')
         y_angle = angles[1]
-        y_angle = pi/2 - y_angle - radians(15)
+        y_angle = pi/2 - y_angle - radians(15) - (radians(39)
+                                                  if camera == 'lower'
+                                                  else 0)
+        print('Ball distance through', camera, 'camera')
+        print('Angles', angles)
         return 0.5 * tan(y_angle)
 
-    def walking_direction(self, lr, d):
-        return asin(0.5 / d) * lr
+    def walking_direction(self, lr, d, hypo):
+        return (asin(0.5 / d) if hypo == 'bdist' else atan(0.2 / d)) * lr
 
     def ball_tracking(self, soll=0, tol=0.15):
         """Track the ball using the feed from top and bottom camera.
@@ -215,11 +228,9 @@ class Striker(object):
             # stop visibility check
 
             if not in_sight:
-                self.speak('No ball visible search it')
                 self.scan_rotation()
                 continue
 
-            # self.speak('I see the ball')
             ball_locked = self.turn_to_ball(x, y, soll=soll, tol=tol)
             print()
 
@@ -257,7 +268,6 @@ class Striker(object):
         if abs(d_yaw) > tol:
             self.mover.stop_moving()
             print('Going to rotate by', d_yaw)
-            self.speak('Going to rotate')
             self.mover.set_head_angles(soll, head_pitch, 0.3)
             self.mover.move_to(0, 0, d_yaw)
             self.mover.wait()
@@ -275,7 +285,7 @@ class Striker(object):
         goal_x, goal_y = 0.095, 0.4
         dx, dy = goal_x - x, goal_y - y
 
-        dx = -dx * 0.2 if abs(dx) > 0.05 else 0
+        dx = -dx * 0.2 if abs(dx) > 0.03 else 0
         dy = dy * 0.3 if abs(dy) > 0.05 else 0
         if dx == 0  and dy == 0:
             return True
@@ -293,14 +303,11 @@ class Striker(object):
             ball_angles = self.get_ball_angles_from_camera(self.lower_camera,
                                                            mask=False)
             if ball_angles is None:
-                self.speak("Cannot see the ball")
                 raise ValueError('No ball')
         x, y = ball_angles
 
         print(x, y)
-        self.speak("Turn to ball")
         self.turn_to_ball(x, y, tol=0.15)
-        self.speak('Trying to find the goal')
         sleep(0.2)
 
         goal = self.goal_search()
@@ -308,13 +315,9 @@ class Striker(object):
             return False
 
         gcl, gcr, gcc = goal
-        self.speak('Goal found')
         print('Goal:', gcl, gcr, gcc)
 
         if gcl > 0 > gcr:
-            self.speak("Goal and ball are aligned")
-            print('Goal ball aligned!')
-            #raise SystemExit
             return True
 
         if y > 0.35:
@@ -327,19 +330,24 @@ class Striker(object):
             # return False
 
         sign = -1 if gcc > 0 else 1
-        num_steps = int(min(abs(gcc), 0.1) // 0.05)
-        for _ in range(num_steps):
+        if sign == 1:
+            self.speak('Goal is on the right')
+        elif sign == -1:
+            self.speak('Goal is on the left')
+
+        for _ in range(2):
             self.mover.move_to(0, 0.05 * sign, 0)
             self.mover.wait()
         return False
 
     def goal_search(self):
+        self.speak('Searching for goal')
         goal_angles = None
         positions = [0, pi/6, pi/4, pi/3, pi/2]
         angles = [-p for p in positions] + [p for p in positions][1:]
 
         for angle in angles:
-            self.mover.set_head_angles(angle, 0)
+            self.mover.set_head_angles(angle, -0.3)
             sleep(0.5)
             for i in range(5):
                 print(i, goal_angles)

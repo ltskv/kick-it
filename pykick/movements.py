@@ -1,10 +1,10 @@
 # from time import sleep
 import argparse
-from math import radians
+from math import radians, pi
 
 from naoqi import ALProxy
 
-from .utils import read_config 
+from .utils import read_config
 
 class NaoMover(object):
 
@@ -169,7 +169,17 @@ class NaoMover(object):
         if not self.ready_to_move:
             self.mp.moveInit()
             self.ready_to_move = True
-        self.mp.post.moveTo(front, side, rotation)
+        if rotation != 0:
+            n_cycles = int(abs(rotation) // (pi/4))
+            sign = 1 if rotation > 0 else -1
+            rest = abs(rotation) % (pi/4)
+            print('Rotation', rotation, 'Cycles', n_cycles, 'Rest', rest)
+            for _ in range(n_cycles):
+                self.mp.post.moveTo(0, 0, pi/4 * sign)
+                self.wait()
+            self.mp.post.moveTo(0, 0, rest * sign)
+        else:
+            self.mp.post.moveTo(front, side, rotation)
 
     def move_to_fast(self, front, side, rotation, wait=False):
         if not self.ready_to_move:
@@ -210,7 +220,7 @@ class NaoMover(object):
                     clear_existing
                 )
         self.wait()
-        self.stand_up(0.5)
+        self.stand_up(0.7)
 
     def wait(self):
         self.mp.waitUntilMoveIsFinished()
