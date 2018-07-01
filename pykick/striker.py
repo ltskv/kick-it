@@ -15,12 +15,13 @@ from naoqi import ALProxy
 class Striker(object):
 
     def __init__(self, nao_ip, nao_port, res, ball_hsv, goal_hsv, field_hsv,
-                 ball_min_radius):
+                 ball_min_radius, do_capture=False):
 
         # Maintenance
         self.run_id = strftime('%Y%m%d%H%M%S')
         self.is_over = False
         self.last_goal = 'right'
+        self.doing_caputre = do_capture
 
         # Motion
         self.mover = NaoMover(nao_ip=nao_ip, nao_port=nao_port)
@@ -34,17 +35,18 @@ class Striker(object):
         )
 
         # POV
-        self.upper_pov = NaoImageReader(
-            nao_ip, port=nao_port, res=1, fps=10, cam_id=0,
-            video_file='./cam0_' + self.run_id + '.avi'
-        )
+        if do_capture:
+            self.upper_pov = NaoImageReader(
+                nao_ip, port=nao_port, res=1, fps=10, cam_id=0,
+                video_file='./cam0_' + self.run_id + '.avi'
+            )
 
-        self.lower_pov = NaoImageReader(
-            nao_ip, port=nao_port, res=1, fps=10, cam_id=1,
-            video_file='./cam1_' + self.run_id + '.avi'
-        )
-        self.pov_thread = Thread(target=self._pov)
-        self.pov_thread.start()
+            self.lower_pov = NaoImageReader(
+                nao_ip, port=nao_port, res=1, fps=10, cam_id=1,
+                video_file='./cam1_' + self.run_id + '.avi'
+            )
+            self.pov_thread = Thread(target=self._pov)
+            self.pov_thread.start()
 
         # Recognition
         self.ball_finder = BallFinder(tuple(ball_hsv[0]), tuple(ball_hsv[1]),
@@ -70,13 +72,13 @@ class Striker(object):
 
         if self.tts_thread.isAlive():
             self.tts_thread.join()
-        if self.pov_thread.isAlive():
+        if self.doing_caputre and self.pov_thread.isAlive():
             self.pov_thread.join()
+            self.upper_pov.close()
+            self.lower_pov.close()
 
         self.upper_camera.close()
         self.lower_camera.close()
-        self.upper_pov.close()
-        self.lower_pov.close()
         self.mover.stop_moving()
 
     def _speaker(self):
@@ -118,11 +120,11 @@ class Striker(object):
 
         # the robot starts to move arround his z-Axis in the direction where his
         # head is aligned when the head yaw angle has reached his maximum
-        if yaw > 0.8:
+        if yaw > pi/3:
             self.mover.set_head_angles(-pi / 8, pitch, 0.5)
             sleep(0.5)
-        elif yaw < -0.8:
-            self.mover.move_to_fast(0, 0, -pi / 4)
+        elif yaw < -pi/3:
+            self.mover.move_to(0, 0, -pi / 4)
             self.mover.wait()
         # rotate head to the left, if head yaw angle is equally zero or larger
         # rotate head to the right, if head yaw angle is smaller than zero
@@ -290,7 +292,7 @@ class Striker(object):
         if ball_angles is None:
             raise ValueError('No ball')
         x, y = ball_angles
-        goal_x, goal_y = 0.088, 0.4
+        goal_x, goal_y = 0.092, 0.38
         dx, dy = goal_x - x, goal_y - y
 
         dx = -dx * 0.2 if abs(dx) > 0.03 else 0
@@ -325,7 +327,7 @@ class Striker(object):
         gcl, gcr, gcc = goal
         print('Goal:', gcl, gcr, gcc)
 
-        if gcl > 0 > gcr:
+        if gcl > 0.15 > -0.22 > gcr:
             return True
 
         if y > 0.38:

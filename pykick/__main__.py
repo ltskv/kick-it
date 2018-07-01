@@ -48,12 +48,12 @@ if __name__ == '__main__':
                 _, _, gcc = striker.goal_search()
                 print('Goal center', gcc, 'Ball dist', bdist)
 
-                if abs(gcc) < 0.2 or bdist <= 0.35:
+                if abs(gcc) < 0.3 or bdist <= 0.40:
                     print('Straight approach')
                     state = 'straight_approach'
                     approach = 0
 
-                elif 0.35 < bdist < 0.50:
+                elif 0.40 < bdist < 0.60:
                     print('Rdist is hypo')
                     state = 'rdist_is_hypo'
                     approach = 1 if gcc < 0 else - 1
@@ -91,8 +91,10 @@ if __name__ == '__main__':
 
                 striker.mover.move_to(0, 0, angle)
                 striker.mover.wait()
-                if rdist > 1.5:
-                    striker.run_to_ball(1.5)
+                if rdist > 2:
+                    striker.run_to_ball(rdist / 2)
+                    striker.mover.wait()
+                    striker.mover.move_to(0, 0, -angle)
                     striker.mover.wait()
                 else:
                     striker.run_to_ball(rdist)
@@ -179,7 +181,7 @@ if __name__ == '__main__':
 # [    |                                yes        v              ]
 # [    |                  Ball distance <--  Goal angle > thr     ]
 # [    |                 /   |         \           |              ]
-# [    |        > 50 cm /    |(35,50)   \ < 35cm   | no           ]
+# [    |        > 60 cm /    |(40,60)   \ < 40cm   | no           ]
 # [    |               /     v           \         v              ]
 # [    +- Distance is <   Walk is hypo    \  Straight approach    ]
 # [    |    hypo              |            >  until goal align    ]
@@ -190,3 +192,4 @@ if __name__ == '__main__':
 # [      |(  | (   |(       Ball           Goal align             ]
 # [      | \ |  \_ | \ <-- align <-- (if lost ball run backwards) ]
 # [_______________________________________________________________]
+#
