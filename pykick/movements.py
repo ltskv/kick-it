@@ -29,11 +29,11 @@ class NaoMover(object):
         # base_or_kicking, unsymmetric, joint, angle
 
         # lift the arm
-        [[(0, 1, 'ShoulderRoll', -70)], 0.5],
+        # [[(0, 1, 'ShoulderRoll', -70)], 0.5],
 
         # lean to the side using the ankle joints
-        [[(0, 1, 'AnkleRoll', -10),
-          (1, 1, 'AnkleRoll', -10)],
+        [[(0, 1, 'AnkleRoll', -11),
+          (1, 1, 'AnkleRoll', -11)],
          1],
 
         # lift the foot using the knee joint and the ankle joint

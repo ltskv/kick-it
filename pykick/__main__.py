@@ -19,11 +19,11 @@ if __name__ == '__main__':
                 ball_min_radius=cfg['ball_min_radius'],
             )
 
-            # striker.speak('tiger')
-            # sleep(4.75)
+            striker.speak('tiger')
+            sleep(4.75)
             striker.mover.stand_up(1.0)
-            # sleep(9)
-            # print('Initialized')
+            sleep(9)
+            print('Initialized')
         striker.speak('Initialized')
 
         state = 'init'
@@ -132,7 +132,7 @@ if __name__ == '__main__':
                     sleep(0.3)
                     if success:
                         state = 'kick'
-                        # striker.speak('hasta')
+                        striker.speak('hasta')
                 except ValueError:
                     striker.ball_tracking()
 
@@ -164,9 +164,9 @@ if __name__ == '__main__':
                 striker.speak('I succeeded, presumably')
                 striker.mover.stand_up()
                 sleep(0.5)
-                # striker.speak('Nice kick. Lets do the dance')
-                # sleep(2)
-                # striker.mover.dance()
+                striker.speak('Nice kick. Lets do the dance')
+                sleep(2)
+                striker.mover.dance()
                 break
     finally:
         striker.close()
