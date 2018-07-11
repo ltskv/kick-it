@@ -3,6 +3,10 @@
 *.jpg
 *.avi
 *.mpg
+*.pptx
+*.mov
+*.mp4
+*.mkv
 *~
 ~*
 exp_*

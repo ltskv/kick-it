@@ -56,6 +56,7 @@ class GoalFinder(object):
         self.hsv_upper = tuple(hsv_upper)
         self.goal_thr = goal_thr
         self.last_detection = []
+        self.last_contours = []
 
     def primary_mask(self, frame):
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
@@ -92,6 +93,7 @@ class GoalFinder(object):
         thr = self.primary_mask(frame)
         cnts, _ = cv2.findContours(thr, cv2.RETR_EXTERNAL,
                                    cv2.CHAIN_APPROX_SIMPLE)
+        self.last_contours = cnts
         cnts.sort(key=cv2.contourArea, reverse=True)
         top_x = 6
         cnts = cnts[:top_x]
@@ -120,6 +122,12 @@ class GoalFinder(object):
         # Find the contour with the shape closest to that of the goal
         goal = good_cnts[similarities.index(best)]
         return goal
+
+    def draw_last_contours(self, frame):
+        frame = frame.copy()
+        for cnt in self.last_contours:
+            cv2.drawContours(frame, (cnt,), -1, (255, 0, 0), 2)
+        return frame
 
     def left_right_post(self, contour):
         return contour[...,0].min(), contour[...,0].max()
@@ -205,11 +213,11 @@ class BallFinder(object):
         if ball is not None:
             center, radius = ball
             cv2.circle(frame, center, radius, (255, 255, 0), 2)
-        for i in range(1, len(self.history)):
-            if self.history[i - 1] is None or self.history[i] is None:
-                continue
-            center_now = self.history[i - 1][0]
-            center_prev = self.history[i][0]
-            thickness = int((64 / (i + 1))**0.5 * 1.25)
-            cv2.line(frame, center_now, center_prev, (0, 0, 255), thickness)
+        # for i in range(1, len(self.history)):
+            # if self.history[i - 1] is None or self.history[i] is None:
+                # continue
+            # center_now = self.history[i - 1][0]
+            # center_prev = self.history[i][0]
+            # thickness = int((64 / (i + 1))**0.5 * 1.25)
+            # cv2.line(frame, center_now, center_prev, (0, 0, 255), thickness)
         return frame

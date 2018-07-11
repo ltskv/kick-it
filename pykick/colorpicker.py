@@ -101,6 +101,7 @@ class Colorpicker(object):
             )
 
         thr = cv2.cvtColor(thr, cv2.COLOR_GRAY2BGR)
+        thr = self.marker.draw_last_contours(thr)
         resulting = np.concatenate((frame, thr), axis=1)
 
         cv2.imshow(self.WINDOW_CAPTURE_NAME, resulting)
