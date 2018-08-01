@@ -1,0 +1,61 @@
+\documentclass[a4paper,12pt]{report}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}        % support of the inclusion of graphics
+\usepackage{epstopdf}
+\usepackage{upquote}
+\usepackage[hidelinks]{hyperref}
+\usepackage{glossaries}
+% lots of packages are included in the preamble, look there for more information about how this.
+
+\include{robotum_report.preamble}  %this adds some options, parameters and also shortcuts
+
+% if you don't know where something can be found, click on the pdf, and Overleaf will open the file where it is described
+
+\begin{document}
+\title{\LARGE {\bf Report Project Striker 2018}\\
+ \vspace*{6mm}
+}
+\author{Pavel Lutskov\\Jonas Bubenhagen\\Yuankai Wu\\Seif Ben Hamida\\ Ahmed Kamoun}
+\supervisors{Mohsen Kaboli\\ and the Tutor (insert name)}
+\submitdate{August 2018}
+
+\maketitle % this generates the title page. More in icthesis.sty
+
+
+
+\preface
+%\input{Acknowledgements/Acknowledgements}
+
+\generatebody  %generates table of contents, list of figures and list of tables.
+
+%\input{Introduction/Introduction}
+
+
+\setstretch{1.2} % set line spacing
+% body of thesis comes here
+%\input{Body/SoftwareTools} %this loads the content of file SoftwareTools.tex in the folder Body.
+%\todo{SoftwareTools} %this is how you add a todo, it will appear in the list on page 2, and in orange in the margin where you add it.
+%\input{Body/Setup}
+% \todo{Setup}
+%\input{Body/Perception}
+%\todo{Perception}
+%\input{Body/Modeling}
+%\todo{Modeling}
+%\input{Body/Motion}
+
+%\input{Body/Behavior}
+
+
+%\input{Conclusion/Conclusion}
+
+\begin{appendices}
+%\input{Appendix/BehaviorImplementation}
+\end{appendices}
+
+% Bibliography, see https://de.sharelatex.com/learn/Bibliography_management_with_bibtex#Bibliography_management_with_Bibtex
+\addcontentsline{toc}{chapter}{Bibliography}
+\bibliographystyle{IEEEtran}
+\bibliography{Bibliography/Bibliography}
+
+\end{document}

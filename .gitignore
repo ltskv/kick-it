@@ -11,3 +11,15 @@
 ~*
 exp_*
 .DS_Store
+
+## for Latex Stuff
+*.aux
+*.out
+*.log
+*.lof
+*.blg
+*.bbl
+*.toc
+*.gz
+*.synctex
+
