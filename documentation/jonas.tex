@@ -15,20 +15,23 @@ The algorithm which we implemented to solve this problem can be found in figure 
 
 The turn to ball algorithm consists of four main parts. 
 
-\subsubsection{Ball Detection} 
+\subsubsection*{Ball Detection}
+\label{j sec ball detection} 
 At first frames from both cameras of the robot are read in. It is then checked, if a ball is visible in the picture using the ball-detection algorithm. Depending on if the ball is visible or not, different strategies are considered. If no ball was found in the pictures, the algorithm proceeds with \textbf{Can't See the Ball}, if the ball was found in the pictures, the ball yaw angle in the camera frame is calculated and forwarded to \textbf{Head Adjustment}.
 
-\subsubsection{Can't See the Ball} 
+\subsubsection*{Can't See the Ball} 
 This part of the algorithm is executed, if the ball was not visible in one of the camera frames. Different succeeding strategies are run to cover different situations. If the strategies are successful the algorithm continues with \textbf{Ball Detection} and \textbf{Head Adjustment}. If the strategies are not successful, the next strategy in the chain is run. \\
 At the ball detection algorithm can sometimes fail, it is first insured, that 
 the ball detection algorithm was used on at least 3 succeeding frames. If the ball was not found in 3 succeeding frames, the next possible solution is letting the robot stop his current movement and step back for a specified distance, in case if the ball was directly in front of the robot and could therefore not be detected by both cameras. If this strategy was not successful, the robot starts to move his head to some defined angles and tries to find the ball in both camera frames. If this strategy than also failes, the robot starts to rotate around his z-axis until he is able to detect the ball in one of his camera frames.
 
-\subsubsection{Head Adjustment}
+\subsubsection*{Head Adjustment}
+\label{j sec head adjustment}
 In this part of the algorithm the head is rotated by a calculated angle, which depends on the ball yaw angle, which was provided by the \textbf{Ball Detection} part.
 Therefore, the ball should now be aligned in the centre of the robots' camera frames.
 If the angle between the head an the rest of the body is now below a specified threshold, the ball is locked and the algorithm stops, otherwise the algorithm continues with \textbf{Body Adjustment}. 
 
-\subsubsection{Body Adjustment}
+\subsubsection*{Body Adjustment}
+\label{j sec body adjustment}
 In this part of the algorithm, the robot first stops his current movement. Then the robot starts to rotate around his z-axis depending on the current head yaw angle. To ensure that the head and body of the robot are aligned as in the beginning of the whole algorithm, the head is rotated back into zero yaw. The algorithm continues than with the \textbf{Ball Detection}.
 
 \subsection*{Results}
@@ -137,6 +140,8 @@ Again the robot is in the standing position and the ball is centred in the camer
 \end{figure}
 
 \newpage
+
+
 During our test this approach seemed more suitable for short ball distances.
 For long ball distances however we choose a different approach. 
 If the distance between ball and the robot is larger than a specified threshold, the triangle looks like in figure \ref{j figure bdist hypo}.
@@ -158,10 +163,10 @@ If the distance between ball and the robot is larger than a specified threshold,
 	\label{j figure bdist hypo}
 \end{figure}
 
-
+To calculate the appropriate walking distance, the following formulas estimate the approaching angle and calculate the distance.
 
 \begin{equation}
-	\Theta_\mathrm{appr}=\arctan\left(\frac{\mathrm{Desired\ distance}}{\mathrm{ball\ distance}} \right)
+\Theta_\mathrm{appr}=\arctan\left(\frac{\mathrm{Desired\ distance}}{\mathrm{ball\ distance}} \right)
 \end{equation}
 
 \begin{equation}
