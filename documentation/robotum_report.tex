@@ -6,9 +6,20 @@
 \usepackage{upquote}
 \usepackage[hidelinks]{hyperref}
 \usepackage{glossaries}
+
+
+
+\newcommand{\fig}{figures/}
+\usepackage{graphicx}
+
+\usepackage{hyperref} 
+\usepackage{tikz}
+\usetikzlibrary{quotes,angles}
 % lots of packages are included in the preamble, look there for more information about how this.
 
 \include{robotum_report.preamble}  %this adds some options, parameters and also shortcuts
+
+
 
 % if you don't know where something can be found, click on the pdf, and Overleaf will open the file where it is described
 
@@ -33,6 +44,7 @@
 
 
 \setstretch{1.2} % set line spacing
+\include{jonas}
 % body of thesis comes here
 %\input{Body/SoftwareTools} %this loads the content of file SoftwareTools.tex in the folder Body.
 %\todo{SoftwareTools} %this is how you add a todo, it will appear in the list on page 2, and in orange in the margin where you add it.
