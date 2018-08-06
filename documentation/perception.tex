@@ -1,0 +1,46 @@
+\section{Ball detection}
+
+The very first task that needed to be accomplished was to detect the ball,
+which is uniformly red-colored and measures about 6 cm in diameter. We decided
+to use a popular algorithm based on color segmentation. The idea behind this
+algorithm is to find the biggest red area in the image and assume that this is
+the ball. First, the desired color needs to be defined as an interval of HSV
+(Hue-Saturation-Value) values. After that, the image itself needs to be
+transformed into HSV colorspace, so that the regions of interest can be
+extracted into a \textit{binary mask}. The contours of the regions can then be
+identified in a mask, and the areas of the regions can be calculated using the
+routines from the OpenCV library. The center and the radius of the region with
+the largest area are then determined and are assumed to be the center and the
+radius of the ball.
+
+It is often recommended to eliminate the noise in the binary mask by applying a
+sequence of \textit{erosions} and \textit{dilations}, but we found, that for
+the task of finding the \textit{biggest} area the noise doesn't present a
+problem, whereas performing erosions may completely delete the image of the
+ball, if it is relatively far from the robot and the camera resolution is low.
+For this reason it was decided not to process the binary mask with erosions and
+dilations, which allowed us to detect the ball even over long distances.
+
+The advantages of the presented algorithm are its speed and simplicity. The
+major downside is that the careful color calibration is required for the
+algorithm to function properly. If the HSV interval of the targeted color is
+too narrow, then the algorithm might miss the ball; if the interval is too
+wide, then other big red-shaded objects in the camera image will be detected as
+the ball. A possible approach to alleviate these issues to a certain degree
+will be presented further in this chapter. To conclude, we found this algorithm
+to be robust enough for our purposes, if the sensible color calibration was
+provided.
+
+\section{Goal detection}
+
+The goal detection presented itself as a more difficult task. The color of the
+goal is white, and there are generally many white areas in the image from the
+robot camera, which have area larger than that of the image of the goal, for
+example the white field lines and the big white wall in the room with the
+field. To deal with the multitude of the possible goal candidates, we
+propose the following algorithm.
+
+First, all contours around white areas are extracted by using a procedure
+similar to that described in the section on ball detection. Only $N$ contours
+with the largest areas are considered further (in our experiments it was
+empirically determined that $N=5$ provides good results).

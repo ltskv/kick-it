@@ -40,38 +40,45 @@
 
 
 \preface
-%\input{Acknowledgements/Acknowledgements}
+% \input{Acknowledgements/Acknowledgements}
 
-\generatebody  %generates table of contents, list of figures and list of tables.
+\generatebody  % generates table of contents, list of figures and of tables.
 
-%\input{Introduction/Introduction}
+% \input{Introduction/Introduction}
 
 
 \setstretch{1.2} % set line spacing
 \input{introduction}
 \input{tools}
+\input{solintro}
+\input{perception}
 \input{jonas}
+
 % body of thesis comes here
-%\input{Body/SoftwareTools} %this loads the content of file SoftwareTools.tex in the folder Body.
-%\todo{SoftwareTools} %this is how you add a todo, it will appear in the list on page 2, and in orange in the margin where you add it.
-%\input{Body/Setup}
+% \input{Body/SoftwareTools} %this loads the content of file SoftwareTools.tex
+% in the folder Body.
+% \todo{SoftwareTools} %this is how you add a todo, it will appear in the list
+% on page 2, and in orange in the margin where you add it.
+% \input{Body/Setup}
 % \todo{Setup}
-%\input{Body/Perception}
-%\todo{Perception}
-%\input{Body/Modeling}
-%\todo{Modeling}
-%\input{Body/Motion}
+% \input{Body/Perception}
+% \todo{Perception}
+% \input{Body/Modeling}
+% \todo{Modeling}
+% \input{Body/Motion}
 
-%\input{Body/Behavior}
+% \input{Body/Behavior}
 
 
-%\input{Conclusion/Conclusion}
+% \input{Conclusion/Conclusion}
 
 \begin{appendices}
 %\input{Appendix/BehaviorImplementation}
 \end{appendices}
 
-% Bibliography, see https://de.sharelatex.com/learn/Bibliography_management_with_bibtex#Bibliography_management_with_Bibtex
+% Bibliography, see
+% https://de.sharelatex.com/learn/Bibliography_management_with_bibtex#Bibliography_management_with_Bibtex
+
 \addcontentsline{toc}{chapter}{Bibliography}
 \bibliographystyle{IEEEtran}
 \bibliography{Bibliography/Bibliography}
