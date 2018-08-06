@@ -23,4 +23,5 @@ exp_*
 *.gz
 *.synctex
 documentation/robotum_report.pdf
-
+documentation/build/
+*.latexmain
