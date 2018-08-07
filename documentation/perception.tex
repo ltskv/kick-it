@@ -38,9 +38,61 @@ goal is white, and there are generally many white areas in the image from the
 robot camera, which have area larger than that of the image of the goal, for
 example the white field lines and the big white wall in the room with the
 field. To deal with the multitude of the possible goal candidates, we
-propose the following algorithm.
+propose the following heuristic algorithm.
 
 First, all contours around white areas are extracted by using a procedure
-similar to that described in the section on ball detection. Only $N$ contours
-with the largest areas are considered further (in our experiments it was
-empirically determined that $N=5$ provides good results).
+similar to that described in the section on ball detection. Next, the
+\textit{candidate preselection} takes place. During this stage only $N$
+contours with the largest areas are considered further (in our experiments it
+was empirically determined that $N=5$ provides good results). Furthermore, all
+convex contours are rejected, since the goal is a highly non-convex shape.
+After that, a check is performed, how many points are necessary to approximate
+the remaining contours. The motivation behind this is the following: it is
+clearly visible that the goal shape can be perfectly approximated by a line
+with 8 straight segments. On an image from the camera, the approximation is
+almost perfect when using only 6 line segments, and in some degenerate cases
+when the input image is noisy, it might be necessary to use 9 line segments to
+approximate the shape of the goal. Any contour that requires a different number
+of line segments to be approximated is probably not the goal. The preselection
+stage ends here, and the remaining candidates are passed to the scoring
+function.
+
+The scoring function calculates, how different are the properties of the
+candidates are from the properties, an idealized goal contour is expected to
+have. The evaluation is happening based on two properties. The first property
+is based on the observation, that the area of the goal contour is much smaller
+than the area of its \textit{enclosing convex hull}. The second observation is
+that all points of the goal contour must lie close to the enclosing convex
+hull. The mathematical formulation of the scoring function looks like the
+following \todo{mathematical formulation}:
+
+The contour, that minimizes the scoring function, while keeping its value under
+a certain threshold is considered the goal. If no contour scores below the
+threshold, then the algorithm assumes that no goal was found. Our tests have
+shown, that when the white color is calibrated correctly, the algorithm can
+detect the goal almost without mistakes, when the goal is present in the image.
+The downside of this algorithm, is that in some cases the field lines might
+appear the same properties, that the goal contour is expected to have,
+therefore the field lines can be mistaken for the goal. We will describe, how
+we dealt with this problem, in the following section.
+
+\section{Field detection}
+
+The algorithm for the field detection is very similar to the ball detection
+algorithm, but some concepts introduced in the previous section are also used
+here. This algorithm extracts the biggest green area in the image, finds its
+enclosing convex hull, and assumes everything inside the hull to be the field.
+
+Such rather simple field detection has two important applications. The first
+one is that the robot should be aware, where the field is, so that it doesn't
+try to walk away from the field. Due to time constraints, we didn't implement
+this part of the behavior. The second application of field detection is the
+improvement of the quality of goal and ball recognition. As was mentioned in
+the section on ball detection, the current algorithm might get confused, if
+there are any red objects in the robot's field of view. However, there
+shouldn't be any red objects on the field, except the ball itself. So, if
+everything that's not on the field is ignored, when trying to detect the ball,
+the probability of identifying a wrong object decreases. On the other hand, the
+problem with the goal detection algorithm was that it could be distracted by
+the field lines. So, if everything on the field is ignored for goal
+recognition, then the accuracy can be improved.
