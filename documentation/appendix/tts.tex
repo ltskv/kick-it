@@ -1,0 +1,6 @@
+\chapter{Headline\todo{insert headline}}
+
+\section{Text to speech}
+During the implementation of our solution for the problem stated in \ref{sec problem statement} we included suitable functions to get a feedback about what the robot is doing at the moment during code execution. In addition to the text output on the console we decided to let the robot speak about what he is doing using Voice output. We therefore implemented a Speech output using the official Aldebaran NAOqi API (\cite{aldebarandocumentation}) which provides a Text-to-Speech function. We implemented the Speech output in such a way, that the robot does not repeat the same sentence over and over again, if he remains in the same state. We also ensured, that the Speech output does not influence the actual execution of the problem solution by running it in a separate thread.
+
+
