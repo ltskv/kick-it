@@ -1,18 +1,24 @@
 \section{Strategy Overview}
 
+\begin{figure}[ht]
+  \includegraphics[width=\textwidth]{\fig striker-flowchart}
+  \caption{Overview of the goal scoring strategy}
+  \label{p figure strategy-overview}
+\end{figure}
+
 Now that all of the milestones are completed, we will present a short overview
 of the whole goal scoring strategy, the block diagram of which can be found in
-\todo{learn to do figures and reference them}. At the very beginning the robot
-will detect the ball and turn to ball, as described in \todo{where}. After
-that, the distance to the ball will be calculated, the goal will be detected,
-and the direction to goal will be determined. If the ball is far away
-\textit{and} the ball and the goal are strongly misaligned, then the robot will
-try to approach the ball from the appropriate side, otherwise the robot will
-approach the ball directly. These approach steps will be repeated until the
-robot is close enough to the ball to start aligning to the goal, but in the
-practice one step of approach from the side followed by a short direct approach
-should suffice. When the ball is close, the robot will check if it is between
-the goalposts, and will perform necessary adjustments if that's not the case.
-After the ball and the goal are aligned, the robot will align its foot with
-the ball and kick the ball. For now, we assumed that the ball will reach the
-goal and so the robot can finish execution.
+the figure \ref{p figure strategy-overview}. At the very beginning the robot
+will detect the ball and turn to ball, as described in the section \ref{j sec
+  turning to ball}. After that, the distance to the ball will be calculated,
+the goal will be detected, and the direction to goal will be determined. If the
+ball is far away \textit{and} the ball and the goal are strongly misaligned,
+then the robot will try to approach the ball from the appropriate side,
+otherwise the robot will approach the ball directly. These approach steps will
+be repeated until the robot is close enough to the ball to start aligning to
+the goal, but in the practice one step of approach from the side followed by a
+short direct approach should suffice. When the ball is close, the robot will
+check if it is between the goalposts, and will perform necessary adjustments if
+that's not the case. After the ball and the goal are aligned, the robot will
+align its foot with the ball and kick the ball. For now, we assumed that the
+ball will reach the goal and so the robot can finish execution.

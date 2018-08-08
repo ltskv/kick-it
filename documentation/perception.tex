@@ -1,4 +1,5 @@
 \section{Ball detection}
+\label{p sec ball detection}
 
 The very first task that needed to be accomplished was to detect the ball,
 which is uniformly red-colored and measures about 6 cm in diameter. We decided
@@ -12,6 +13,12 @@ then be identified in a mask \cite{contours}, and the areas of the regions can
 be calculated using the routines from the OpenCV library. The center and the
 radius of the region with the largest area are then determined and are assumed
 to be the center and the radius of the ball.
+
+\begin{figure}[ht]
+  \includegraphics[width=\textwidth]{\fig ball-detection}
+  \caption{Ball detection. On the right is the binary mask}
+  \label{p figure ball-detection}
+\end{figure}
 
 It is sometimes recommended \cite{ball-detect} to eliminate the noise in the
 binary mask by applying a sequence of \textit{erosions} and \textit{dilations},
@@ -33,6 +40,7 @@ to be robust enough for our purposes, if the sensible color calibration was
 provided.
 
 \section{Goal detection}
+\label{p sec goal detect}
 
 The goal detection presented itself as a more difficult task. The color of the
 goal is white, and there are generally many white areas in the image from the
@@ -41,9 +49,19 @@ example the white field lines and the big white wall in the room with the
 field. To deal with the multitude of the possible goal candidates, we
 propose the following heuristic algorithm.
 
+\begin{figure}[ht]
+  \includegraphics[width=\textwidth]{\fig goal-detection}
+  \caption{Goal Detection. On the right binary mask with all found contours. On
+    the left the goal, and one contour that passed preselection but was
+    rejected during scoring.}
+  \label{p figure goal-detection}
+\end{figure}
+
 First, all contours around white areas are extracted by using a procedure
-similar to that described in the section on ball detection. Next, the
-\textit{candidate preselection} takes place. During this stage only $N$
+similar to that described in the section \ref{p sec ball detection}. Unlike in
+the ball detection, the resulting binary mask undergoes some slight erosions
+and dilations, since in the goal shape detection the noise is undesired. Next,
+the \textit{candidate preselection} takes place. During this stage only $N$
 contours with the largest areas are considered further (in our experiments it
 was empirically determined that $N=5$ provides good results). Furthermore, all
 convex contours are rejected, since the goal is a highly non-convex shape.
@@ -64,26 +82,47 @@ have. The evaluation is happening based on two properties. The first property
 is based on the observation, that the area of the goal contour is much smaller
 than the area of its \textit{enclosing convex hull} \cite{convex-hull}. The
 second observation is that all points of the goal contour must lie close to the
-enclosing convex hull. The mathematical formulation of the scoring function
-looks like the following \todo{mathematical formulation}:
+enclosing convex hull. The mathematical formulation can then look like the
+following:
+
+\begin{equation*}
+  S(c)=\frac{A(c)}{A(Hull(c))}+\displaystyle\sum_{x_i \in c}\min_{h \in Hull(c)
+  }(||x_i-h||)
+\end{equation*}
 
 The contour, that minimizes the scoring function, while keeping its value under
 a certain threshold is considered the goal. If no contour scores below the
-threshold, then the algorithm assumes that no goal was found.
+threshold, then the algorithm assumes that no goal was found. An important note
+is that the algorithm in such a way, that the preselection and scoring are
+modular, which means that the current simple scoring function can later be
+replaced by a function with a better heuristic, or even by some function that
+employs machine learning models.
 
 Our tests have shown, that when the white color is calibrated correctly, the
 algorithm can detect the goal almost without mistakes, when the goal is present
-in the image. The downside of this algorithm, is that in some cases the field
-lines might appear the same properties, that the goal contour is expected to
+in the image. Most irrelevant candidates candidates are normally discarded in
+the preselection stage, and the scoring function improves the robustness
+further. The downside of this algorithm, is that in some cases the field lines
+might appear to have the same properties, that the goal contour is expected to
 have, therefore the field lines can be mistaken for the goal. We will describe,
-how we dealt with this problem, in the following section.
+how we dealt with this problem, in the section \ref{p sec field detect}.
 
 \section{Field detection}
+\label{p sec field detect}
 
 The algorithm for the field detection is very similar to the ball detection
-algorithm, but some concepts introduced in the previous section are also used
-here. This algorithm extracts the biggest green area in the image, finds its
-enclosing convex hull, and assumes everything inside the hull to be the field.
+algorithm, but some concepts introduced in the section \ref{p sec goal detect}
+are also used here. This algorithm extracts the biggest green area in the
+image, finds its enclosing convex hull, and assumes everything inside the hull
+to be the field. In here, when we extract the field, we apply strong Gaussian
+blurring and erosions-dilations combination to the binary mask, so that the
+objects on the field are properly consumed.
+
+\begin{figure}[ht]
+  \includegraphics[width=\textwidth]{\fig field-detection}
+  \caption{Field detection}
+  \label{p figure field-detection}
+\end{figure}
 
 Such rather simple field detection has two important applications. The first
 one is that the robot should be aware, where the field is, so that it doesn't
@@ -98,3 +137,9 @@ the probability of identifying a wrong object decreases. On the other hand, the
 problem with the goal detection algorithm was that it could be distracted by
 the field lines. So, if everything on the field is ignored for goal
 recognition, then the accuracy can be improved.
+
+\begin{figure}[ht]
+  \includegraphics[width=\textwidth]{\fig combined-detection}
+  \caption{Using field detection to improve ball and goal detection}
+  \label{p figure combined-detection}
+\end{figure}
