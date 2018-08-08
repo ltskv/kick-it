@@ -8,9 +8,9 @@ algorithms, on which we could rely when we worked on higher-lever behaviors.
 During our tests, there were almost no false detections, i.e.\ foreign objects
 were not detected as a ball or a goal. Sometimes the ball and the goal were
 missed, even if they were in the field of view, which happened due to imprecise
-color calibration under changing lighting conditions. The goal detection was on
-of the most difficult project milestones, so we are particularly satisfied with
-the resulting performance. It is worth mentioning, that with the current
+color calibration under changing lighting conditions. The goal detection was
+one of the most difficult project milestones, so we are particularly satisfied
+with the resulting performance. It is worth mentioning, that with the current
 algorithm, for successful detection, it is not even necessary to have the whole
 goal in the camera image.
 
@@ -19,8 +19,7 @@ the robot could successfully reach the ball, do the necessary alignments and
 kick the ball. When the robot decided that he should kick the ball, in the
 majority of cases the kick was successful and the ball reached the target. We
 performed these tests from many starting positions and assuming many relative
-position of the ball and the goal. Naturally, we put some constraints on the
-problem, but within th \todo{smth about constraints and such bullshit}.
+position of the ball and the goal.
 
 Furthermore, we managed not only to make the whole approach robust, but also
 worked on making the procedure fast, and the approach planing was a crucial
@@ -40,13 +39,13 @@ With our objective for this semester completed, there still remains a vast room
 for improvement. Some of the most interesting topics for future work will now
 presented.
 
-The first important topic is the self-localization. Currently our robot is
+The first important topic is self-localization. Currently our robot is
 completely unaware of his position on the field, but if such information could
 be obtained, then it could be leveraged to make path planning more effective
 and precise.
 
 Another important capability that our robot lacks for now is obstacle
-awareness, which would be unacceptable in the real RoboCup soccer game. Making
+awareness, which would be unacceptable in a real RoboCup soccer game. Making
 the robot aware of the obstacles on the field would require the obstacle
 detection to be implemented, as well as some changes to the path planning
 algorithms to be made, which makes this task an interesting project on its own.
@@ -62,8 +61,8 @@ is not moving. Another constraint that we imposed on our problem is that the
 ball is relatively close to the goal, and that the ball is closer to the goal
 than the robot, so that the robot doesn't have to run away from the goal. To be
 useful in a real game the striker should be able to handle more complex
-situations. For example, the \textit{dribbling} skill could help the robot to
-avoid the opponents and to bring the ball into a convenient striking position.
+situations. For example, \textit{dribbling} skill could help the robot to avoid
+the opponents and to bring the ball into a convenient striking position.
 
 Finally, we realized that the built-in moving functions in NAOqi SDK produce
 fairly slow movements, and also don't allow to change the direction of movement

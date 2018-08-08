@@ -2,8 +2,8 @@
 
 \section{Robot}
 
-The aforementioned \textit{Nao} is a small humanoid robot, around 60 cm tall.
-Some of its characteristics are:
+The aforementioned \textit{Nao} \cite{nao} is a small humanoid robot, around 60
+cm tall. Some of its characteristics are:
 
 \begin{itemize}
 
@@ -39,19 +39,20 @@ it can handle all aspects of robot control, such as reading the sensors, moving
 the robot and establishing the network connection.
 
 As a framework for the implementation of the desired behavior we chose the
-official NAOqi Python SDK. Our experience with this framework is that it is
-easy to use, well documented and also covers most basic functionality that was
-necessary for us to start working on the project. A further advantage of this
-SDK is that it uses Python as the programming language, which allows for quick
-prototyping, but also makes maintaining a large codebase fairly easy.
+official NAOqi Python SDK \cite{naoqi-sdk}. Our experience with this framework
+is that it is easy to use, well documented and also covers most basic
+functionality that was necessary for us to start working on the project. A
+further advantage of this SDK is that it uses Python as the programming
+language, which allows for quick prototyping, but also makes maintaining a
+large codebase fairly easy.
 
 Finally, the third-party libraries that were used in the project are OpenCV and
-NumPy. OpenCV is a powerful and one of the most widely used open-source
-libraries for computer vision tasks, and NumPy is a popular Python library for
-fast numerical computations. Both of these libraries, as well as the NAOqi
-Python SDK are included in the NAOqi OS distribution by default, which means
-that no extra work was necessary to ensure their proper functioning on the
-robot.
+NumPy \cite{opencv, numpy}. OpenCV is a powerful and one of the most widely
+used open-source libraries for computer vision tasks, and NumPy is a popular
+Python library for fast numerical computations. Both of these libraries, as
+well as the NAOqi Python SDK are included in the NAOqi OS distribution by
+default, which means that no extra work was necessary to ensure their proper
+functioning on the robot.
 
 \section{Rejected Software Alternatives}
 
@@ -66,14 +67,14 @@ never really hit the performance constraints, that couldn't have been overcome
 by refactoring our code, but in the future it might be reasonable to migrate
 some of the portions of it to C++.
 
-Another big alternative is ROS (Robotic Operating System). ROS is a collection
-of software targeted at robot development, and there exists a large ecosystem
-of third-party extensions for ROS, which could assist in performing common
-tasks such as camera and joint calibration. ROS was an attractive option, but
-there was a major downside, that there was no straightforward way to run ROS
-locally on the robot, so the decision was made not to spend time trying to
-figure out how to do that. However, since Python is one of the main languages
-in ROS, it should be possible to incorporate our work into ROS.
+Another big alternative is ROS \cite{ros} (Robotic Operating System). ROS is a
+collection of software targeted at robot development, and there exists a large
+ecosystem of third-party extensions for ROS, which could assist in performing
+common tasks such as camera and joint calibration. ROS was an attractive
+option, but there was a major downside, that there was no straightforward way
+to run ROS locally on the robot, so the decision was made not to spend time
+trying to figure out how to do that. However, since Python is one of the main
+languages in ROS, it should be possible to incorporate our work into ROS.
 
 Finally, as was already mentioned in the introduction, B-Human Framework is a
 popular choice for beginners, thanks to the quality of the algorithms and good
