@@ -45,7 +45,7 @@ camera frames.
 In the \textbf{Head Adjustment} part all necessary head movements are covered.
 In this part of the algorithm the head is rotated by a calculated angle, which
 depends on the ball yaw angle, which was provided by the \textbf{Ball
-  Detection} part. Therefore, the ball should now be aligned in the center of
+  Detection} part. Therefore, the ball should now be aligned in the centre of
 the robots' camera frames. If the angle between the head and the rest of the
 body is now below a specified threshold, the ball is locked and the algorithm
 stops, otherwise the algorithm continues with \textbf{Body Adjustment}.
@@ -56,7 +56,7 @@ current movement. Then the robot starts to rotate around its z-axis depending
 on the current head yaw angle. To ensure that the head and body of the robot
 are aligned, like in the beginning of the whole algorithm, the head is rotated
 back into zero yaw. The algorithm continues then with another \textbf{Ball
-  Detection}, to ensure that the robot is properly centered at the ball.
+  Detection}, to ensure that the robot is properly centred at the ball.
 
 The proposed algorithm provided decent results during many test runs. It allows
 the robot to align itself to the ball fast, while some strategies are in place

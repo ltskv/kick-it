@@ -11,8 +11,8 @@ image itself needs to be transformed into HSV colorspace, so that the regions
 of interest can be extracted into a \textit{binary mask}. The contours of the
 regions can then be identified in a mask \cite{contours}, and the areas of the
 regions can be calculated using the routines from the OpenCV library. The
-center and the radius of the region with the largest area are then determined
-and are assumed to be the center and the radius of the ball.
+centre and the radius of the region with the largest area are then determined
+and are assumed to be the centre and the radius of the ball.
 
 \begin{figure}[ht]
   \includegraphics[width=\textwidth]{\fig ball-detection}
@@ -30,13 +30,13 @@ binary mask with erosions and dilations, which allowed us to detect the ball
 even over long distances.
 
 The advantages of the presented algorithm are its speed and simplicity. The
-major downside is that the careful color calibration is required for the
+major downside is that a careful color calibration is required for the
 algorithm to function properly. If the HSV interval of the targeted color is
-too narrow, then the algorithm might miss the ball; if the interval is too
-wide, then other big red-shaded objects in the camera image will be detected as
+too narrow, the algorithm might miss the ball; if the interval is too
+wide, other big red-shaded objects in the camera image will be detected as
 the ball. A possible approach to alleviate these issues to a certain degree
 will be presented further in the section \ref{p sec field detect}. To
-conclude, we found this algorithm to be robust enough for our purposes, if the
+conclude, we found this algorithm to be robust enough for our purposes, if a
 sensible color calibration was provided.
 
 \section{Goal Detection}
@@ -64,7 +64,7 @@ contours with the largest areas are considered further (in our experiments it
 was empirically determined that $N=5$ provides good results). Furthermore, all
 convex contours are rejected, since the goal is a highly non-convex shape.
 After that, a check is performed, how many points are necessary to approximate
-the remaining contours. The motivation behind this is the following: it is
+the remaining contours. The motivation behind this is the following: It is
 clearly visible that the goal shape can be perfectly approximated by a line
 with 8 straight segments. On an image from the camera, the approximation is
 almost perfect when using only 6 line segments, and in some degenerate cases
@@ -74,7 +74,7 @@ of line segments to be approximated is probably not the goal. The preselection
 stage ends here, and the remaining candidates are passed to the scoring
 function.
 
-The scoring function calculates, how different are the properties of the
+The scoring function calculates, how different the properties of the
 candidates are from the properties, that an idealized goal contour is expected
 to have. The evaluation is happening based on two properties. The first
 property is based on the observation, that the area of the goal contour is much
@@ -90,7 +90,7 @@ scoring function can then look like the following:
 
 The contour, that minimizes the scoring function, while keeping its value under
 a certain threshold is considered the goal. If no contour scores below the
-threshold, then the algorithm assumes that no goal was found. An important note
+threshold, the algorithm assumes that no goal was found. An important note
 is that the algorithm is designed in such a way, that the preselection and
 scoring are modular, which means that the current simple scoring function can
 later be replaced by a function with a better heuristic, or even by some
@@ -104,7 +104,7 @@ Figure \ref{p figure goal-detection} demonstrates the algorithm in action. On
 the right is the binary mask with all found contours. On the left are the goal,
 and one contour that passed preselection but was rejected during scoring.
 
-One downside of this algorithm, is that in some cases the field lines
+One downside of this algorithm is that in some cases the field lines
 might appear to have the same properties, that the goal contour is expected to
 have, therefore the field lines can be mistaken for the goal. We will describe,
 how we dealt with this problem, in the section \ref{p sec field detect}.
@@ -129,7 +129,7 @@ objects on the field are properly consumed.
 Such rather simple field detection has two important applications. The first
 one is that the robot should be aware, where the field is, so that it doesn't
 try to walk away from the field. Due to time constraints, we didn't implement
-this part of the behavior. The second application of field detection is the
+this part of the behaviour. The second application of field detection is the
 improvement of the quality of goal and ball recognition. As was mentioned in
 the section on ball detection, the current algorithm might get confused, if
 there are any red objects in the robot's field of view. However, there

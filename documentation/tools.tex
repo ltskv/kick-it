@@ -56,15 +56,14 @@ to ensure their proper functioning on the robot.
 \section{Rejected Software Alternatives}
 
 Here we will briefly discuss what alternative options were available for the
-choice of the base framework, and why we decided not to use those. One
+choice of the base framework and why we decided not to use those. One
 available option was the official \textit{NAOqi C++ SDK}. Being based on the
-C++ language, this SDK can naturally be expected to have better performance and
-be more resource-efficient, than the Python-based version. We still chose the
+C++ language, this SDK can naturally be expected to have better performance and to be more resource-efficient, than the Python-based version. We still chose the
 Python SDK, because C++ is not particularly suitable for fast prototyping,
 because of the complexity of the language. It is also worth noting, that we
 never really hit the performance constraints, that couldn't have been overcome
 by refactoring our code, but in the future it might be reasonable to migrate
-some of the portions of it to C++.
+some portions of it to C++.
 
 Another big alternative is \textit{ROS} \cite{ros} (Robotic Operating System).
 ROS is a collection of software targeted at robot development, and there exists
@@ -79,7 +78,7 @@ in ROS, it should be possible in the future to incorporate our work into ROS.
 Finally, as was already mentioned in the introduction, \textit{B-Human
   Framework} is a popular choice for beginners, thanks to the quality of the
 algorithms and good documentation. However, B-Human has been in development
-over many years and is therefore a very complex system. The amount time needed
+over many years and is therefore a very complex system. The amount of time needed
 to get familiar with the code, and then to incorporate our changes would have
-been too big, for this reason we decided to use the simpler option as a
+been too big. For this reason we decided to use the simpler option as a
 starting point.
