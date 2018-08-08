@@ -1,4 +1,4 @@
-\section{Turning to ball}
+\section{Turning to Ball}
 \label{j sec turning to ball}
 The task which we try to accomplish here is to bring the robot in a position, so that he is looking straight at the ball.
 The robot should be able to find the ball anywhere on the field and rotate itself so that it will focus the ball. \\
@@ -6,7 +6,7 @@ The algorithm which we implemented to solve this problem can be found in figure 
 
 \begin{figure}[ht]
 	\includegraphics[width=\textwidth]{\fig turn-to-ball}
-	\caption{Turn to ball algorithm}
+	\caption{Turn to Ball algorithm}
 	\label{j figure turn to ball}
 \end{figure}
 
@@ -40,7 +40,7 @@ The task which we try to accomplish here is to measure the distance to the ball 
 The proposed solution to measure the distance to the ball is shown in figure \ref{j figure distance measurement}. In the right upper corner of the picture is the camera frame shown, which belongs to the top camera of the robot.
 \begin{figure}[ht]
 	\includegraphics[width=\textwidth]{\fig distance-meassurement}
-	\caption{Distance Measurement}
+	\caption{Distance measurement}
 	\label{j figure distance measurement}
 \end{figure}
 
@@ -60,8 +60,9 @@ Even so the proposed equation for distance measurement is rather simple it provi
 %Mention Stand up to ensure, that robot is always in the same position
 %Explain how angles are derived from the camera frames?
 %Value of phi cam?
-\newpage
-\section{Approach planning}
+% \newpage
+\section{Approach Planning}
+\label{j sec approach planing}
 An important part of the approaching strategy is to find out, in which direction the robot should start to approach the ball, so that it is later in a good position for the following approach steps. 
 The task is therefore to choose an appropriate approach path.
 
@@ -70,7 +71,7 @@ The task is therefore to choose an appropriate approach path.
 
 \begin{figure}[ht]
 	\includegraphics[width=\textwidth]{\fig choose-approach-start}
-	\caption{starting condition of choose approach}
+	\caption{Starting condition of approach planning}
 	\label{j figure starting condition choose-approach}
 \end{figure}
 
@@ -113,7 +114,7 @@ The task is solved as following. Again the robot is in the standing position and
 	\label{j figure rdist hypo}
 \end{figure}
 
-\newpage
+% \newpage
 
 
 During our tests this approach seemed more suitable for short ball distances.

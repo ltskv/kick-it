@@ -1,6 +1,7 @@
-\section{Ball approach}
+\section{Ball Approach}
+\label{p sec approach}
 
-\subsection{Approach from the Side}
+\subsection*{Approach from the Side}
 
 The first possibility is that in the approach planing stage, described in the
 section \ref{j sec approach planing}, the decision was taken to approach the
@@ -9,13 +10,13 @@ the calculated direction. Normally, after the movement the robot should lose
 the sight of the ball. However, the approximate angle, where the ball should be
 relative to the robot after the movement, is known. Therefore, the robot will
 rotate by that angle and will then try to detect the ball and turn to it, using
-the \textbf{Turn to Ball} algorithm, described in the section \ref {j sec turn
-  to ball}. Once this was done, the approach planning stage is repeated.
-Normally, the distance to the ball should now be small, and the ball and the
-goal should lie in the same direction, which means that only short direct
-approach at this point will be necessary. That might not always be the case, so
-in rare situations another step of the approach from the side might be
-necessary.
+the \textbf{Turn to Ball} algorithm, described in the section \ref {j sec
+  turning to ball}. Once this was done, the approach planning stage is
+repeated. Normally, the distance to the ball should now be small, and the ball
+and the goal should lie in the same direction, which means that only short
+direct approach at this point will be necessary. That might not always be the
+case, so in rare situations another step of the approach from the side might be
+required.
 
 \begin{figure}[ht]
   \includegraphics[width=\textwidth]{\fig after-sideways}
@@ -23,19 +24,19 @@ necessary.
   \label{p figure after-sideways}
 \end{figure}
 
-\subsection{Direct Approach}
+\subsection*{Direct Approach}
 
 It is also possible that the decision will be taken to approach the ball
 directly, either from the start or after the robot already has approached the
 ball from the side. In this stage the robot will walk towards the ball trying
 to stay centered at it. To do so, it will be constantly checked that the ball
 stays within some tolerance angle from the center of the camera frame. If the
-ball moves from the center further than by some tolerance angle, then the robot
+ball moves from the center further than by the tolerance angle, then the robot
 will stop moving, will adjust the movement direction and then will go further.
 The robot will continue moving until the ball is close enough to start the goal
 alignment. Do determine if that is the case, we don't use trigonometry, but
 simply define a threshold, which the image of the ball in the robot's lower
-camera should reach. Once this happened, the approach stage is over and the
+camera should reach. Once this has happened, the approach stage is over and the
 robot will start aligning itself to the goal.
 
 \begin{figure}[ht]

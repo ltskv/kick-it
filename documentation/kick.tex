@@ -1,0 +1,28 @@
+\section{Kick}
+
+The final milestone in the goal scoring project is naturally the kick. Before
+we started working on the kick, we formulated some requirements, which our
+implementation must satisfy. Firstly and most importantly, the robot shouldn't
+fall down when performing the kick. Secondly, the kick must have the sufficient
+strength, so that ideally only one kick is necessary for the ball to reach the
+goal. Therefore, due to time constraints we implemented the simplest possible
+kick, that would satisfy those requirements.
+
+The procedure is as follows. First the robot will use its ankle joints to shift
+its weight to the base leg. After this, the robots will be able to lift the
+kicking leg for the swing. Finally, the robot will perform the swing and return
+to the standing position. Both raising the leg and doing the swing require
+precise coordinated joint movements, so we had to conduct experiments to
+establish the correct joint angles and the movement speed.
+
+An important drawback of our implementation is that the swing makes the whole
+process slower, but we weren't able to design a strong and stable kick without
+using the swing. Nevertheless, the tests that we performed have shown, that our
+implementation satisfies our requirements, and hence the last milestone was
+successfully completed.
+
+% \begin{figure}[ht]
+  % \includegraphics[width=\textwidth]{\fig kick}
+  % \caption{Kick sequence}
+  % \label{p figure kick}
+% \end{figure}

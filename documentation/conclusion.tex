@@ -11,15 +11,15 @@ missed, even if they were in the field of view, which happened due to imprecise
 color calibration under changing lighting conditions. The goal detection was
 one of the most difficult project milestones, so we are particularly satisfied
 with the resulting performance. It is worth mentioning, that with the current
-algorithm, for successful detection, it is not even necessary to have the whole
+algorithm, for successful detection it is not even necessary to have the whole
 goal in the camera image.
 
 Another important achievement is the overall system robustness. In our tests
 the robot could successfully reach the ball, do the necessary alignments and
 kick the ball. When the robot decided that he should kick the ball, in the
 majority of cases the kick was successful and the ball reached the target. We
-performed these tests from many starting positions and assuming many relative
-position of the ball and the goal.
+performed these tests from many starting positions and assuming a variety of
+different relative positions of the ball and the goal.
 
 Furthermore, we managed not only to make the whole approach robust, but also
 worked on making the procedure fast, and the approach planing was a crucial
@@ -29,9 +29,10 @@ towards the ball directly and aligned to the goal afterwards. The tests have
 shown, that in such configuration the goal alignment was actually the longest
 phase and could take over a minute. Then we introduced the approach planing,
 and as a result the goal alignment stage could in many scenarios be completely
-eliminated, which was greatly beneficial for the execution times.
-
-Finally, \todo{the kick was nice}.
+eliminated, which was greatly beneficial for the execution times. Finally,
+thanks to the strong kick, the goal can be scored from a large range of
+distances, which means that in some situations is not necessary to bring the
+ball closer to the goal, which can also save time.
 
 \section{Future Work}
 
@@ -39,27 +40,27 @@ With our objective for this semester completed, there still remains a vast room
 for improvement. Some of the most interesting topics for future work will now
 presented.
 
-The first important topic is self-localization. Currently our robot is
+The first important topic is \textit{self-localization}. Currently our robot is
 completely unaware of his position on the field, but if such information could
 be obtained, then it could be leveraged to make path planning more effective
 and precise.
 
-Another important capability that our robot lacks for now is obstacle
-awareness, which would be unacceptable in a real RoboCup soccer game. Making
+Another important capability, that our robot lacks for now, is \textit{obstacle
+  awareness}, which would be unacceptable in a real RoboCup soccer game. Making
 the robot aware of the obstacles on the field would require the obstacle
 detection to be implemented, as well as some changes to the path planning
 algorithms to be made, which makes this task an interesting project on its own.
 
 A further capability that could be useful for the striker is the ability to
-perform different kicks depending on the situation. For example, if the robot
-could perform a sideways kick, then the goal alignment would in many situations
-be unnecessary, which would reduce the time needed to score a goal.
+perform \textit{different kicks} depending on the situation. For example, if
+the robot could perform a sideways kick, then the goal alignment would in many
+situations be unnecessary, which would reduce the time needed to score a goal.
 
-In this semester we concentrated on the ``free-kick'' situation, so our robot
-can perform its tasks in the absence of other players, and only when the ball
-is not moving. Another constraint that we imposed on our problem is that the
-ball is relatively close to the goal, and that the ball is closer to the goal
-than the robot, so that the robot doesn't have to run away from the goal. To be
+In this semester we concentrated on a ``free-kick'' situation, so our robot can
+perform its tasks in the absence of other players when the ball is not moving.
+Another constraint that we imposed on our problem is that the ball is
+relatively close to the goal, and that the ball is closer to the goal than the
+robot, so that the robot doesn't have to move away from the goal first. To be
 useful in a real game the striker should be able to handle more complex
 situations. For example, \textit{dribbling} skill could help the robot to avoid
 the opponents and to bring the ball into a convenient striking position.

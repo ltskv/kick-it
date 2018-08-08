@@ -12,13 +12,14 @@ goalposts.
 
 The walk in circle was implemented in the following way: the robot will step
 several steps sideways, then will turn to ball, as described in the section
-\ref{j sec turn to ball}, and finally will adjust the distance to the ball by
-stepping forwards or backwards, so that the ball is neither too close nor too
-far. The distance to the ball, similarly to the stage of the direct approach,
-is not measured explicitly, but is approximated through the position of the
-ball image in the camera frame. After performing these steps, the check is
-performed, if the goal alignment is completed. Otherwise, the steps will be
-repeated until alignment is achieved.
+\ref{j sec turning to ball}, and finally will adjust the distance to the ball
+by stepping forwards or backwards, so that the ball is neither too close nor
+too far. The distance to the ball, similarly to the stage of the direct
+approach, is not measured explicitly, but is approximated through the position
+of the ball image in the camera frame. After performing these steps, the check
+is performed, if the goal alignment is completed. Otherwise, the steps will be
+repeated until alignment is achieved. The figure \ref{p figure goal-alignment}
+depicts the successful completion of this stage.
 
 \begin{figure}[ht]
   \includegraphics[width=\textwidth]{\fig goal-alignment}
@@ -26,21 +27,21 @@ repeated until alignment is achieved.
   \label{p figure goal-alignment}
 \end{figure}
 
-\section{Ball alignment}
+\section{Ball Alignment}
 
-Now that the ball and the goal are aligned, the robot has to move to the ball
-into a position, from which the kick can be performed. Depending on the
-situation, it may be feasible to select the foot, with which the kick should be
-performed, but due to time constraints we programmed the robot to kick with the
-left foot only. So, the task now is to place the ball in front of the left
-foot. We realized, that when the ball is in the correct position, then its
-image in the lower camera should be within a certain region. We experimentally
-determined the extents of this region. The algorithm therefore is for the robot
-to gradually adjust its position in small steps, until the ball image reaches
-the target, after which the robot will proceed with the kick. Our tests have
-shown, that this approach while being relatively simple, works sufficiently
-robust, which means that we didn't have the situations, when the robot missed
-the ball after alignment or even hit the ball with an edge of the foot.
+Now that the ball and the goal are aligned, the robot has to move into a
+position, from which the kick can be performed. Depending on the situation, it
+may be feasible to select the foot, with which the kick should be performed,
+but due to time constraints we programmed the robot to kick with the left foot
+only. So, the task now is to place the ball in front of the left foot. We
+realized, that when the ball is in the correct position, then its image in the
+lower camera should be within a certain region. We experimentally determined
+the extents of this region. The algorithm therefore is for the robot to
+gradually adjust its position in small steps, until the ball image reaches the
+target, after which the robot will proceed with the kick. Our tests have shown,
+that this method while being relatively simple, works sufficiently robust,
+which means that we didn't have the situations, when the robot missed the ball
+after alignment or even hit the ball with an edge of the foot.
 
 \begin{figure}[ht]
   \includegraphics[width=\textwidth]{\fig ball-align}

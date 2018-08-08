@@ -1,18 +1,18 @@
-\section{Color calibration}
+\section{Color Calibration}
 
 All our detection algorithms require color calibration, and when the lighting
-conditions on the field change, colors might have to be newly calibrated. For
-us this meant that a tool was necessary, that could simplify this process as
-far as possible. For this reason, we implemented a small OpenCV-based program,
-that we called \verb|Colorpicker|. This program can access various video
-sources, as well as use still images for calibration. The main interface
-contains the sliders for adjusting the HSV interval, as well as the video area,
+conditions on the field change, colors might have to be recalibrated. For us
+this meant that a tool was necessary, that could simplify this process as far
+as possible. For this reason, we implemented a small OpenCV-based program, that
+we called \verb|Colorpicker|. This program can access various video sources, as
+well as use still images for calibration. The main interface contains the
+sliders for adjusting the HSV interval, as well as the video area,
 demonstrating the resulting binary mask. The colors can be calibrated for three
 targets: ball, goal and field; and the quality of detection, depending on the
-chosen target is demonstrated. When the program is closed, the calibration
-values are automatically saved to the settings file \verb|nao_defaults.json|.
-The interface of the Colorpicker is demonstrated in the figure \ref{p figure
-  colorpicker}.
+chosen target is demonstrated in the tool's video area. When the program is
+closed, the calibration values are automatically saved to the settings file
+\verb|nao_defaults.json|. The interface of the Colorpicker is demonstrated in
+the figure \ref{p figure colorpicker}.
 
 \begin{figure}[ht]
   \includegraphics[width=\textwidth]{\fig colorpicker}

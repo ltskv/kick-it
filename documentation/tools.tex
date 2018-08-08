@@ -2,7 +2,7 @@
 
 \section{Robot}
 
-The aforementioned \textit{Nao} \cite{nao} is a small humanoid robot, around 60
+The aforementioned Nao \cite{nao} is a small humanoid robot, around 60
 cm tall. Some of its characteristics are:
 
 \begin{itemize}
@@ -15,9 +15,9 @@ cm tall. Some of its characteristics are:
 
 \item Internet connectivity over Ethernet cable or 802.11g WLAN;
 
-\item Single-Core Intel Atom CPU and 1 GB of RAM;
+\item Single-core Intel Atom CPU and 1 GB of RAM;
 
-\item Programmable Joints with overall 25 Degrees of Freedom;
+\item Programmable joints with overall 25 degrees of freedom;
 
 \item Speakers;
 
@@ -27,7 +27,7 @@ cm tall. Some of its characteristics are:
 
 It can be seen from the specifications list, that the multitude of sensors and
 interfaces makes Nao an attractive development platform, suitable for the task
-of \todo{Robocup}. However, relatively weak CPU and a low amount of RAM require
+of playing soccer. However, relatively weak CPU and a low amount of RAM require
 the programs running on the robot to be resource-efficient, which had to be
 taken into into account during our work on the project.
 
@@ -39,46 +39,47 @@ it can handle all aspects of robot control, such as reading the sensors, moving
 the robot and establishing the network connection.
 
 As a framework for the implementation of the desired behavior we chose the
-official NAOqi Python SDK \cite{naoqi-sdk}. Our experience with this framework
-is that it is easy to use, well documented and also covers most basic
-functionality that was necessary for us to start working on the project. A
-further advantage of this SDK is that it uses Python as the programming
-language, which allows for quick prototyping, but also makes maintaining a
-large codebase fairly easy.
+official \textit{NAOqi Python SDK} \cite{naoqi-sdk}. We found this framework
+easy to use, well documented and also covering most basic functionality that
+was necessary for us to start working on the project. A further advantage of
+this SDK is that it uses Python as the programming language, which allows for
+quick prototyping, but also makes maintaining a large codebase fairly easy.
 
-Finally, the third-party libraries that were used in the project are OpenCV and
-NumPy \cite{opencv, numpy}. OpenCV is a powerful and one of the most widely
-used open-source libraries for computer vision tasks, and NumPy is a popular
-Python library for fast numerical computations. Both of these libraries, as
-well as the NAOqi Python SDK are included in the NAOqi OS distribution by
-default, which means that no extra work was necessary to ensure their proper
-functioning on the robot.
+Finally, the third-party libraries that were used in the project are
+\textit{OpenCV} and \textit{NumPy} \cite{opencv, numpy}. OpenCV is a powerful
+and one of the most widely used open-source libraries for computer vision
+tasks, and NumPy is a popular Python library for fast numerical computations.
+Both of these libraries, as well as the NAOqi Python SDK are included in the
+NAOqi OS distribution by default, which means that no extra work was necessary
+to ensure their proper functioning on the robot.
 
 \section{Rejected Software Alternatives}
 
 Here we will briefly discuss what alternative options were available for the
 choice of the base framework, and why we decided not to use those. One
-available option was the official NAOqi C++ SDK. Being based on the C++
-language, this SDK can naturally be expected to have better performance and be
-more resource-efficient, than the Python-based version. We still chose the
+available option was the official \textit{NAOqi C++ SDK}. Being based on the
+C++ language, this SDK can naturally be expected to have better performance and
+be more resource-efficient, than the Python-based version. We still chose the
 Python SDK, because C++ is not particularly suitable for fast prototyping,
 because of the complexity of the language. It is also worth noting, that we
 never really hit the performance constraints, that couldn't have been overcome
 by refactoring our code, but in the future it might be reasonable to migrate
 some of the portions of it to C++.
 
-Another big alternative is ROS \cite{ros} (Robotic Operating System). ROS is a
-collection of software targeted at robot development, and there exists a large
-ecosystem of third-party extensions for ROS, which could assist in performing
-common tasks such as camera and joint calibration. ROS was an attractive
-option, but there was a major downside, that there was no straightforward way
-to run ROS locally on the robot, so the decision was made not to spend time
-trying to figure out how to do that. However, since Python is one of the main
-languages in ROS, it should be possible to incorporate our work into ROS.
+Another big alternative is \textit{ROS} \cite{ros} (Robotic Operating System).
+ROS is a collection of software targeted at robot development, and there exists
+a large ecosystem of third-party extensions for ROS, which could assist in
+performing common tasks such as camera and joint calibration, as well as in
+more complex tasks such as object detection. ROS was an attractive option, but
+there was a major downside, that there was no straightforward way to run ROS
+locally on the robot, so the decision was made not to spend time trying to
+figure out how to do that. However, since Python is one of the main languages
+in ROS, it should be possible in the future to incorporate our work into ROS.
 
-Finally, as was already mentioned in the introduction, B-Human Framework is a
-popular choice for beginners, thanks to the quality of the algorithms and good
-documentation. However, B-Human has been in development over many years and is
-therefore a very complex system. The amount time needed to get familiar with
-the code, and then to incorporate our changes would have been too big, for this
-reason we decided to use the simpler option as a starting point.
+Finally, as was already mentioned in the introduction, \textit{B-Human
+  Framework} is a popular choice for beginners, thanks to the quality of the
+algorithms and good documentation. However, B-Human has been in development
+over many years and is therefore a very complex system. The amount time needed
+to get familiar with the code, and then to incorporate our changes would have
+been too big, for this reason we decided to use the simpler option as a
+starting point.
