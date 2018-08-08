@@ -74,7 +74,7 @@ The task is therefore to choose an appropriate approach path.
 	\label{j figure starting condition choose-approach}
 \end{figure}
 
-The task is solved as following. At the begging the robot is in the standing position and the ball is in the centre of the camera view. As the position of the ball is therefore know, it is important to find out, where the ball is to determine an appropriate approach path. The robot will therefore rotate his head, until he is able to recognize the goal in the view of his top camera (figure \ref{j figure choose-approach}).
+The task is solved as following. At the beginning the robot is in the standing position and the ball is in the centre of the camera view. As the position of the ball is therefore known, it is important to find out, where the ball is to determine an appropriate approach path. The robot will therefore rotate his head, until he is able to recognize the goal in the view of his top camera (figure \ref{j figure choose-approach}).
 
 \begin{figure}[ht]
 	\includegraphics[width=\textwidth]{\fig choose-approach}
@@ -82,11 +82,9 @@ The task is solved as following. At the begging the robot is in the standing pos
 	\label{j figure choose-approach}
 \end{figure}
 
-Using the centre position of the goal, the angle between the ball and the goal is estimated. Depending on the value of the angle different approach directions are chosen. In figure \ref{j figure choose-approach}, the goal is on the right side of the ball. It makes therefore sense to approach the ball somewhere from the left side. In the current implementation there are three possible approach directions. The robot could approach the ball either from the left or the right side. If the angle between the goal and the ball is sufficiently small, the robot could also do a straight to the ball. As the exact approach angle to the ball is calculated in another part of the approach planning, it's enough to decide between those 3 possible approach directions.\\
-The proposed algorithm worked fine under the consideration of the possible scenarios. As the goal detection algorithm works quite reliable the appropriate approach direction was found fast most of the time.
-\newpage
-\section{Estimate approach angle and walking distance}
-At the approach direction is now known, the approach angle and the walking distance of the robot have to be estimated. The task is to find an approach angle and walking distance in such a way, that the robot is in a good position for a later kick.
+Using the centre position of the goal, the angle between the ball and the goal is estimated. Depending on the value of the angle, different approach directions are chosen. In figure \ref{j figure choose-approach}, the goal is on the right side of the ball. It makes therefore sense to approach the ball somewhere from the left side. In the current implementation there are three possible approach directions. The robot could approach the ball either from the left or the right side. If the angle between the goal and the ball is sufficiently small, the robot could also do a straight approach to the ball. As the exact approach angle to the ball is calculated in another part of the approach planning, it's enough to decide between those 3 possible approach directions.\\
+The proposed algorithm worked fine under the consideration of the possible scenarios. As the goal detection algorithm works quite reliable the appropriate approach direction was found fast most of the time.\\
+As the approach direction is now known, the approach angle and the walking distance of the robot have to be estimated. The task is to find an approach angle and walking distance in such a way, that the robot is in a good position for a later kick.
 
 \begin{figure}[ht]
 	\includegraphics[width=\textwidth]{\fig walking-distance}
@@ -96,7 +94,7 @@ At the approach direction is now known, the approach angle and the walking dista
 
 %TODO
 %bdist is hypo and walking distance is hypo
-The task is solved as following. Again the robot is in the standing position and the ball is centred in the camera view of the top camera. The ball distance has already been estimated as described in section \ref{j sec distance measurement}. To estimate the approach angle and the walking distance, a desired distance is defined which defines the distance between the robot and the ball after the walk. Approach angle and walking distance can than be computed. Thereby we considered to different approaches depending on the distance between the ball and the robot. If the distance between the robot and the ball is below or equal a specified threshold the triangle looks as shown in figure \ref{j figure rdist hypo}. 
+The task is solved as following. Again the robot is in the standing position and the ball is centred in the camera view of the top camera. The ball distance has already been estimated as described in section \ref{j sec distance measurement}. To estimate the approach angle and the walking distance, a desired distance is defined which defines the distance between the robot and the ball after the walk. Approach angle and walking distance can then be computed. Thereby we considered to different approaches depending on the distance between the ball and the robot. If the distance between the robot and the ball is below or equal to a specified threshold the triangle looks as shown in figure \ref{j figure rdist hypo}. 
 
 \begin{figure}[ht]
 	\centering
@@ -118,7 +116,7 @@ The task is solved as following. Again the robot is in the standing position and
 \newpage
 
 
-During our test this approach seemed more suitable for short ball distances.
+During our tests this approach seemed more suitable for short ball distances.
 For long ball distances however we choose a different approach. 
 If the distance between ball and the robot is larger than a specified threshold, the triangle looks like in figure \ref{j figure bdist hypo}.
 
@@ -142,11 +140,11 @@ If the distance between ball and the robot is larger than a specified threshold,
 To calculate the appropriate walking distance, the following formulas estimate the approaching angle and calculate the distance.
 
 \begin{equation}
-\Theta_\mathrm{appr}=\arctan\left(\frac{\mathrm{Desired\ distance}}{\mathrm{ball\ distance}} \right)
+\Theta_\mathrm{appr}=\arctan\left(\frac{\mathrm{Desired\ distance}}{\mathrm{ball\ distance}} \right) \; \; \mathrm{or} \; \; \arcsin\left(\frac{\mathrm{Desired\ distance}}{\mathrm{ball\ distance}}\right)
 \end{equation}
 
 \begin{equation}
-	\mathrm{walking\ distance}=\frac{\mathrm{ball\ distance}}{\cos(\Theta_\mathrm{appr})}
+	\mathrm{walking\ distance}=\frac{\mathrm{ball\ distance}}{\cos(\Theta_\mathrm{appr})} \; \; \mathrm{or} \; \; \frac{\cos(\Theta_\mathrm{appr})}{\mathrm{ball\ distance}}
 \end{equation}
 
        
