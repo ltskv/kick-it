@@ -1,0 +1,40 @@
+\chapter{Implementation details}
+
+\section{Code organization}
+
+Our code is organized as a standard Python package. The following command can
+be used to make the robot run the whole goal scoring sequence:
+
+\begin{verbatim}
+  python -m pykick
+\end{verbatim}
+
+Alternatively, individual modules can be run with the following command:
+
+\begin{verbatim}
+  python -m pykick.[filename_without_.py]
+\end{verbatim}
+
+The main logic of our implementation can be found in the following files:
+
+\begin{itemize}
+
+  \item \verb|__main__.py| contains the state machine described in the section
+    \ref{p sec overview}.
+
+  \item \verb|striker.py| contains implementation of higher level behaviors,
+    such as aligning the ball and the goal, or turning to ball.
+
+  \item \verb|finders.py| contains implementations of our detection algorithms.
+
+  \item \verb|imagereaders.py| contains some convenience classes for capturing
+    video output from various video sources, such as Nao cameras, web-cameras
+    or video files.
+
+  \item \verb|movements.py| implements convenience movements-related function,
+    such as walking and kick.
+
+  \item \verb|nao_defaults.json| stores all project-global settings, such as
+    the IP-address of the robot, or color calibration results.
+
+\end{itemize}

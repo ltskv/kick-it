@@ -1,0 +1,19 @@
+\section{Video Recording from the Nao Camera}
+
+For the purposes of debugging and also for the final presentation, we wanted to
+record what the robot sees during the program execution. NAOqi SDK provides a
+function to write the camera video to a file, but has a limitation of allowing
+the capture from only one camera at a time, which was not optimal for us. We
+overcame this limitation, by exploiting the fact, that the NAOqi SDK didn't
+impose any restrictions on reading individual frames from the cameras into the
+memory. So, during the test runs we started a separate thread, where the camera
+frames from both cameras were read into memory one by one, and after the robot
+has completed the execution of his task, the recorded frame sequences were
+written to video files with the help of OpenCV. This approach has a downside,
+that the frames can only be read at irregular and unpredictable intervals, so
+the framerate of the resulting video couldn't be calculated, which means that
+the playback speed of the videos needed to be adjusted afterwards using video
+editing programs. Furthermore, due to computational resource limitations of the
+Nao, the frames could have been captured only in low resolution. However, the
+quality of the resulting videos was sufficient for successful debugging and
+also for the presentation.

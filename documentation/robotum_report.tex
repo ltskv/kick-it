@@ -17,9 +17,6 @@
 
 \include{robotum_report.preamble}
 
-% if you don't know where something can be found, click on the pdf, and
-% Overleaf will open the file where it is described
-
 \begin{document}
 \title{\LARGE {\bf Report Project Striker 2018}\\
   \vspace*{6mm}
@@ -36,25 +33,23 @@
 
 \generatebody  % generates table of contents, list of figures and of tables.
 
-% \input{Introduction/Introduction}
+\setstretch{1.2}  % set line spacing
 
-\setstretch{1.2} % set line spacing
-\input{introduction}
-\input{tools}
-\input{solintro}
-\input{perception}
+\input{introduction}  % Introduction
+\input{tools}  % Hardware and software
+\input{solintro}  % Our solution intro
+\input{perception}  % Ball goal and field
 % \input{Yuankai}
-\input{jonas}
-\input{overview}
-\input{conclusion}
+\input{jonas}  % Distance, approach planing
+\input{overview}  % The complete strategy
+\input{conclusion}  % Results and future work
 
 \begin{appendices}
-%\input{appendix/BehaviorImplementation}
-\input{appendix/tts}
+\input{appendix/details}  % Code organization
+\input{appendix/colorpicker}  % Colorpicker
+\input{appendix/tts}  % Text to speech and goal confirmation
+\input{appendix/pov}
 \end{appendices}
-
-% Bibliography, see
-% https://de.sharelatex.com/learn/Bibliography_management_with_bibtex#Bibliography_management_with_Bibtex
 
 \addcontentsline{toc}{chapter}{Bibliography}
 \bibliography{references}{}
