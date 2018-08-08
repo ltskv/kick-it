@@ -5,6 +5,7 @@ import json
 import argparse
 
 import cv2
+import numpy as np
 
 from .imagereaders import VideoReader, NaoImageReader, PictureReader
 from .finders import GoalFinder, BallFinder, FieldFinder
@@ -99,9 +100,13 @@ class Colorpicker(object):
                 tuple(map(self.settings.get, ('high_h', 'high_s', 'high_v')))
             )
 
-        cv2.imshow(self.WINDOW_CAPTURE_NAME, frame)
-        cv2.imshow(self.WINDOW_DETECTION_NAME, thr)
-        return cv2.waitKey(0 if manual else 1)
+        thr = cv2.cvtColor(thr, cv2.COLOR_GRAY2BGR)
+        thr = self.marker.draw_last_contours(thr)
+        resulting = np.concatenate((frame, thr), axis=1)
+
+        cv2.imshow(self.WINDOW_CAPTURE_NAME, resulting)
+        # cv2.imshow(self.WINDOW_DETECTION_NAME, thr)
+        return cv2.waitKey(0 if manual else 50)
 
     def save(self, filename, color):
         try:

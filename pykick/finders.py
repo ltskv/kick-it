@@ -6,7 +6,7 @@ from collections import deque
 import cv2
 import numpy as np
 
-from .utils import hsv_mask
+from .utils import hsv_mask, contour_center
 
 
 class FieldFinder(object):
@@ -51,9 +51,12 @@ class FieldFinder(object):
 
 class GoalFinder(object):
 
-    def __init__(self, hsv_lower, hsv_upper):
+    def __init__(self, hsv_lower, hsv_upper, goal_thr=0.45):
         self.hsv_lower = tuple(hsv_lower)
         self.hsv_upper = tuple(hsv_upper)
+        self.goal_thr = goal_thr
+        self.last_detection = []
+        self.last_contours = []
 
     def primary_mask(self, frame):
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
@@ -86,9 +89,11 @@ class GoalFinder(object):
         return final_score
 
     def find(self, frame):
+        self.last_detection = []
         thr = self.primary_mask(frame)
         cnts, _ = cv2.findContours(thr, cv2.RETR_EXTERNAL,
                                    cv2.CHAIN_APPROX_SIMPLE)
+        self.last_contours = cnts
         cnts.sort(key=cv2.contourArea, reverse=True)
         top_x = 6
         cnts = cnts[:top_x]
@@ -108,14 +113,21 @@ class GoalFinder(object):
             return None
 
         similarities = [self.goal_similarity(cnt) for cnt in good_cnts]
+        self.last_detection = list(zip(good_cnts, similarities))
         best = min(similarities)
         print('Final goal score:', best)
         print()
-        if best > 0.45:
+        if best > self.goal_thr:
             return None
         # Find the contour with the shape closest to that of the goal
         goal = good_cnts[similarities.index(best)]
         return goal
+
+    def draw_last_contours(self, frame):
+        frame = frame.copy()
+        for cnt in self.last_contours:
+            cv2.drawContours(frame, (cnt,), -1, (255, 0, 0), 2)
+        return frame
 
     def left_right_post(self, contour):
         return contour[...,0].min(), contour[...,0].max()
@@ -127,9 +139,27 @@ class GoalFinder(object):
         return (l + r) / 2
 
     def draw(self, frame, goal):
+        frame = frame.copy()
+        cv2.putText(frame,
+                    'Upper threshold: ' + '%.2f' % self.goal_thr, (10, 50),
+                    cv2.FONT_HERSHEY_DUPLEX, 1, (0, 255, 0))
+        if self.last_detection:
+            cnts = sorted(self.last_detection,
+                          key=lambda x: x[1])
+            if cnts[0][1] < self.goal_thr:
+                goal, score = cnts[0]
+                cnts = cnts[1:]
+            for cnt, sim in cnts[1:]:
+                print(sim)
+                cv2.drawContours(frame, (cnt,), -1, (0, 0, 255), 1)
+                cv2.putText(frame, '%.2f' % sim, contour_center(cnt),
+                            cv2.FONT_HERSHEY_DUPLEX, 1, (0, 0, 255))
+
         if goal is not None:
-            frame = frame.copy()
+            print(goal)
             cv2.drawContours(frame, (goal,), -1, (0, 255, 0), 2)
+            cv2.putText(frame, '%.2f' % score, contour_center(goal),
+                        cv2.FONT_HERSHEY_DUPLEX, 1, (0, 255, 0))
         return frame
 
 
@@ -179,8 +209,15 @@ class BallFinder(object):
         return center, int(radius)
 
     def draw(self, frame, ball):
+        frame = frame.copy()
         if ball is not None:
-            frame = frame.copy()
             center, radius = ball
-            cv2.circle(frame, center, radius, (255, 255, 0), 1)
+            cv2.circle(frame, center, radius, (255, 255, 0), 2)
+        # for i in range(1, len(self.history)):
+            # if self.history[i - 1] is None or self.history[i] is None:
+                # continue
+            # center_now = self.history[i - 1][0]
+            # center_prev = self.history[i][0]
+            # thickness = int((64 / (i + 1))**0.5 * 1.25)
+            # cv2.line(frame, center_now, center_prev, (0, 0, 255), thickness)
         return frame

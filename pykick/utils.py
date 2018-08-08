@@ -41,6 +41,11 @@ def hsv_mask(hsv, hsv_lower, hsv_upper):
     else:
         return cv2.inRange(hsv, tuple(hsv_lower), tuple(hsv_upper))
 
+
+def contour_center(contour):
+    M = cv2.moments(contour)
+    return int(M['m10'] / M['m00']) - 30, int(M['m01'] / M['m00']) + 30
+
 class InterruptDelayed(object):
 
     def __enter__(self):
