@@ -1,10 +1,7 @@
 \section{Turning to ball}
 \label{j sec turning to ball}
-\subsection*{Problem Statement}
-Bring the robot in a position, so that he is looking straight at the ball.	\\
-The robot should be able to find the ball anywhere on the field and rotate itself so that it will focus the ball. 
-
-\subsection*{Proposed Solution}
+The task which we try to accomplish here is to bring the robot in a position, so that he is looking straight at the ball.
+The robot should be able to find the ball anywhere on the field and rotate itself so that it will focus the ball. \\
 The algorithm which we implemented to solve this problem can be found in figure \ref{j figure turn to ball}.
 
 \begin{figure}[ht]
@@ -15,26 +12,22 @@ The algorithm which we implemented to solve this problem can be found in figure 
 
 The turn to ball algorithm consists of four main parts. 
 
-\subsubsection*{Ball Detection}
-\label{j sec ball detection} 
-At first frames from both cameras of the robot are read in. It is then checked, if a ball is visible in the picture using the ball-detection algorithm. Depending on if the ball is visible or not, different strategies are considered. If no ball was found in the pictures, the algorithm proceeds with \textbf{Can't See the Ball}, if the ball was found in the pictures, the ball yaw angle in the camera frame is calculated and forwarded to \textbf{Head Adjustment}.
 
-\subsubsection*{Can't See the Ball} 
+The first part is the \textbf{Ball Detection} part \label{j sec ball detection}, which main task is to find out, if the ball is visible in one of the cameras. At first frames from both cameras of the robot are read in. It is then checked, if a ball is visible in the picture using the ball-detection algorithm. Depending on if the ball is visible or not, different strategies are considered. If no ball was found in the pictures, the algorithm proceeds with \textbf{Can't See the Ball}, if the ball was found in the pictures, the ball yaw angle in the camera frame is calculated and forwarded to \textbf{Head Adjustment}.
+
+Another part of the turn to ball algorithm is the \textbf{Can't See the Ball} part.
 This part of the algorithm is executed, if the ball was not visible in one of the camera frames. Different succeeding strategies are run to cover different situations. If the strategies are successful the algorithm continues with \textbf{Ball Detection} and \textbf{Head Adjustment}. If the strategies are not successful, the next strategy in the chain is run. \\
 At the ball detection algorithm can sometimes fail, it is first insured, that 
 the ball detection algorithm was used on at least 3 succeeding frames. If the ball was not found in 3 succeeding frames, the next possible solution is letting the robot stop his current movement and step back for a specified distance, in case if the ball was directly in front of the robot and could therefore not be detected by both cameras. If this strategy was not successful, the robot starts to move his head to some defined angles and tries to find the ball in both camera frames. If this strategy than also failes, the robot starts to rotate around his z-axis until he is able to detect the ball in one of his camera frames.
 
-\subsubsection*{Head Adjustment}
-\label{j sec head adjustment}
+In the \textbf{Head Adjustment} part all necessary head movements are covered. 
 In this part of the algorithm the head is rotated by a calculated angle, which depends on the ball yaw angle, which was provided by the \textbf{Ball Detection} part.
 Therefore, the ball should now be aligned in the centre of the robots' camera frames.
 If the angle between the head an the rest of the body is now below a specified threshold, the ball is locked and the algorithm stops, otherwise the algorithm continues with \textbf{Body Adjustment}. 
 
-\subsubsection*{Body Adjustment}
-\label{j sec body adjustment}
+The \textbf{Body Adjustment} part covers all necessary parts regarding the rotation of the body.
 In this part of the algorithm, the robot first stops his current movement. Then the robot starts to rotate around his z-axis depending on the current head yaw angle. To ensure that the head and body of the robot are aligned as in the beginning of the whole algorithm, the head is rotated back into zero yaw. The algorithm continues than with the \textbf{Ball Detection}.
 
-\subsection*{Results}
 The proposed algorithm provided decent results during many test runs. It allows the robot to align himself to the ball fast while some strategies are in place to let the robot find the ball for situations, where the ball is not in the direct view of the robot. However, there are still some things to improve. If the ball is far away from the robot and can therefore not be detected by the \textbf{Ball Detection algorithm} the robot will continue to rotate and try to find the ball. To solve this, some self localisation algorithms could be implemented to let the robot move to predefined locations the field and then start the \textbf{Turn to ball algorithm} again.
 
 %TODO
@@ -43,10 +36,7 @@ The proposed algorithm provided decent results during many test runs. It allows 
 %Mention stand up
 \section{Distance Measurement}
 \label{j sec distance measurement}
-\subsection*{Problem Statement}
-Measure the distance to the ball using the images from the cameras.
-
-\subsection*{Proposed Solution}
+The task which we try to accomplish here is to measure the distance to the ball using the images from the cameras. \\
 The proposed solution to measure the distance to the ball is shown in figure \ref{j figure distance measurement}. In the right upper corner of the picture is the camera frame shown, which belongs to the top camera of the robot.
 \begin{figure}[ht]
 	\includegraphics[width=\textwidth]{\fig distance-meassurement}
@@ -64,7 +54,6 @@ Using the estimated angle $ \Phi_{\mathrm{ball}} $ and the height of the robot t
 	d = \frac{\mathrm{height}}{\Phi_{\mathrm{ball}}} = \frac{\mathrm{height}}{\Phi_{\mathrm{meas}}+\Phi_{\mathrm{cam}}} \; .
 \end{equation}
 
-\subsection*{Results}
 Even so the proposed equation for distance measurement is rather simple it provided sufficient results during the test runs. 
 
 %TODO
@@ -73,11 +62,8 @@ Even so the proposed equation for distance measurement is rather simple it provi
 %Value of phi cam?
 
 \section{Approach planning}
-\subsection*{Choose approach direction}
 An important part of the approaching strategy is to find out, in which direction the robot should start to approach the ball, so that it is later in a good position for the following approach steps. 
-
-\subsection*{Problem Statement}
-Choose an appropriate approach path.
+The task is therefore to choose an appropriate approach path.
 
 %TODO
 %It is assumed, that ball and goal are aligned in such a way, that the robot ....
@@ -88,8 +74,7 @@ Choose an appropriate approach path.
 	\label{j figure starting condition choose-approach}
 \end{figure}
 
-\subsection*{Proposed Solution}
-At the begging the robot is in the standing position and the ball is in the centre of the camera view. As the position of the ball is therefore know, it is important to find out, where the ball is to determine an appropriate approach path. The robot will therefore rotate his head, until he is able to recognize the goal in the view of his top camera (figure \ref{j figure choose-approach}).
+The task is solved as following. At the begging the robot is in the standing position and the ball is in the centre of the camera view. As the position of the ball is therefore know, it is important to find out, where the ball is to determine an appropriate approach path. The robot will therefore rotate his head, until he is able to recognize the goal in the view of his top camera (figure \ref{j figure choose-approach}).
 
 \begin{figure}[ht]
 	\includegraphics[width=\textwidth]{\fig choose-approach}
@@ -97,16 +82,11 @@ At the begging the robot is in the standing position and the ball is in the cent
 	\label{j figure choose-approach}
 \end{figure}
 
-Using the centre position of the goal, the angle between the ball and the goal is estimated. Depending on the value of the angle different approach directions are chosen. In figure \ref{j figure choose-approach}, the goal is on the right side of the ball. It makes therefore sense to approach the ball somewhere from the left side. In the current implementation there are three possible approach directions. The robot could approach the ball either from the left or the right side. If the angle between the goal and the ball is sufficiently small, the robot could also do a straight to the ball. As the exact approach angle to the ball is calculated in another part of the approach planning, it's enough to decide between those 3 possible approach directions.
-
-\subsection*{Results}
+Using the centre position of the goal, the angle between the ball and the goal is estimated. Depending on the value of the angle different approach directions are chosen. In figure \ref{j figure choose-approach}, the goal is on the right side of the ball. It makes therefore sense to approach the ball somewhere from the left side. In the current implementation there are three possible approach directions. The robot could approach the ball either from the left or the right side. If the angle between the goal and the ball is sufficiently small, the robot could also do a straight to the ball. As the exact approach angle to the ball is calculated in another part of the approach planning, it's enough to decide between those 3 possible approach directions.\\
 The proposed algorithm worked fine under the consideration of the possible scenarios. As the goal detection algorithm works quite reliable the appropriate approach direction was found fast most of the time.
-
-\subsection*{Estimate approach angle and walking distance}
-At the approach direction is now known, the approach angle and the walking distance of the robot have to be estimated. 
-
-\subsection*{Problem Statement}
-Estimate approach angle and walking distance.
+\newpage
+\section{Estimate approach angle and walking distance}
+At the approach direction is now known, the approach angle and the walking distance of the robot have to be estimated. The task is to find an approach angle and walking distance in such a way, that the robot is in a good position for a later kick.
 
 \begin{figure}[ht]
 	\includegraphics[width=\textwidth]{\fig walking-distance}
@@ -114,13 +94,9 @@ Estimate approach angle and walking distance.
 	\label{j figure approach angle and walking distance}
 \end{figure}
 
-
-
-\subsection*{Problem Solution}
 %TODO
 %bdist is hypo and walking distance is hypo
-
-Again the robot is in the standing position and the ball is centred in the camera view of the top camera. The ball distance has already been estimated as described in section \ref{j sec distance measurement}. To estimate the approach angle and the walking distance, a desired distance is defined which defines the distance between the robot and the ball after the walk. Approach angle and walking distance can than be computed. Thereby we considered to different approaches depending on the distance between the ball and the robot. If the distance between the robot and the ball is below or equal a specified threshold the triangle looks as shown in figure \ref{j figure rdist hypo}. 
+The task is solved as following. Again the robot is in the standing position and the ball is centred in the camera view of the top camera. The ball distance has already been estimated as described in section \ref{j sec distance measurement}. To estimate the approach angle and the walking distance, a desired distance is defined which defines the distance between the robot and the ball after the walk. Approach angle and walking distance can than be computed. Thereby we considered to different approaches depending on the distance between the ball and the robot. If the distance between the robot and the ball is below or equal a specified threshold the triangle looks as shown in figure \ref{j figure rdist hypo}. 
 
 \begin{figure}[ht]
 	\centering
