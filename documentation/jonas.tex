@@ -60,7 +60,7 @@ Even so the proposed equation for distance measurement is rather simple it provi
 %Mention Stand up to ensure, that robot is always in the same position
 %Explain how angles are derived from the camera frames?
 %Value of phi cam?
-
+\newpage
 \section{Approach planning}
 An important part of the approaching strategy is to find out, in which direction the robot should start to approach the ball, so that it is later in a good position for the following approach steps. 
 The task is therefore to choose an appropriate approach path.
@@ -147,4 +147,5 @@ To calculate the appropriate walking distance, the following formulas estimate t
 	\mathrm{walking\ distance}=\frac{\mathrm{ball\ distance}}{\cos(\Theta_\mathrm{appr})} \; \; \mathrm{or} \; \; \frac{\cos(\Theta_\mathrm{appr})}{\mathrm{ball\ distance}}
 \end{equation}
 
+If the distance between the robot and the ball is really small, the robot starts a direct approach to the ball regardless of the position of the goal. This makes more sense for short distances, than the two approaches stated above.
        
