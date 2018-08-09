@@ -72,7 +72,7 @@ start the \textbf{Turn to Ball algorithm} again.
 %Follow the ball always -> problem: movement while walking
 %Describe in more Detail??? Are all steps in can not see the ball executed every time?
 %Mention stand up
-
+\newpage
 \section{Distance Measurement}
 \label{j sec distance measurement}
 
@@ -102,8 +102,8 @@ camera of the robot is not aligned with the parallel to the floor. There is
 therefore an offset angle for the center of the camera frame, which has to be
 considered in the calculations. As seen in figure \ref{j figure distance
   measurement} $ \Phi_{\mathrm{ball}} $ and $
-\Phi_{\mathrm{meas}}+\Phi_{\mathrm{cam}} $ are alternate interior angles
-therefore the following equations holds:
+\Phi_{\mathrm{meas}}+\Phi_{\mathrm{cam}} $ are alternate interior angles.
+Therefore, the following equations holds:
 
 \begin{equation}
   \Phi_{\mathrm{ball}} = \Phi_{\mathrm{meas}}+\Phi_{\mathrm{cam}} \; .
@@ -157,12 +157,12 @@ head, until it is able to recognize the goal in the view of its top camera
 
 Using the position of the center of the goal, the angle between the ball and
 the goal is estimated. Depending on the value of the angle, different approach
-directions are chosen. In the figure \ref{j figure choose-approach}, the goal
+directions are chosen. In figure \ref{j figure choose-approach}, the goal
 is on the right side of the ball. It therefore makes sense to approach the ball
 somewhere from the left side. In the current implementation there are three
 possible approach directions. The robot could approach the ball either from the
 left or the right side; or if the angle between the goal and the ball is
-sufficiently small, the robot could also do a straight approach to the ball. As
+sufficiently small or the distance between the ball and the robot is sufficiently small, the robot could also do a straight approach to the ball. As
 the exact approach angle to the ball is calculated in the next part of the
 approach planning, it's enough for now to decide between those three possible
 approach directions.
@@ -171,7 +171,6 @@ The proposed algorithm worked fine under the consideration of the
 possible scenarios. As the goal detection algorithm works quite reliable, the
 appropriate approach direction was found quickly most of the time.
 
-\newpage
 
 As the approach direction is now known, the approach angle and the walking
 distance of the robot have to be estimated. The task is to find an approach
@@ -191,9 +190,9 @@ The task is solved as following. Again the robot is in the standing position
 and the ball is centered in the camera view of the top camera. The ball
 distance has already been estimated as described in section \ref{j sec distance
   measurement}. To estimate the approach angle and the walking distance, a
-desired distance is defined which defines the distance between the robot and
+desired distance is set which defines the distance between the robot and
 the ball after the walk. Approach angle and walking distance can then be
-computed. Thereby we considered two different approaches depending on the
+computed. Thereby we considered three different approaches depending on the
 distance between the ball and the robot. If the distance between the robot and
 the ball is below or equal to a specified threshold the triangle looks as shown
 in figure \ref{j figure rdist hypo}.
@@ -240,19 +239,26 @@ looks like in figure \ref{j figure bdist hypo}.
 \end{figure}
 
 To calculate the appropriate walking distance, the following formulas estimate
-the approaching angle and calculate the distance.
+the approaching angle and calculate the walking distance, depending on the distance to the ball. 
 
 \begin{equation}
-\Theta_\mathrm{appr}=\arctan\left(\frac{\mathrm{Desired\ distance}}{\mathrm{ball\ distance}} \right) \; \; \mathrm{or} \; \; \arcsin\left(\frac{\mathrm{Desired\ distance}}{\mathrm{ball\ distance}}\right)
+\Theta_\mathrm{appr} =
+\begin{cases}
+\arctan\left(\frac{\mathrm{Desired\ distance}}{\mathrm{ball\ distance}} \right) & \text{for short distances}\\
+\arcsin\left(\frac{\mathrm{Desired\ distance}}{\mathrm{ball\ distance}}\right) & \text{for long distances}
+\end{cases}
 \end{equation}
 
 \begin{equation}
-  \mathrm{walking\ distance}=\frac{\mathrm{ball\ distance}}{\cos(\Theta_\mathrm{appr})} \; \; \mathrm{or} \; \; \frac{\cos(\Theta_\mathrm{appr})}{\mathrm{ball\ distance}}
+\mathrm{walking\ distance} =
+\begin{cases}
+\frac{\mathrm{ball\ distance}}{\cos(\Theta_\mathrm{appr})} & \text{for short distances}\\
+\cos(\Theta_\mathrm{appr}) \cdot \mathrm{ball\ distance} & \text{for long distances}
+\end{cases}
 \end{equation}
 
-If the distance between the robot and the ball is really small, the robot
-starts a direct approach to the ball regardless of the position of the goal.
-This makes more sense for short distances, than the two approaches stated
-above. In this case the neccessary actions for goal alignment will happen in a
+As already mentioned, the robot starts a direct approach to the ball regardless of the position of the goal if the distance between the robot and the ball is really small.
+This makes more sense for sufficiently short distances, than the two approaches stated
+above. In this case the necessary actions for goal alignment will happen in a
 dedicated goal alignment stage, described in the section \ref{p sec goal
   align}.

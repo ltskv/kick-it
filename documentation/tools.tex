@@ -7,29 +7,29 @@ cm tall. Some of its characteristics are:
 
 \begin{itemize}
 
-\item Two HD-cameras on the head;
+\item Two HD-cameras on the head
 
-\item An ultrasonic rangefinder on the body;
+\item An ultrasonic rangefinder on the body
 
-\item An inertial navigation unit (accelerometer and gyroscope);
+\item An inertial navigation unit (accelerometer and gyroscope)
 
-\item Internet connectivity over Ethernet cable or 802.11g WLAN;
+\item Internet connectivity over Ethernet cable or 802.11g WLAN
 
-\item Single-core Intel Atom CPU and 1 GB of RAM;
+\item Single-core Intel Atom CPU and 1 GB of RAM
 
-\item Programmable joints with overall 25 degrees of freedom;
+\item Programmable joints with overall 25 degrees of freedom
 
-\item Speakers;
+\item Speakers
 
 \item 60 to 90 minutes battery life.
 
 \end{itemize}
 
 It can be seen from the specifications list, that the multitude of sensors and
-interfaces makes Nao an attractive development platform, suitable for the task
-of playing soccer. However, relatively weak CPU and a low amount of RAM require
+interfaces make the Nao an attractive development platform, suitable for the task
+of playing soccer. However, a relatively weak CPU and a low amount of RAM require
 the programs running on the robot to be resource-efficient, which had to be
-taken into into account during our work on the project.
+taken into account during our work on the project.
 
 \section{Software}
 
@@ -58,13 +58,12 @@ to ensure their proper functioning on the robot.
 Here we will briefly discuss what alternative options were available for the
 choice of the base framework, and why we decided not to use those. One
 available option was the official \textit{NAOqi C++ SDK}. Being based on the
-C++ language, this SDK can naturally be expected to have better performance and
-be more resource-efficient, than the Python-based version. We still chose the
+C++ language, this SDK can naturally be expected to have better performance and to be more resource-efficient, than the Python-based version. We still chose the
 Python SDK, because C++ is not particularly suitable for fast prototyping,
 because of the complexity of the language. It is also worth noting, that we
 never really hit the performance constraints, that couldn't have been overcome
 by refactoring our code, but in the future it might be reasonable to migrate
-some of the portions of it to C++.
+some portions of it to C++.
 
 Another big alternative is \textit{ROS} \cite{ros} (Robotic Operating System).
 ROS is a collection of software targeted at robot development, and there exists
@@ -79,7 +78,7 @@ in ROS, it should be possible in the future to incorporate our work into ROS.
 Finally, as was already mentioned in the introduction, \textit{B-Human
   Framework} is a popular choice for beginners, thanks to the quality of the
 algorithms and good documentation. However, B-Human has been in development
-over many years and is therefore a very complex system. The amount time needed
+over many years and is therefore a very complex system. The amount of time needed
 to get familiar with the code, and then to incorporate our changes would have
-been too big, for this reason we decided to use the simpler option as a
+been too big. For this reason we decided to use the simpler option as a
 starting point.
