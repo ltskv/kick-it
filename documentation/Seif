@@ -1,0 +1,52 @@
+\section{Ball Alignment}
+
+Now that the robot aligned itself with the ball and the goal, it has to move to the
+right position, from which it can perform the kick. Depending on the situation, it
+was feasible to program the robot to automatically select which foot to kick the ball with;
+however, due to time constraints we decided to program the robot to kick only with the left foot.
+In order to program the robot to correctly position its left foot in front of the ball,
+we identified the right position that the ball should be positioned at,
+within the robot’s lower camera as shown in \ref{p figure ball-alignment}.
+We then experimentally determined the extents of this region.
+The algorithm therefore is for the robot to gradually adjust its position in small steps,
+until the ball image reaches the target, which would trigger the robot to perform the kick. \\
+Our tests have shown that this method was quite robust and gave consistent results.
+We registered no case where the robot missed the ball or hit it with the edge of the foot.\\
+
+\begin{figure}[ht]
+  \includegraphics[width=\textwidth]{\fig ball-align}
+  \caption{Ball alignment}
+  \label{p figure ball-alignment}
+\end{figure}
+
+
+\section{Kick}
+
+The final milestone in the goal scoring project is naturally the kick. Before
+we started working on the kick, we set the requirements that our
+implementation must meet. Firstly and most importantly, the robot shouldn't
+fall down during and after performing the kick. Secondly, the kick performance should be efficient,
+thus ideally only one attempt would be necessary for the ball to reach the goal.
+Consequently, we opted for a powerful kick which can cover high distances. \\
+
+As shown in \ref{p figure kick} To obtain our strong kick, First the robot will use its ankle joints to shift
+its weight to the base leg to compensate for the gravity and to avoid any collision between the kicking foot and the floor.
+After this, the robot will be able to lift the
+kicking leg to achieve a stronger swing. Finally, the robot will perform the swing and return
+to the standing position safely. Both raising the leg and doing the swing require
+precise coordinated joint movements, so we had to conduct experiments to
+establish the correct joint angles and the movement speed. \\
+
+An important drawback of our implementation is that the swing makes the whole
+process slower, but we weren't able to design a strong and stable kick without
+using the swing. Nevertheless, the tests that we performed have shown that our
+implementation satisfies our requirements, and hence the last milestone was
+successfully completed.\\
+
+
+\begin{figure}[ht]
+\includegraphics[width=\textwidth]{\fig kick}
+\caption{Kick sequence}
+\label{p figure kick}
+\end{figure}
+
