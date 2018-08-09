@@ -35,23 +35,24 @@
 
 \setstretch{1.2}  % set line spacing
 
-\input{introduction}  % Introduction
-\input{tools}  % Hardware and software
-\input{solintro}  % Our solution intro
-\input{perception}  % Ball goal and field
-% \input{Yuankai}
-\input{jonas}  % Distance, approach planning
-\input{approach}  % Ball approach
-\input{align}  % Goal alignment
-\input{kick}
-\input{overview}  % The complete strategy
-\input{conclusion}  % Results and future work
+\input{Common/introduction}  % Introduction
+\input{Yuankai/tools}  % Hardware and software
+\input{Common/solintro}  % Our solution intro
+\input{Yuankai/bdetect}  % Ball detect
+\input{Pavel/perception}  % Goal and field
+\input{Jonas/jonas}  % Distance, approach planning
+\input{Ahmed/approach}  % Ball approach
+\input{Ahmed/galign}  % Goal alignment
+\input{Seif/balign}  % Ball alignment
+\input{Seif/kick}  % Kick
+\input{Pavel/overview}  % The complete strategy
+\input{Common/conclusion}  % Results and future work
 
 \begin{appendices}
-\input{appendix/details}  % Code organization
-\input{appendix/colorpicker}  % Colorpicker
-\input{appendix/tts}  % Text to speech and goal confirmation
-\input{appendix/pov}
+\input{Pavel/details}  % Code organization
+\input{Pavel/colorpicker}  % Colorpicker
+\input{Jonas/tts}  % Text to speech and goal confirmation
+\input{Pavel/pov}  % Video recording
 \end{appendices}
 
 \addcontentsline{toc}{chapter}{Bibliography}
