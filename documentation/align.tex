@@ -37,12 +37,13 @@ but due to time constraints we programmed the robot to kick with the left foot
 only. So, the task now is to place the ball in front of the left foot. We
 realized, that when the ball is in the correct position, then its image in the
 lower camera should be within a certain region. We experimentally determined
-the extents of this region. The algorithm therefore is for the robot to
-gradually adjust its position in small steps, until the ball image reaches the
-target, after which the robot will proceed with the kick. Our tests have shown,
-that this method while being relatively simple, works sufficiently robust,
-which means that we didn't have the situations, when the robot missed the ball
-after alignment or even hit the ball with an edge of the foot.
+the extents of this region, which is schematically presented in figure \ref{p
+  figure ball-alignment}. The algorithm therefore is for the robot to gradually
+adjust its position in small steps, until the ball image reaches the target,
+after which the robot will proceed with the kick. Our tests have shown, that
+this method while being relatively simple, works sufficiently robust, which
+means that we didn't have the situations, when the robot missed the ball after
+alignment or even hit the ball with an edge of the foot.
 
 \begin{figure}[ht]
   \includegraphics[width=\textwidth]{\fig ball-align}
