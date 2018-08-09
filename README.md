@@ -63,4 +63,5 @@ implemented here.
 * `imagereaders.py` - Convenience classes for capturing video input from
 various sources.
 
-**More documentation as well as the detailed report will be available later.**
+**More documentation will be available later. For now see our report in
+`documentation`**.
