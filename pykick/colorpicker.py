@@ -5,7 +5,6 @@ import json
 import argparse
 
 import cv2
-import numpy as np
 
 from .imagereaders import VideoReader, NaoImageReader, PictureReader
 from .finders import GoalFinder, BallFinder, FieldFinder
@@ -13,7 +12,8 @@ from .utils import read_config, imresize, hsv_mask, InterruptDelayed
 
 class Colorpicker(object):
 
-    WINDOW_DETECTION_NAME = 'Colorpicker'
+    WINDOW_CAPTURE_NAME = 'Object Detection (or not)'
+    WINDOW_DETECTION_NAME = 'Primary Mask'
 
     def __init__(self, target=None):
         parameters = ['low_h', 'low_s', 'low_v', 'high_h', 'high_s', 'high_v']
@@ -53,6 +53,7 @@ class Colorpicker(object):
         else:
             self.marker = None
 
+        cv2.namedWindow(self.WINDOW_CAPTURE_NAME)
         cv2.namedWindow(self.WINDOW_DETECTION_NAME)
         self.trackers = [
             cv2.createTrackbar(
@@ -98,13 +99,9 @@ class Colorpicker(object):
                 tuple(map(self.settings.get, ('high_h', 'high_s', 'high_v')))
             )
 
-        thr = cv2.cvtColor(thr, cv2.COLOR_GRAY2BGR)
-        # thr = self.marker.draw_last_contours(thr)
-        resulting = np.concatenate((frame, thr), axis=1)
-
-        cv2.imshow(self.WINDOW_DETECTION_NAME, resulting)
-        # cv2.imshow(self.WINDOW_DETECTION_NAME, thr)
-        return cv2.waitKey(0 if manual else 50)
+        cv2.imshow(self.WINDOW_CAPTURE_NAME, frame)
+        cv2.imshow(self.WINDOW_DETECTION_NAME, thr)
+        return cv2.waitKey(0 if manual else 1)
 
     def save(self, filename, color):
         try:

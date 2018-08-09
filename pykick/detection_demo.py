@@ -4,7 +4,6 @@ from __future__ import division
 import argparse
 
 import cv2
-import numpy as np
 
 from .utils import read_config, imresize
 from .imagereaders import NaoImageReader, VideoReader, PictureReader
@@ -119,10 +118,9 @@ if __name__ == '__main__':
 
             ball_frame = ball_finder.draw(ball_frame, ball)
             goal_frame = goal_finder.draw(goal_frame, goal)
-            combined = np.concatenate((ball_frame, goal_frame), axis=1)
 
-            cv2.imshow(ball_window, combined)
-            # cv2.imshow(goal_window, goal_frame)
+            cv2.imshow(ball_window, ball_frame)
+            cv2.imshow(goal_window, goal_frame)
 
             key = cv2.waitKey(0 if args.manual else 1)
             if key == ord('q') or key == 27:
