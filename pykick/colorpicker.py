@@ -1,3 +1,6 @@
+"A script for calibrating the color and saving parameters."
+
+
 from __future__ import print_function
 from __future__ import division
 
@@ -16,6 +19,15 @@ class Colorpicker(object):
     WINDOW_DETECTION_NAME = 'Primary Mask'
 
     def __init__(self, target=None):
+        """
+        Parameters
+        ----------
+        target : string
+            'ball', 'goal' or 'field', affects detection algorithm, what config
+            to read and what config to save
+
+        """
+
         parameters = ['low_h', 'low_s', 'low_v', 'high_h', 'high_s', 'high_v']
         maxes = [180, 255, 255, 180, 255, 255]
         checkers = [
@@ -66,14 +78,17 @@ class Colorpicker(object):
         ]
 
     def do_print(self):
+        """Print the current calibration values."""
         print(tuple(map(self.settings.get, ('low_h', 'low_s', 'low_v'))),
               tuple(map(self.settings.get, ('high_h', 'high_s', 'high_v'))))
 
     def _on_trackbar(self, val, name, checker):
+        """Update GUI."""
         self.settings[name] = checker(val)
         self._hsv_updated(name)
 
     def _hsv_updated(self, param):
+        """Update GUI."""
         cv2.setTrackbarPos(param, self.WINDOW_DETECTION_NAME,
                            self.settings[param])
         if self.marker is None:
@@ -86,6 +101,7 @@ class Colorpicker(object):
         )
 
     def show_frame(self, frame, width=None, manual=False):
+        """Show next frame."""
         frame = imresize(frame, width=width)
         if self.marker is not None:
             thr = self.marker.primary_mask(frame)
@@ -103,14 +119,23 @@ class Colorpicker(object):
         cv2.imshow(self.WINDOW_DETECTION_NAME, thr)
         return cv2.waitKey(0 if manual else 1)
 
-    def save(self, filename, color):
+    def save(self, filename, target):
+        """Save the config.
+
+        Parameters
+        ----------
+        filename : string
+        target : string
+            'ball', 'goal' or 'field'
+
+        """
         try:
             with open(filename) as f:
                 conf = json.load(f)
         except IOError:
             conf = {}
         conf.update(
-            {color: [
+            {target: [
                 list(map(self.settings.get, ['low_h', 'low_s', 'low_v'])),
                 list(map(self.settings.get, ['high_h', 'high_s', 'high_v']))
             ]}
@@ -118,19 +143,27 @@ class Colorpicker(object):
         with open(filename, 'w') as f:
             json.dump(conf, f, indent=4)
 
-    def load(self, filename, color):
+    def load(self, filename, target):
+        """Load the config.
+
+        Parameters
+        ----------
+        filename : string
+        target : string
+            'ball', 'goal' or 'field'
+
+        """
         with open(filename) as f:
             jdict = json.load(f)
             self.settings = dict(
                 zip(['low_h', 'low_s', 'low_v', 'high_h', 'high_s', 'high_v'],
-                    jdict[color][0] + jdict[color][1])
+                    jdict[target][0] + jdict[target][1])
             )
         for name in self.settings:
             self._hsv_updated(name)
 
 
 if __name__ == '__main__':
-
     defaults = read_config()
     parser = argparse.ArgumentParser(
         epilog='When called without arguments specifying the video source, ' +
@@ -204,17 +237,17 @@ if __name__ == '__main__':
         cp.load(args.input_config, args.target)
 
     with InterruptDelayed():
-        if args.video_file:
+        if args.video_file:  # read from video
             rdr = VideoReader(args.video_file, loop=True)
-        elif args.image_file:
+        elif args.image_file:  # read from picture
             rdr = PictureReader(args.image_file)
-        elif args.nao_ip:
+        elif args.nao_ip:  # read from nao
             rdr = NaoImageReader(
                 args.nao_ip,
                 cam_id=args.nao_cam,
                 res=args.nao_res
             )
-        else:
+        else:  # read from webcam
             rdr = VideoReader(0)
 
     try:

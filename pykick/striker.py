@@ -1,3 +1,5 @@
+"""The class implementing high-level striker behavior."""
+
 from __future__ import print_function
 from __future__ import division
 
@@ -16,6 +18,31 @@ class Striker(object):
 
     def __init__(self, nao_ip, nao_port, res, ball_hsv, goal_hsv, field_hsv,
                  ball_min_radius, do_capture=False):
+        """For an example initialization see `__main__.py`
+
+        Parameters
+        ----------
+        nao_ip : string
+            Address of the NAO robot.
+        nao_port : int
+            TCP port on which the AIProxy listens.
+        res : int
+            Nao camera resolution. 0, 1, 2 or 3, see `imagereaders.py` for
+            res description.
+        ball_hsv : list
+            Ball HSV parameters in format [[LH, LS, LV], [HH, HS, HV]]
+        goal_hsv : list
+            Goal HSV parameters in format [[LH, LS, LV], [HH, HS, HV]]
+        field_hsv : list
+            Field HSV parameters in format [[LH, LS, LV], [HH, HS, HV]]
+        ball_min_radius : float
+            Minimal radius of the ball, as a fraction of the frame height
+            (for example 0.01 is 1% of the frame height)
+        do_capture : bool
+            Record the POV video or not (don't use, it's gonna crash the
+            robot)
+
+        """
 
         # Maintenance
         self.run_id = strftime('%Y%m%d%H%M%S')
@@ -68,6 +95,7 @@ class Striker(object):
         self._timer_stop = 0
 
     def close(self):
+        """Finish everyting and rest."""
         self.is_over = True
 
         if self.tts_thread.isAlive():
@@ -82,6 +110,7 @@ class Striker(object):
         self.mover.stop_moving()
 
     def _speaker(self):
+        """Internal method: don't use."""
         while not self.is_over:
             while self.speach_queue:
                 text = self.speach_queue.pop()
@@ -95,6 +124,7 @@ class Striker(object):
             sleep(0.5)
 
     def _pov(self):
+        """Don't use."""
         while not self.is_over:
             try:
                 self.upper_pov.get_frame()
@@ -105,6 +135,7 @@ class Striker(object):
                 continue
 
     def speak(self, text):
+        """Say stuff (useful for debugging)."""
         if not self.speach_history or self.speach_history[-1] != text:
             self.speach_queue.appendleft(text)
             self.speach_history.append(text)
@@ -118,8 +149,8 @@ class Striker(object):
         # determine direction of head rotation
         sign = 1 if yaw >= 0 else -1
 
-        # the robot starts to move arround his z-Axis in the direction where his
-        # head is aligned when the head yaw angle has reached his maximum
+        # the robot starts to move arround his z-Axis in the direction where
+        # his head is aligned when the head yaw angle has reached his maximum
         if yaw > pi/3:
             self.mover.set_head_angles(-pi / 8, pitch, 0.5)
             sleep(0.5)
@@ -133,7 +164,22 @@ class Striker(object):
             sleep(0.3)
 
     def get_ball_angles_from_camera(self, cam, mask=True):
-        """Detect the ball and return its angles in camera coordinates."""
+        """Detect the ball and return its angles in camera coordinates.
+
+        Parameters
+        ----------
+        cam : NaoImageReader
+            A camera object form which to read
+        mask : bool
+            Mask out the field or not
+
+        Returns
+        -------
+        tuple or None
+            (x, y) coordinates in camera angles in radians or None if ball
+            not found
+
+        """
         try:
             frame = cam.get_frame()
         except RuntimeError as e:  # Sometimes camera doesn't return an image
@@ -157,6 +203,22 @@ class Striker(object):
         return x, y
 
     def get_goal_angles_from_camera(self, cam, mask=True):
+        """Get the goal left post, center and right post.
+
+        Parameters
+        ----------
+        cam : NaoImageReader
+            A camera object from which to get frames.
+        mask : bool
+            Mask out the field or not.
+
+        Returns
+        -------
+        tuple or None
+            (left, right, center) camera angles of goal in radians or None
+            if not found
+
+        """
         try:
             frame = cam.get_frame()
         except RuntimeError as e:  # Sometimes camera doesn't return an image
@@ -183,6 +245,14 @@ class Striker(object):
         return goal_l, goal_r, goal_c
 
     def distance_to_ball(self):
+        """Measure the distance to the ball in meters.
+
+        Raises
+        ------
+        ValueError
+        The ball could not be seen :(
+
+        """
         camera = 'upper'
         angles = self.get_ball_angles_from_camera(self.upper_camera)
         if angles == None:
@@ -202,7 +272,16 @@ class Striker(object):
         return (asin(0.40 / d) if hypo == 'bdist' else atan(0.2 / d)) * lr
 
     def ball_tracking(self, soll=0, tol=0.15):
-        """Track the ball using the feed from top and bottom camera.
+        """Turn the robot to the ball, find the ball if cannot see it.
+
+        Parameters
+        ----------
+        soll : float
+            X-Angle in radians, under which the ball should appear in the
+            robot's camera (maybe we want the robot not to look at the ball
+            directly).
+        tol : float
+            Allowable deviation in radians from soll-angle.
 
         Returns
         -------
@@ -245,16 +324,29 @@ class Striker(object):
             print()
 
     def run_to_ball(self, d):
+        """Fancy name for GO FORWARD."""
         self.mover.move_to(d, 0, 0)
         # self.mover.wait()
 
     def turn_to_ball(self, ball_x, ball_y, tol=0.15, soll=0):
-        """Align robot to the ball.
+        """Align robot to the ball, assuming the ball is visible.
+
+        This method is mainly used by `turn_to_ball`.
 
         If head is not centered at the ball (within tolerance), then
         turn head to ball. If after that the angle of head to body
         becomes too big, rotate the body by the head angle and
         simultaneously rotate head into 0 position to achieve alignment.
+
+        Parameters
+        ----------
+        soll : float
+            X-Angle in radians, under which the ball should appear in the
+            robot's camera (maybe we want the robot not to look at the ball
+            directly).
+        tol : float
+            Allowable deviation in radians from soll-angle.
+
         """
 
         # only the x ball angle is relevant for alignment
@@ -287,6 +379,15 @@ class Striker(object):
             return True
 
     def align_to_ball(self):
+        """Perform one step of aligning behind the ball for the kick.
+
+        Call this until this returns True.
+
+        Returns
+        -------
+        bool
+            True if nicely aligned else False.
+        """
         ball_angles = self.get_ball_angles_from_camera(self.lower_camera,
                                                        mask=False)
         if ball_angles is None:
@@ -305,6 +406,15 @@ class Striker(object):
         return False
 
     def align_to_goal(self):
+        """Perform one step of aligning ball and goal.
+
+        Call this until this returns True.
+
+        Returns
+        -------
+        bool
+            True if nicely aligned else False.
+        """
         ball_angles = self.get_ball_angles_from_camera(self.lower_camera,
                                                        mask=False)
         if ball_angles is None:
@@ -351,6 +461,13 @@ class Striker(object):
         return False
 
     def goal_search(self):
+        """Find the goal. Return the angles in the robot frame.
+
+        Returns
+        -------
+        The same as the `get_goal_angles_from_camera`.
+
+        """
         self.speak('Searching for goal')
         print('Last goal:', self.last_goal)
         goal_angles = None
