@@ -273,6 +273,8 @@ class Striker(object):
 
     def ball_tracking(self, soll=0, tol=0.15):
         """Turn the robot to the ball, find the ball if cannot see it.
+        Call this until this returns True - then the robot is facing
+        the ball.
 
         Parameters
         ----------
