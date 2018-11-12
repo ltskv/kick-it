@@ -1,3 +1,5 @@
+"""Some convenience functions which I leave up to you to explore."""
+
 from __future__ import division
 
 import os
@@ -40,6 +42,7 @@ def hsv_mask(hsv, hsv_lower, hsv_upper):
         return cv2.add(mask_l, mask_u)
     else:
         return cv2.inRange(hsv, tuple(hsv_lower), tuple(hsv_upper))
+
 
 class InterruptDelayed(object):
 

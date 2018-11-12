@@ -1,3 +1,8 @@
+"""Class with functions for easier movement of NAO.
+
+And a command line script for some movements.
+"""
+
 # from time import sleep
 import argparse
 from math import radians, pi
@@ -8,7 +13,7 @@ from .utils import read_config
 
 class NaoMover(object):
 
-    KICK_SEQUENCE = [
+    KICK_SEQUENCE = [  # DON'T USE THIS ONE
 
         # lean to the side using the ankle joints
         [[(0, 1, 'ShoulderRoll', -70),
@@ -25,7 +30,7 @@ class NaoMover(object):
     ]
 
     # fancy kick
-    KICK_SEQUENCE_FANCY = [
+    KICK_SEQUENCE_FANCY = [  # USE THIS ONE
         # base_or_kicking, unsymmetric, joint, angle
 
         # lift the arm
@@ -53,7 +58,6 @@ class NaoMover(object):
          0.5],
     ]
 
-
     def __init__(self, nao_ip, nao_port=9559):
         nao_ip = bytes(nao_ip)
         self.mp = ALProxy('ALMotion', nao_ip, nao_port)
@@ -70,6 +74,12 @@ class NaoMover(object):
         self.ready_to_move = False
 
     def kick(self, foot='L', fancy=False):
+        """Kick the ball with the foot.
+
+        For now optimized for Left foot. Also please always
+        set fancy to True when calling this.
+
+        """
         self.set_arm_stiffness(0.8)
         self.set_hip_stiffness(0.8)
         self.set_knee_stiffness(0.8)
@@ -106,6 +116,7 @@ class NaoMover(object):
         self.set_arm_stiffness()
 
     def rest(self):
+        """Send robot to resting position."""
         self.mp.rest()
         self.ready_to_move = False
 
@@ -150,10 +161,19 @@ class NaoMover(object):
         return self.mp.getAngles(('HeadYaw', 'HeadPitch'), False)
 
     def change_head_angles(self, d_yaw, d_pitch, speed=0.5):
+        """Change the head angles by a relative amount.
+
+        This function DOES return before movement is finished.
+        """
         self.mp.changeAngles(('HeadYaw', 'HeadPitch'),
                              (d_yaw, d_pitch), speed)
 
     def change_head_angles_blocking(self, d_yaw, d_pitch, speed=0.5):
+        """Same as `change_head_angles` but block until finished.
+
+        Doesn't work quite as expected though. You may need to work on it.
+
+        """
         self.mp.angleInterpolatioWithSpeed(('HeadYaw', 'HeadPitch'),
                                            (d_yaw, d_pitch), speed, False)
 

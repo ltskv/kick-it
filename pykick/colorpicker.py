@@ -1,6 +1,5 @@
 "A script for calibrating the color and saving parameters."
 
-
 from __future__ import print_function
 from __future__ import division
 
