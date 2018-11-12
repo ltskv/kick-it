@@ -32,8 +32,8 @@ class NaoMover(object):
         # [[(0, 1, 'ShoulderRoll', -70)], 0.5],
 
         # lean to the side using the ankle joints
-        [[(0, 1, 'AnkleRoll', -11),
-          (1, 1, 'AnkleRoll', -11)],
+        [[(0, 1, 'AnkleRoll', -12),
+          (1, 1, 'AnkleRoll', -12)],
          1],
 
         # lift the foot using the knee joint and the ankle joint
