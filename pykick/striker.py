@@ -255,21 +255,21 @@ class Striker(object):
         """
         camera = 'upper'
         angles = self.get_ball_angles_from_camera(self.upper_camera)
-        if angles == None:
+        if angles is None:
             camera = 'lower'
             angles = self.get_ball_angles_from_camera(self.lower_camera)
-            if angles == None:
+            if angles is None:
                 raise ValueError('No ball in sight')
         y_angle = angles[1]
-        y_angle = pi/2 - y_angle - radians(15) - (radians(39)
-                                                  if camera == 'lower'
-                                                  else 0)
+        y_angle = pi/2 - y_angle - radians(16.5) - (radians(39)
+                                                    if camera == 'lower'
+                                                    else 0)
         print('Ball distance through', camera, 'camera')
         print('Angles', angles)
         return 0.5 * tan(y_angle)
 
     def walking_direction(self, lr, d, hypo):
-        return (asin(0.40 / d) if hypo == 'bdist' else atan(0.2 / d)) * lr
+        return (asin(0.43 / d) if hypo == 'bdist' else atan(0.23 / d)) * lr
 
     def ball_tracking(self, soll=0, tol=0.15):
         """Turn the robot to the ball, find the ball if cannot see it.
