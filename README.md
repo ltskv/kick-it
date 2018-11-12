@@ -39,10 +39,10 @@ python -m pykick.[file_name_without_.py]
 
 To get an overview try
 
-``sh
+```sh
 python -m pykick.colorpicker -h
 python -m pykick.movements -h
-``
+```
 
 ### To run code on the robot
 
