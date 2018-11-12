@@ -250,7 +250,7 @@ class Striker(object):
         Raises
         ------
         ValueError
-        The ball could not be seen :(
+            The ball could not be seen :(
 
         """
         camera = 'upper'

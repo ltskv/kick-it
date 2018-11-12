@@ -251,8 +251,6 @@ class NaoMover(object):
 
 
 if __name__ == '__main__':
-    cfg = read_config()
-    mover = NaoMover(cfg['ip'], cfg['port'])
     parser = argparse.ArgumentParser()
     actions = parser.add_mutually_exclusive_group()
     actions.add_argument("-s", "--stand", action="store_true",
@@ -267,6 +265,9 @@ if __name__ == '__main__':
                         help="blow up the dance floor")
 
     args = parser.parse_args()
+
+    cfg = read_config()
+    mover = NaoMover(cfg['ip'], cfg['port'])
 
     if args.stand:
         mover.stand_up()
