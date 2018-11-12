@@ -178,14 +178,27 @@ class NaoMover(object):
                                            (d_yaw, d_pitch), speed, False)
 
     def set_head_angles(self, yaw, pitch, speed=0.5):
+        """Rotate head to a specified angle in the robot frame.
+
+        This function DOES return before movement is finished.
+        """
         self.mp.setAngles(('HeadYaw', 'HeadPitch'),
                           (yaw, pitch), speed)
 
     def set_head_angles_blocking(self, yaw, pitch, speed=0.5):
+        """Same as `set_head_angles` but block until finished.
+
+        Doesn't work quite as expected though. You may need to work on it.
+
+        """
         self.mp.angleInterpolatioWithSpeed(('HeadYaw', 'HeadPitch'),
                                            (yaw, pitch), speed, True)
 
     def move_to(self, front, side, rotation, wait=False):
+        """Move the robot around.
+
+        If `wait` is set, will block until move is finished.
+        """
         if not self.ready_to_move:
             self.mp.moveInit()
             self.ready_to_move = True
@@ -202,6 +215,7 @@ class NaoMover(object):
             self.mp.post.moveTo(front, side, rotation)
 
     def move_to_fast(self, front, side, rotation, wait=False):
+        """Move faster. DON'T USE."""
         if not self.ready_to_move:
             self.mp.moveInit()
             self.ready_to_move = True
@@ -214,6 +228,10 @@ class NaoMover(object):
         ])
 
     def move_toward(self, front, side, rotation):
+        """Move in a specified direction until interrupted.
+
+        DON'T USE, unstable, I think.
+        """
         if not self.ready_to_move:
             self.mp.moveInit()
             self.ready_to_move = True
@@ -243,6 +261,7 @@ class NaoMover(object):
         self.stand_up(0.7)
 
     def wait(self):
+        """Shortcut for mp.waitUntilMoveIsFinished."""
         self.mp.waitUntilMoveIsFinished()
 
     def stop_moving(self):
