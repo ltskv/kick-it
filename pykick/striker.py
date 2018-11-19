@@ -276,6 +276,8 @@ class Striker(object):
         Call this until this returns True - then the robot is facing
         the ball.
 
+        This will block until the robot sees the ball and is facing the ball.
+
         Parameters
         ----------
         soll : float
@@ -284,11 +286,6 @@ class Striker(object):
             directly).
         tol : float
             Allowable deviation in radians from soll-angle.
-
-        Returns
-        -------
-        bool
-            True if robot is nicely aligned to ball; else False.
 
         """
 
