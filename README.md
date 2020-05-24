@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-1. (L)ubuntu 14.04
+1. (L)ubuntu 14.04 (if not using Docker)
 2. Git installed:
 
 ```sh
@@ -53,6 +53,27 @@ robot.
 
 3. ssh to the robot, go to the directory containing the `pykick` folder and run
 `python -m pykick` (the same as on the laptop).
+
+### To run code with the Docker
+
+*Note:* For this method to work, you don't need a Ubuntu 14.04, any x86 system with
+Docker installed will probably work.
+
+1. Download the `pynaoqi-python2.7-2.1.4.13-linux32.tar.gz` from somewhere and
+   put it into the project directory, and `cd` to the project directory.
+2. Run `docker build -t kick-it .`
+3. Then use Docker to run the stuff, for example
+
+```
+docker run --rm -it \
+         -v /path/to/project:/workspace \
+         -w /workspace \
+         --user "$(id -u):$(id -g)" \
+         kick-it python -m pykick.colorpicker --help
+```
+
+The scripts with GUI (like `colorpicker`) can be made to work with some extra
+flags.
 
 ## What's inside?
 
